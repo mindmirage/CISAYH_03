@@ -1,0 +1,1745 @@
+
+
+import React, { useState, useEffect, useRef } from 'react';
+
+// --- 아이콘 컴포넌트 (외부 라이브러리 의존성 제거) ---
+const IconWrapper = ({ children, size = 24, className = "" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    {children}
+  </svg>
+);
+
+const ChevronLeft = (props) => <IconWrapper {...props}><path d="m15 18-6-6 6-6"/></IconWrapper>;
+const MoreHorizontal = (props) => <IconWrapper {...props}><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></IconWrapper>;
+const Plus = (props) => <IconWrapper {...props}><path d="M5 12h14"/><path d="M12 5v14"/></IconWrapper>;
+const Send = (props) => <IconWrapper {...props}><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></IconWrapper>;
+const Battery = (props) => <IconWrapper {...props}><rect width="16" height="10" x="2" y="7" rx="2" ry="2"/><line x1="22" x2="22" y1="11" y2="13"/><path d="M5 9h10v6H5z" fill="currentColor" stroke="none"/></IconWrapper>;
+const Wifi = (props) => <IconWrapper {...props}><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" x2="12.01" y1="20" y2="20"/></IconWrapper>;
+const Signal = (props) => <IconWrapper {...props}><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 20V4"/></IconWrapper>;
+const Search = (props) => <IconWrapper {...props}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></IconWrapper>;
+const Bell = (props) => <IconWrapper {...props}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></IconWrapper>;
+const User = (props) => <IconWrapper {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconWrapper>;
+const MessageCircle = (props) => <IconWrapper {...props}><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></IconWrapper>;
+const X = (props) => <IconWrapper {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></IconWrapper>;
+const Music = (props) => <IconWrapper {...props}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></IconWrapper>;
+const Pencil = (props) => <IconWrapper {...props}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></IconWrapper>;
+const Play = (props) => <IconWrapper {...props}><polygon points="5 3 19 12 5 21 5 3"/></IconWrapper>;
+const BookOpen = (props) => <IconWrapper {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></IconWrapper>;
+const Feather = (props) => <IconWrapper {...props}><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" x2="2" y1="8" y2="22"/><line x1="17.5" x2="9" y1="15" y2="15"/></IconWrapper>;
+
+// --- 유틸리티 함수 ---
+const getTime = () => {
+  const now = new Date();
+  let h = now.getHours(), m = String(now.getMinutes()).padStart(2, '0');
+  return `${h >= 12 ? '오후' : '오전'} ${h % 12 || 12}:${m}`;
+};
+
+let audioCtx = null;
+
+const playSound = (type) => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    
+    // 오디오 엔진이 없으면 만들고, 멈춰있으면 깨웁니다
+    if (!audioCtx) {
+      audioCtx = new AudioContext();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    const now = audioCtx.currentTime;
+
+    if (type === 'message') {
+      // [수정됨] 예전의 경쾌하고 짧은 소리로 복구
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(400, now); 
+      oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.1); 
+      gainNode.gain.setValueAtTime(0.2, now); // 볼륨 0.2
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1); 
+      oscillator.start(now);
+      oscillator.stop(now + 0.1); // 길이 0.1초
+
+    } else if (type === 'narrative') {
+      // [수정됨] 내레이션도 예전의 긴 호흡(0.8초)으로 복구
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(220, now); 
+      oscillator.frequency.exponentialRampToValueAtTime(440, now + 0.8); 
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.05, now + 0.2);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.8);
+      oscillator.start(now);
+      oscillator.stop(now + 0.8); // 길이 0.8초
+
+    } else if (type === 'typing') {
+      // 타이핑 소리 (이건 새로 추가된 기능이니 유지)
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(600, now);
+      oscillator.frequency.exponentialRampToValueAtTime(300, now + 0.03);
+      gainNode.gain.setValueAtTime(0.05, now);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
+      oscillator.start(now);
+      oscillator.stop(now + 0.03);
+
+    } else if (type === 'error') {
+      // 에러음
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(150, now); 
+      oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.2); 
+      gainNode.gain.setValueAtTime(0.1, now);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+      oscillator.start(now);
+      oscillator.stop(now + 0.2);
+    }
+
+  } catch (e) {
+    console.error('Audio error:', e);
+  }
+};
+
+const shuffleArray = (array) => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
+// --- 설정 및 스타일 ---
+const COLORS = {
+  bg: "bg-gradient-to-b from-white via-gray-50 to-slate-100",
+  jaehyun: "bg-gradient-to-b from-white to-sky-200", 
+  mark: "bg-gradient-to-b from-green-50 to-green-200",
+  jiwon: "bg-gradient-to-b from-white to-yellow-200",
+  eunjae: "bg-gradient-to-b from-white to-orange-200",
+  niko: "bg-gradient-to-b from-white to-pink-200",
+  seonwoo: "bg-gradient-to-b from-white to-purple-200",
+  yeondeok: "bg-gradient-to-b from-white to-[#D7CCC8]",
+  jaekyung: "bg-gradient-to-b from-white to-blue-200",
+  other: "bg-gradient-to-b from-white to-gray-200",
+  markText: "text-gray-800 text-sm",
+  button: `bg-white border-2 border-[#E0E0E0] text-gray-700
+           transition-all duration-300 ease-out
+           hover:border-transparent hover:text-gray-800 hover:shadow-md
+           hover:bg-gradient-to-r hover:from-sky-100 hover:to-green-100`,
+};
+
+const IMAGES = {
+  jaehyun: "https://i.pinimg.com/736x/89/18/32/891832cf581c3b0e0feb85ae95e1ae52.jpg",
+  mark: "https://i.pinimg.com/736x/80/b2/5e/80b25e83d5af4f18fa219fb6e62274bb.jpg"
+};
+
+const CHAPTERS = [
+  { id: 1, title: "Part 1: 요리", sceneId: 'start', desc: "주방에서의 미묘한 기류" },
+  { id: 2, title: "Part 2: 거실 대화", sceneId: 'living1', desc: "비포 선라이즈와 낭만" },
+  { id: 3, title: "Part 3: 방 배정 & 대화", sceneId: 'scene8', desc: "단 둘이 쓰는 방, 그리고..." },
+  { id: 4, title: "Part 4: 나이트 메시지", sceneId: 'night_1', desc: "꿈, 영화, 그리고 우리" },
+  { id: 5, title: "Part 5: 아침 식사", sceneId: 'morning_1', desc: "서운함과 약속 사이" },
+  { id: 6, title: "Part 6: 미션 & 암호", sceneId: 'mission_start', desc: "10분만 더 있다가 가면 안 돼요?" }
+];
+
+const FRIENDS_DATA = [
+  { id: 'niko', name: '니코', color: 'bg-pink-200', status: '싸이다...' },
+  { id: 'seonwoo', name: '선우', color: 'bg-purple-200', status: '별이 빛나는 창공을 보고, 갈 수가 있고 또 가야만 하는 길의 지도를 읽을 수 있던 시대는 얼마나 행복했던가?', isOnline: false },
+  { id: 'yeondeok', name: '연덕', color: 'bg-[#D7CCC8]', status: '리스본 여행 중.' },
+  { id: 'eunjae', name: '은재', color: 'bg-orange-200', status: '난 재현마크' },
+  { id: 'jaekyung', name: '재경', color: 'bg-blue-200', status: '아름다운 것', statusSuffix: ' 듣는 중', link: 'https://youtu.be/3iHBlNgjQQo?si=4cp1GqVu5gdcBXwt', isOnline: true },
+  { id: 'jiwon', name: '지원', color: 'bg-yellow-200', status: 'Voice Mail', statusSuffix: ' 듣는 중', link: 'https://youtu.be/KriXKHJXEbc?si=TmkDdgF4yJXeffx0', isOnline: true },
+].sort((a, b) => a.name.localeCompare(b.name));
+
+// --- 시나리오 데이터 ---
+const SCENARIO_SEQUENCE = {
+  start: [
+    { type: 'text', sender: '재현', content: "바빠서 요리는 많이 못해 봤나 보다." },
+    { type: 'choice', options: [{ text: "아니거든요? 저 그래도 기본은 해요.", nextId: null }, { text: "티 나나 봐요. 뭔가 잘하는 척하고 싶었는데.", nextId: 'scene2' }, { text: "형이 너무 잘해서 비교되는 거예요.", nextId: null }] }
+  ],
+  scene2: [
+    { type: 'text', sender: '재현', content: "그것까지 잘하면 반칙이지." },
+    { type: 'choice', options: [{ text: "제가 좀 반칙 캐릭터긴 하죠.", nextId: null }, { text: "노력하면 금방 늘겠죠 뭐.", nextId: null }, { text: "형은 잘하는 것 같은데요?", nextId: 'scene3' }] }
+  ],
+  scene3: [
+    { type: 'text', sender: '재현', content: "반칙 써도 되지? 너한테." },
+    { type: 'narrative', content: "마크가 재현의 말에 잠시 당황한 채 말을 잇지 못한다. 화기애애했던 공기가 순식간에 팽팽하게 당겨진다. 마크가 쥐고 있는 나무 주걱이 팬 위에 어정쩡하게 떠 있다." },
+    { type: 'narrative', content: "마크의 눈이 커졌다가, 시선이 재현의 옆모습, 어깨, 그리고 다시 팬으로 바쁘게 오간다. 머릿속이 하얘진 사람처럼 입만 겨우 달싹거릴 뿐이다." },
+    { type: 'choice', options: [{ text: "형은 무슨 그런 말을.", nextId: 'scene4' }, { text: "무슨 반칙이요? 게임 말하는 거예요?", nextId: null }, { text: "맘대로 하세요. 저도 반칙 쓸 거니까.", nextId: null }] }
+  ],
+  scene4: [
+    { type: 'text', sender: '재현', content: "반칙이 그런 거지 뭐." },
+    { type: 'choice', options: [{ text: "알다가도 모르겠네요, 형은.", nextId: null }, { text: "아니, 갑자기 그러니까요.", nextId: 'scene5' }, { text: "반칙왕 정재현.", nextId: null }] }
+  ],
+  scene5: [
+    { type: 'text', sender: '재현', content: "그럼 다음부턴 예고하고?" },
+    { type: 'choice', options: [{ text: "아, 나 알았다. 솔직히 이거 저 놀리는 거죠?", nextId: 'scene6' }] }
+  ],
+  scene6: [
+    { type: 'narrative', content: "재현이 어깨를 으쓱하고 다시 팬을 휘두른다. 여전히 태연하다. 입꼬리만 살짝 올린 채 요리에 집중하고 있다. 베이컨 볶는 소리와 물 끓는 소리만이 어색한 공기를 채우고 있다." },
+    { type: 'narrative', content: "잠시 멍하니 서 있던 마크의 팬에서 베이컨의 기름이 유난히 크게 튄다." },
+    { type: 'text', sender: '재현', content: "안 다쳤어?" },
+    { type: 'narrative', content: "재현이 즉시 팬의 불을 줄이고 마크의 손등을 살핀다. 걱정이 배어 있는 반사적인 움직임이다. 마크는 재현에게 손등을 내어 준 채로 입술을 꾹 깨물고 있다." },
+    { type: 'choice', options: [{ text: "안 다쳤어요. 그냥 조금 따끔. 찬물로 씻으면 금방 가라앉지 않을까요?", nextId: 'scene7' }] }
+  ],
+  scene7: [
+    { type: 'narrative', content: "재차 묻는 재현의 물음에 마크는 손을 스윽 빼고는 다시 팬을 쥔다. 재현의 손이 잠시 멈칫한다. 아무래도 뭔가를 좀 더 챙겨 주려고 했던 눈치다. 멈칫한 손끝에서 머쓱함이 스친다. 재현이 손을 가볍게 쥐었다 펴며, 다시 팬쪽으로 돌아선다." },
+    { type: 'text', sender: '재현', content: "그래, 그럼." },
+    { type: 'narrative', content: "마크는 슬쩍 재현의 눈치를 살핀다. 호의를 거절한 듯싶어 괜히 또 신경이 쓰이는 표정이다. 반면 재현의 표정은 잘 모르겠다. 요리에 집중하는 것처럼 보이기도 하고, 방금의 짧은 순간을 곱씹는 것처럼 보이기도 한다. 느긋해 보이지만 어딘가 선이 그어진 듯한 태도에 주방의 공기가 다시금 묘하게 가라앉는다." },
+    { type: 'typing_narrative', content: "몇 시간 뒤...", nextId: 'living1' } 
+  ],
+  living1: [
+    { type: 'narrative', content: "거실 소파. 8명 중 세 사람이 나란히 앉아 있다. L자형 소파의 한쪽 긴 면에 재현과 마크가 앉아 있고, 코너를 돌아 짧은 면에 지원이 편안하게 기대 앉아 있다." },
+    { type: 'narrative', content: "은재와 니코가 설거지를 하며 웃는 소리, 연덕과 선우가 대화하는 소리가 배경처럼 깔린다. 그런 소소한 소음들이 오히려 세 사람이 앉은 소파 주변을 더 고요하고 내밀한 공간처럼 분리시킨다." },
+    { type: 'narrative', content: "재현이 가벼운 한숨을 내쉬며 여행지에서의 피로와 낯섦을 갈무리한다. 마크는 약간 실눈을 뜨고 따분한 하품을 한다. 먼저 정적을 깬 것은 지원이다." },
+    { type: 'text', sender: '지원', content: "근데 둘은 비행기에서 뭐 봤어요? 나는 기내도 너무 어둡고 해서 딱 하나 보고 바로 잠들었는데." },
+    { type: 'choice', options: [{ text: "어, 저 비포 선라이즈 봤어요. 형도 그거 봤죠?", nextId: 'living2' }, { text: "저는 그냥 잤어요. 너무 피곤해서.", nextId: null }, { text: "액션 영화 봤는데 제목이 기억 안 나네요.", nextId: null }] }
+  ],
+  living2: [
+    { type: 'text', sender: '재현', content: "오랜만에 다시··· 마크가 보길래 따라서 본 것도 있고. 누나도 그 영화 좋아하지 않아요?" },
+    { type: 'text', sender: '지원', content: "그렇지. 하긴, 유럽 여행 시작하기에 딱 좋은 영화다. 낭만적이잖아." },
+    { type: 'choice', options: [{ text: "진짜 낭만적이에요. 그런 게 진짜 가능할까요?", nextId: 'living3' }, { text: "좀 지루하던데요. 대화만 너무 많고.", nextId: null }, { text: "여주인공이 멋지더라고요.", nextId: null }] }
+  ],
+  living3: [
+    { type: 'narrative', content: "마크의 질문은 순수하게 영화를 향해 있는 듯하지만, 재현과 지원은 그 의미를 조금 더 미묘하게 인식한 듯하다." },
+    { type: 'text', sender: '재현', content: "가능하지 않을까? 그냥 말이 잘 통하면 하루가 1년 같을 수도 있지. 누구랑 있느냐에 따라서." },
+    { type: 'narrative', content: "재현은 등받이에 팔을 걸친 편안한 자세 그대로, 고개만 살짝 돌려 마크를 보며 답한다. 재현의 말에 마크가 작게 감탄한다. 지원은 그 둘을 가만히 지켜본다. 지원의 시선이 재현의 입가에 머물렀다가, 이내 마크의 붉어지는 귓불로 옮겨간다." },
+    { type: 'text', sender: '지원', content: "글쎄. 나는 그게 그 영화의 판타지라고 생각하는데. 그 낭만은 영원하지 않아서 낭만인 거잖아. 딱 그 하룻밤뿐이라서. 결국엔 현실로 돌아와야 하니까." },
+    { type: 'text', sender: '재현', content: "그럴 수도 있겠네요." },
+    { type: 'narrative', content: "재현이 지원의 말에 답하고는 느릿하게 턱을 괴고 생각에 잠긴다." },
+    { type: 'text', sender: '재현', content: "왜 대부분의 사람들은 낭만이 현실에 틈입될 수 없다고 생각하는 걸까요? 낭만도 현실의 일부이지 않아요? 어떤 낭만은 누군가의 삶을 자꾸만 이어 나가게 만들기도 하잖아요. 그렇게 따지면 결국 순간의 낭만이 그 사람의 삶을 증명하기도 하는 거고." },
+    { type: 'narrative', content: "재현의 말에 지원이 고개를 끄덕거리면서도 갸웃한다." },
+    { type: 'text', sender: '지원', content: "정말 그런가?" },
+    { type: 'text', sender: '재현', content: "예전에 학교 동방에서 그 영화 같이 본 적이 있어서, 누나가 아직도 그 영화 좋아하는 줄 알았어요. 그래서 같은 생각이지 않을까 했는데." },
+    { type: 'text', sender: '지원', content: "동방?" },
+    { type: 'text', sender: '재현', content: "저희끼리 상영회도 자주 하고, 영화도 보고 그랬잖아요. 어떤 선배가 이런 로맨스 영화는 세상에 존재해선 안 된다고 얘기하던 걸, 누나가 따졌던 기억이 나요. 싫어하는 구체적인 이유가 있냐고요." },
+    { type: 'narrative', content: "재현이 눈을 반짝이며 얘기하자, 지원이 놀란 듯 눈을 살짝 크게 떴다가 이내 멋쩍은 듯 웃는다." },
+    { type: 'text', sender: '지원', content: "아, 너 그걸 어떻게 기억해? 무슨 블랙박스 같아." },
+    { type: 'text', sender: '재현', content: "그냥 그 말이 저한테 좀 인상적이었나 봐요. 싫은 것도 다 이유가 있는 법이고, 그 싫은 것들 사이에서도 결국 취향이 생긴다는 말이요." },
+    { type: 'text', sender: '지원', content: "내가 그런 멋진 말을 했었나?" },
+    { type: 'text', sender: '재현', content: "원래 영향을 준 당사자는 잘 모르죠." },
+    { type: 'narrative', content: "재현이 툭 던진 말에 지원은 잠시 할 말을 잃는다. 영향을 준 당사자. 그 말의 무게가 상당한 듯하다. 지원이 재현을 스리슬쩍 쳐다보고는 바로 시선을 내리깐다. 그러고는 입술 안쪽을 잘근잘근 깨문다. 재현의 말에 왠지 모르게 생각이 많아 보인다." },
+    { type: 'narrative', content: "마크는 두 사람의 대화에서 오가는 친밀함을 감히 넘보지 못한다. 두 사람 사이에 흐르는 공기는 다른 밀도를 가졌다. 마크는 바지를 괜스레 주물거리며 눈동자만 굴려 지원의 눈치를 살필 뿐이다. 그때, 재현의 시선이 지원에게서 마크에게로 옮겨 간다." },
+    { type: 'text', sender: '재현', content: "마크는 무슨 장면 좋아해? 레코드 샵 장면을 계속 돌려 보던데." },
+    { type: 'choice', options: [{ text: "아, 그 좁은 곳에서 같이 음악 듣는 거요?", nextId: 'living4' }, { text: "저는 전화 받는 장면이요.", nextId: null }, { text: "공원에서 시 읽어주는 장면?", nextId: null }] }
+  ],
+  living4: [
+    { type: 'text', sender: '지원', content: "어, 나도 레코드 샵." },
+    { type: 'narrative', content: "지원이 장난스럽게 마크를 향해 손바닥을 내밀며 하이파이브를 청한다. 마크는 예상치 못한 호응과 제스처에 놀라지만 자연스럽게 지원에게 손을 내밀고 짝, 소리가 나게 손뼉을 친다." },
+    { type: 'choice', options: [{ text: "그 순간만큼은 진짜 아니었을까요? 영원하지 않아도요.", nextId: 'living5' }, { text: "연기니까 그렇죠. 현실에선 어색할걸요.", nextId: null }, { text: "노래가 좋아서 더 그래 보였던 것 같아요.", nextId: null }] }
+  ],
+  living5: [
+    { type: 'narrative', content: "지원이 옅게 읊조리는 마크의 얼굴을 가만히 들여다보더니 씩 웃는다." },
+    { type: 'text', sender: '지원', content: "알았다. 마크는 생각보다 더 로맨티스트구나." },
+    { type: 'narrative', content: "지원의 말에 재현이 자세를 바로 하고 웃는다. 마크의 순수함을 귀여워하는 것인지, 지원의 언변이 재미있는 것인지는 모호하다. 마크가 재현의 웃음에 약간 당황하지만 한 번 생각난 말을 멈출 수 없는 듯 영화에 대한 의견을 이어나간다." },
+    { type: 'choice', options: [{ text: "그리고 저는요. 엔딩도 좋았어요. 희망적인 거잖아요.", nextId: 'living6' }, { text: "엔딩이 좀 허무했어요. 만났는지 안 나왔잖아요.", nextId: null }, { text: "2편을 봐야 알 것 같아요.", nextId: null }] }
+  ],
+  living6: [
+    { type: 'text', sender: '지원', content: "희망. 좋다. 재현이 넌?" },
+    { type: 'text', sender: '재현', content: "뭐가요? 저도 로맨티스트냐고요?" },
+    { type: 'narrative', content: "재현의 말에 지원과 마크가 나란히 웃는다." },
+    { type: 'text', sender: '지원', content: "아니, 아니. 너도 마크처럼 그런 의견이야? 6개월 뒤에 그 장소에서 둘이 만났을 것 같아?" },
+    { type: 'narrative', content: "웃는 목소리로 말하고 있지만 질문은 날카롭다. 재현은 잠시 지원을 바라본다. 두 사람 사이에는 뭔가 해소되지 않은 감정이 남아 있는 것 같다. 혹은, 두고 온 기억이 많은 것인지도 모른다. 마크는 지원의 말에 웃음을 멈추고 딴청을 피운다. 신경 쓰지 않는 듯하지만 재현의 답이 궁금한 것 같다." },
+    { type: 'text', sender: '재현', content: "음, 만났는지는 별로 안 중요한 것 같아요." },
+    { type: 'text', sender: '지원', content: "왜?" },
+    { type: 'text', sender: '재현', content: "그런 건 이상하게 신경이 안 쓰여요. 영화의 의미도 그런 걸 묻는 게 아닐 테고요. 사실 인생은 전반적으로 기다림의 연속이고, 그 기다림 속에서 의미를 찾는 법이니까요. 그래도 정말 만났냐 안 만났느냐를 따진다면 만나지 않았을까요? 꼭 6개월 뒤가 아니더라도 만났을 것 같은데." },
+    { type: 'text', sender: '재현', content: "해는 매일 뜨니까··· 해 뜨기 전에는 만났겠죠?" },
+    { type: 'choice', options: [{ text: "아, 설마. 비포 선라이즈?", nextId: 'living7' }, { text: "해 뜨기 전에는 자야죠.", nextId: null }, { text: "형 말장난은 여전하네요.", nextId: null }] }
+  ],
+  living7: [
+    { type: 'narrative', content: "재현이 입꼬리를 살짝 올리고는 마크를 응시한다. 마크가 재현의 말을 잠시 곱씹는가 싶더니, 작은 감탄사와 함께 웃음이 터지는 것을 참고 있다. 재현의 말장난과 센스가 마음에 든 모양이다. 지원 역시 바람 빠진 웃음 소리를 내며 시시한 말을 건넨다." },
+    { type: 'text', sender: '지원', content: "듣고 보니까 하나도 안 변했다, 정재현." },
+    { type: 'narrative', content: "재현이 어깨를 으쓱하고는 소파에 몸을 깊게 묻는다. 어느새 셋은 가만히 앉아 각자 생각하는 시간을 갖는다. 누구도 물어보지 않은 질문을 떠올리며 사색에 잠겨 있다." },
+    { type: 'narrative', content: "언뜻 보면 셋의 얼굴에 비포 선라이즈의 줄리 델피와 에단 호크가 조금씩 깃들어 있는 듯하다. 서로를 긴밀히 살피면서도 태연히 시선을 훔치는 것이 그렇다." },
+    { type: 'narrative', content: "이내 지원이 푹신한 소파에 나른한 몸을 기댄다. 얼굴을 반쯤 소파에 묻고는 힐끗 재현의 옆모습을 바라본다. 재현은 숙소 곳곳을 눈으로 훑고 있다. 마크는 거실에 놓인 테이블의 모서리 끝을 하염없이 응시하며 멍을 때리고 있다." },
+    { type: 'narrative', content: "재경은 창가에 기댄 채로 그런 셋을 지켜보고 있다. 넷의 시선이 절대로 맞닿지 않기 때문에 이 광경이 아름다운지도 모른다." },
+    { type: 'typing_narrative', content: "몇 시간 뒤...", nextId: 'scene8' } 
+  ],
+  scene8: [
+    { type: 'narrative', content: "재현과 마크가 방으로 이동한다." },
+    { type: 'narrative', content: "삐걱, 삐걱. 발소리가 울리는 계단을 재현이 먼저 성큼성큼 올라선다. 재현이 2층 복도에 있는 두 개의 문을 차례차례 열어 보고, 작은 방 앞에 캐리어를 둔다." },
+    { type: 'text', sender: '재현', content: "여길 우리 둘이 쓰면 될 것 같은데." },
+    { type: 'narrative', content: "2층의 다른 방과 달리 재현과 마크의 방은 더블베드 하나와 작은 책상 하나가 덩그러니 놓여 있다. 붙박이장과 침대 옆 작은 협탁이 방의 아늑한 분위기를 강조한다. 가장 안쪽에는 화장실 하나가 작게 딸려 있다." },
+    { type: 'narrative', content: "뒤따라 들어오던 마크가 방 한가운데 놓인 침대를 보고 문 앞에서 그대로 멈춰 선다." },
+    { type: 'choice', options: [{ text: "어?", nextId: 'scene9' }, { text: "와, 침대 크다.", nextId: null }, { text: "여기 제 방인가요?", nextId: null }] }
+  ],
+  scene9: [
+    { type: 'narrative', content: "먼저 방을 훑어보던 재현이 뒤따라 들어오지 않는 마크를 돌아본다." },
+    { type: 'text', sender: '재현', content: "왜 안 들어오고." },
+    { type: 'choice', options: [{ text: "아니, 전.", nextId: 'scene10' }, { text: "방이 좀 좁은 거 같아서요.", nextId: null }, { text: "먼저 들어가세요.", nextId: null }] }
+  ],
+  scene10: [
+    { type: 'text', sender: '재현', content: "침대가 하나라서?" },
+    { type: 'choice', options: [{ text: "그게 아니라···", nextId: 'scene11' }, { text: "네, 저는 바닥에서 잘게요.", nextId: null }, { text: "아뇨, 그냥 생각 좀 하느라.", nextId: null }] }
+  ],
+  scene11: [
+    { type: 'narrative', content: "마크가 살짝 얼어 있는 듯한 태도로 캐리어를 끌고 방으로 들어선다. 드르륵. 캐리어 바퀴 소리가 좁은 방 안에서 유난히 크게 울린다. 재현이 아무렇지 않게 마크의 캐리어를 가볍게 받아 들어 한쪽 벽에 세워 두고는 작게 중얼거린다." },
+    { type: 'text', sender: '재현', content: "불편하면 바꿔 줄까? 큰방 써도 돼." },
+    { type: 'choice', options: [{ text: "아뇨, 왜요?", nextId: 'scene12' }, { text: "네, 바꿔주시면 감사하죠.", nextId: null }, { text: "형이 불편하시면 제가 나가고요.", nextId: null }] }
+  ],
+  scene12: [
+    { type: 'text', sender: '재현', content: "근데 왜 이렇게 긴장했어?" },
+    { type: 'narrative', content: "누가 보면 내가 너 잡아 먹는 줄 알겠어. 재현이 짐짓 장난스러운 표정으로 마크의 콧잔등을 톡, 치고 익숙한 손놀림으로 캐리어의 지퍼를 열고는 세면도구와 옷가지를 꺼내 책상 위에 정돈하기 시작한다." },
+    { type: 'narrative', content: "마크가 코를 슥슥 문지르고는 재현의 너른 등 뒤를 빤히 바라본다. 넓지 않은 방이라 그런 것인지, 조심스레 발을 떼는 소리마저 괜스레 크게 들린다." },
+    { type: 'narrative', content: "그리고 소담스럽게 복작거리는 방 안을 은재가 몰래 훔쳐보고 있다. 몸을 살짝 옆으로 기울인 채로 고개만 빼고는 까치발까지 들고 있다." },
+    { type: 'text', sender: '은재', content: "됐다, 됐어." },
+    { type: 'narrative', content: "뭐가 됐다는 건지는 몰라도 은재가 작은 방을 쓰는 재현과 마크를 확인한 뒤 신나는 발걸음으로 깡총깡총 다락방으로 뛰어간다." },
+    { type: 'next', nextId: 'room_talk_1' }
+  ],
+  room_talk_1: [
+    { type: 'narrative', content: "방 안에는 다시 두 사람만 남았다. 재현이 짐을 정리하는 소리만 바스락거린다." },
+    { type: 'text', sender: 'Mark', content: "근데 형. 아, 아니에요." },
+    { type: 'text', sender: '재현', content: "왜?" },
+    { type: 'choice', options: [{ text: "이런 거 물어봐도 되나?", nextId: 'room_talk_2' }, { text: "아까 은재 누나 뭐였을까요?", nextId: null }, { text: "저 침대 진짜 편해 보여요.", nextId: null }] }
+  ],
+  room_talk_2: [
+    { type: 'text', sender: '재현', content: "안 될 건 없지." },
+    { type: 'choice', options: [{ text: "그니까, 왜 저랑 같이 방 쓰고 싶었던 거예요?", nextId: 'room_talk_3' }, { text: "형 혹시 잘 때 코 골아요?", nextId: null }, { text: "내일 아침 식사 당번 누구예요?", nextId: null }] }
+  ],
+  room_talk_3: [
+    { type: 'narrative', content: "재현이 마크를 잠시 바라본다. 방 안의 공기가 순간 정지된 것처럼 고요해진다. 재현이 천천히 마크의 얼굴을 훑으며 입술을 달싹인다." },
+    { type: 'narrative', content: "마크가 재현의 시선을 느끼고는 머쓱해진 것인지 고개를 아래로 떨구고 빗장뼈를 만지작거린다. 아무래도 괜히 물었다고 생각하는 것 같다. 그럼에도 불구하고 바로 답해 주지 않는 재현을 탓하고 싶은 것인지 마크의 입술이 삐죽거린다." },
+    { type: 'narrative', content: "땀이 삐질거릴 정도로 고요한 적막이다. 둘의 목소리에 잘 들리지 않았던 시계의 초침 소리가 두텁게 째깍거리며 존재감을 드러낸다. 째깍. 째깍. 재현이 옅은 숨을 내쉬고는 대답한다." },
+    { type: 'text', sender: '재현', content: "안 되겠는데?" },
+    { type: 'text', sender: 'Mark', content: "아, 뭐예요." },
+    { type: 'narrative', content: "마크가 빗장뼈를 주물거리던 손을 내려놓고는 자연스러운 척하며 캐리어의 지퍼를 연다. 나름대로 진지하게 물은 것이었는데 장난기가 서린 재현의 답이 못내 만족스럽지 않다." },
+    { type: 'narrative', content: "재현이 그런 마크의 움직임을 빼곡하게 훑으며 슬며시 웃는다. 어느새 느긋한 마음이 된 것인지 팔짱을 낀 채다. 마크는 홧홧하게 달아오르는 것 같은 집요함을 애써 무시한 채 옷가지를 정리해 본다. 큼, 하며 목을 가다듬기도 한다." },
+    { type: 'text', sender: '재현', content: "그럼 나도 물어봐도 돼?" },
+    { type: 'narrative', content: "갑작스러운 질문에 마크가 고개를 들고 재현을 비스듬히 바라본다. 재현은 마크에게 살짝 웃어 보이고는 창가쪽으로 향해 몸을 기댄다." },
+    { type: 'choice', options: [{ text: "뭘요?", nextId: 'room_talk_4' }, { text: "안 돼요. 저 삐쳤어요.", nextId: null }, { text: "비밀인데요.", nextId: null }] }
+  ],
+  room_talk_4: [
+    { type: 'text', sender: '재현', content: "아, 아니다." },
+    { type: 'narrative', content: "캐리어를 정리하는 마크의 얼굴을 제대로 보고 싶은 것인지 재현의 몸이 바닥을 향해 반쯤 기울어진다. 앉아 있던 마크가 시선의 격차를 느낀 것인지 반쯤 몸을 일으켜 세우고는 침대에 앉는다. 재현 역시 마크의 움직임에 따라 다시 몸이 바르게 세워진다." },
+    { type: 'text', sender: 'Mark', content: "왜 자꾸 놀려요?" },
+    { type: 'text', sender: '재현', content: "너는 왜 같이 쓰자는 말에 따라온 건데?" },
+    { type: 'narrative', content: "재현의 예기치 못한 반격에 마크의 눈이 동그래진다." },
+    { type: 'choice', options: [{ text: "그건요. 아, 진짜. 형은 사람을 참 당황스럽게 해요. 오늘 하루 형 때문에 진짜. 제가 먼저 물어봤잖아요?", nextId: 'room_talk_5' }, { text: "그냥 형이 좋아서요.", nextId: null }, { text: "거절하면 예의가 아닌 것 같아서...", nextId: null }] }
+  ],
+  room_talk_5: [
+    { type: 'narrative', content: "마크가 우물쭈물하자 재현이 기지개를 켜 몸을 살짝 풀고는 마크의 곁에 앉는다. 재현이 앉자 침대의 매트리스가 약간 가라앉는다. 비로소 대등한 위치가 되었는데도, 재현이 마크를 조금 내려다보고 있다." },
+    { type: 'text', sender: '재현', content: "이게 네가 생각한 최선의 방안이었나 보지?" },
+    { type: 'choice', options: [{ text: "그렇게 따지면 말은 형이 먼저 돌렸는 걸요.", nextId: 'room_talk_6' }, { text: "최선이라기보단 차선책?", nextId: null }, { text: "네, 방도 넓고 좋잖아요.", nextId: null }] }
+  ],
+  room_talk_6: [
+    { type: 'text', sender: '재현', content: "안 넘어오네." },
+    { type: 'narrative', content: "재현이 팔을 뒤로 한 채 몸을 반쯤 눕힌다. 그러고는 마크의 목덜미와 가지런한 척추의 선을 빼꼼히 훑어 본다. 마크는 그런 재현의 시선을 느끼지 못한 채로, 뭔가를 골똘히 생각하다가 재현을 돌아본다." },
+    { type: 'choice', options: [{ text: "제가 말하면 형도 말해 줄 거예요?", nextId: 'room_talk_7' }, { text: "그럼 저 먼저 씻을까요?", nextId: null }, { text: "형, 피곤하죠? 불 끌까요?", nextId: null }] }
+  ],
+  room_talk_7: [
+    { type: 'text', sender: '재현', content: "생각해 볼게." },
+    { type: 'narrative', content: "재현이 느적느적한 움직임으로 침대에서 몸을 일으키고는 다시 캐리어 앞에 앉는다. 이번엔 재현이 마크를 올려다본다. 마크는 천장 쪽으로 눈을 굴리다가 오늘 하루 있었던 일을 떠올리는 사람처럼 뭔가를 바쁘게 말한다." },
+    { type: 'choice', options: [{ text: "그냥 형이 하는 말은 거절하기가 어려워요. 그리고 형이 먼저 저한테 말해 줘서 솔직히 신나기도 했어요. 아, 너무 애 같은가? 사실 쫌 조심스럽기도 한데, 그나마 여기서 마음이 편한 사람이 있다면 형이거든요. 사전미팅에서 만난 것도 있고요. 맞다, 아이팟은 저인 거 어떻게 알았어요? 알고 고른 거예요? 그럴 리는 없는데, 완전 대박. 형은 왜 꽃다발 한 거예요? 제가 꽃다발 고른 것도 신기해요. 형한테 끌렸나 봐요. 처음부터.", nextId: 'room_talk_8' }, { text: "사실 형이랑 친해지고 싶었어요. 어색한 거 풀고 싶어서...", nextId: null }, { text: "다른 방은 너무 꽉 차서 선택지가 없었어요.", nextId: null }] }
+  ],
+  room_talk_8: [
+    { type: 'narrative', content: "짐을 착착 정리하던 재현이 마크의 마지막 발화에 잠시 멈칫한다. 어째서인지 마크가 건넨 순수한 말을 원래의 의도대로 해석하기 어려운 눈치다. 이내 가볍게 웃어 보이고는 농담조로 대화를 잇는다." },
+    { type: 'text', sender: '재현', content: "아이팟 씨, 몰랐는데 말 쫑알쫑알 되게 많다." },
+    { type: 'text', sender: 'Mark', content: "엇, 조용히 할까요?" },
+    { type: 'text', sender: '재현', content: "아니, 듣기 좋아서 그래. 혼자 있으면 밤에 너무 적적하거든. 간만에 누구랑 같이 있어서 좋아. 자기가 하는 말이 얼마나 고백 같은 말인지 모르는 사람인 것도 좋고." },
+    { type: 'choice', options: [{ text: "저 언제 형한테 고백했어요?", nextId: 'room_talk_9' }, { text: "고백이라뇨! 저 그런 거 안 했는데요?", nextId: null }, { text: "듣기 좋다니 다행이네요.", nextId: null }] }
+  ],
+  room_talk_9: [
+    { type: 'narrative', content: "재현이 반대편 캐리어의 지퍼를 연다. 역으로 아무것도 모르겠다는 표정을 짓는 것은 재현이다. 마크의 표정을 따라 하는 듯하다." },
+    { type: 'text', sender: '재현', content: "이거 봐. 모르잖아. 그런 사람이니까 같이 쓰자고 한 거 아닐까?" },
+    { type: 'text', sender: 'Mark', content: "제가 어떤 사람인데요?" },
+    { type: 'narrative', content: "재현은 그 말에 정리하던 캐리어를 아예 밀어버린다. 아무래도 이야기에 집중하려고 하는 듯하다. 그러고는 침대 위에 턱을 괸다. 하얗게 덮인 이불이 약간 부스럭거린다. 음, 마크 너는 말이지. 마크는 어떻게 자신을 정의내릴지 궁금하다는 듯 재현을 호기심 가득한 눈으로 지켜보고 있다." },
+    { type: 'text', sender: '재현', content: "궁금하고 앞으로 계속 알아가고 싶은 사람이지." },
+    { type: 'choice', options: [{ text: "이게 고백 아니에요?", nextId: 'room_talk_10' }, { text: "아, 저도 형 알아가고 싶어요.", nextId: null }, { text: "저 쉬운 남자 아니에요.", nextId: null }] }
+  ],
+  room_talk_10: [
+    { type: 'narrative', content: "재현이 침대 헤드쪽을 멍하니 바라보고 있다가 마크의 말에 살짝 고개를 틀고는 마크를 올려다본다." },
+    { type: 'text', sender: '재현', content: "그런가? 이렇게 너를 보고 있으면 좀 더 알고 싶다는 생각을 하게 돼." },
+    { type: 'narrative', content: "무심하게 턱을 괴고 있던 재현의 시선이 마크의 손등으로 향한다. 조금 낮게 가라앉은 목소리에 마크는 머리를 긁적인다. 그러고는 침대 모서리로부터 미끄러져 내려와 바닥에 쿵, 하고 앉는다. 마크는 부끄러움을 직면하지 못하는 듯하다. 그 모습을 지켜보고 있던 재현이 턱을 괴고 있던 손을 풀고는 캐리어를 다시 끌고 와 얼마간 짐을 뒤적인다." },
+    { type: 'text', sender: '재현', content: "아, 여기 있다. 이거 화상 연고." },
+    { type: 'text', sender: 'Mark', content: "형은 이런 걸 어떻게 들고 다녀요?" },
+    { type: 'narrative', content: "마크가 무릎을 그러 모으고는 고개를 슬쩍 묻는다. 재현이 연고 상자를 흔들자 달그락거리는 소리가 들린다." },
+    { type: 'text', sender: '재현', content: "오늘의 운세에서 상비약 구비해 두라고 하던데." },
+    { type: 'choice', options: [{ text: "오, 대박. 진짜요? 그걸 어떻게 알았지?", nextId: 'room_talk_11' }, { text: "에이, 거짓말.", nextId: null }, { text: "형 미신 믿어요?", nextId: null }] }
+  ],
+  room_talk_11: [
+    { type: 'text', sender: '재현', content: "농담이고, 너같은 사람이 분명 있을 거라고 생각했어. 그렇게 속이 물렁해서 어쩜 좋지?" },
+    { type: 'narrative', content: "재현이 연고의 뚜껑을 열고 검지 손가락 위에 조심스럽게 짜낸다. 어디더라? 손등이지. 재현이 태연하게 마크의 손등을 잡고는 연고를 발라 준다. 마크는 재현이 약을 발라 주는 모습을 가만히 보고만 있다. 손등의 상처에 집중하고 있는 모습에 괜히 몸이 간지러운 것인지 목을 긁적거린다. 재현이 힐끗 마크를 쳐다보고는 다시 고요히 내려앉은 시선으로 손등에 연고를 넓게 펴바른다." },
+    { type: 'narrative', content: "마크는 재현을 오래 담아보겠다는 양 최대한 느릿하게 눈을 깜빡인다. 간접등 불빛 아래 차분하게 가라앉은 머리칼과 오뚝한 코, 가느다란 속눈썹, 집중한 듯한 입이 보인다. 살짝 열린 창문으로부터 야트막한 바람이 나부낀다. 그로 인해 재현의 머리칼이 휘날린다. 재현의 이마가 훤히 드러난다. 마크가 그 모습을 멍하니 보다가 숨을 헉, 하고 들이키고는 반대편 손을 꾹 쥔다." },
+    { type: 'text', sender: '재현', content: "어디 보자, 그리고··· 이건 너한테 어울리는 거." },
+    { type: 'narrative', content: "재현이 마지막으로 마크의 손등 위에 뽀로로 밴드를 붙여 준다. 마크가 손등 위에 캐릭터를 바라보고는 환하게 웃는다. 재현은 쉽게 마크의 손을 놓아 주지 않는다. 재현의 서느런 손가락이 마크의 손등을 조심히 감싸 쥐고 있다. 밴드가 잘 붙여진 것을 확인하려는 듯, 재현이 마크의 손등을 엄지로 슥슥 매만진다. 마크 역시 주방에서의 일을 만회해 보려는 듯 쉽게 손을 빼지 않는다. 머리를 맞대고 뽀로로 밴드를 지켜보고 있는 모습이 다소 정겹다." },
+    { type: 'text', sender: '재현', content: "내일 몇 번 더 바르자. 덧나거나 흉터 남으면 안 되니까." },
+    { type: 'narrative', content: "재현의 말에 마크가 고개를 선선히 끄덕거린다." },
+    { type: 'narrative', content: "리스본의 숙소는 다소 분주하고 소란스럽지만, 재현과 마크가 있는 방만큼은 다정한 고요함이 방 안 가득 깃들어 있다. 둘의 입가에 어리숙하면서도 넉넉한 미소가 걸려 있다." },
+    { type: 'narrative', content: "풋풋한 시작의 설렘이 둘 사이를 메꾸고 있다." },
+    { type: 'typing_narrative', content: "나이트 메시지 전달 후, 재현과 마크의 방.", nextId: 'night_1' } 
+  ],
+  night_1: [
+    { type: 'narrative', content: "마크의 메시지를 확인한 재현이 편안하게 침대 헤드에 기댄 채로 침대 끝자락에 앉아 있는 마크의 뒷모습을 바라본다. '형이랑 앞으로 하고 싶은 게 많아질 것 같아요. 오늘 너무 고마웠어요.' 재현이 쪽지에 적힌 말을 떠올리는 듯, 살짝 감긴 눈으로 가늘게 웃는다." },
+    { type: 'narrative', content: "조금 편안한 옷으로 갈아 입은 마크는 한결 가뿐하고 산뜻해 보인다. 샤워를 마친 뒤인지, 팔꿈치와 귓바퀴에 채 마르지 않은 물기가 선연하다." },
+    { type: 'narrative', content: "마크는 아직 고개를 푹 숙이고 누가 보냈는지 반쯤 모호한 메시지 카드를 계속 들여다 보고 있다. 읽었던 것을 차례대로 쭉 읽다가, 다시 처음으로 돌아가 읽어 본다. 그러다가 끝에서부터 읽어 보기도 하고, 중간부터 읽기도 한다. 마크의 얼굴이 잔잔한 물결에 일렁이는 것처럼 투명하면서도 그윽해 보인다." },
+    { type: 'narrative', content: "뭔가에 한껏 휘말린 표정이다. 어떻게 하면 이 방에 고여 있는 어색하면서도 다정한 분위기를 탈피할 수 있을지 고민스러워 보이기도 한다. 쪽지 모양으로 반듯하게 접힌 것을 거꾸로 되짚어 가며 완성하던 마크가 천천히 등을 돌려 재현을 본다. 재현이 기다렸다는 듯 마크의 눈맞춤에 응한다." },
+    { type: 'text', sender: '재현', content: "누구한테서 왔길래 그렇게 오래도록 들여다 봐?" },
+    { type: 'narrative', content: "마크가 민망하다는 듯 눈을 맞추다가 고개를 숙인다." },
+    { type: 'choice', options: [{ text: "비밀이에요.", nextId: 'night_2' }, { text: "형한테는 안 알려 줄래요.", nextId: null }, { text: "맞혀 봐요.", nextId: null }] }
+  ],
+  night_2: [
+    { type: 'text', sender: '재현', content: "한 방에서 같이 자는 사람한테 비밀이라니. 너무하네." },
+    { type: 'choice', options: [{ text: "아니, 그런 비밀 하나쯤은 간직하고 싶어요. 오늘은.", nextId: 'night_3' }, { text: "오늘은 좀 신비로운 컨셉이거든요.", nextId: null }, { text: "안 알려줌.", nextId: null }] }
+  ],
+  night_3: [
+    { type: 'narrative', content: "마크가 배시시 웃으며 재현 쪽을 향해 몸을 조금 더 돌린다. 재현이 그런 마크의 움직임에 살짝 긴장한 채로 헤드에서 몸을 반쯤 일으키고 꼿꼿하게 앉는다." },
+    { type: 'text', sender: '재현', content: "밑줄 치고 싶은 게 많았나 봐." },
+    { type: 'choice', options: [{ text: "생각보다 사람을 어린애처럼 만드는 것 같아요. 이렇게 쪽지를 주고받는 거요.", nextId: 'night_4' }, { text: "쪽지 보니까 옛날 생각 나요.", nextId: null }, { text: "글씨체가 예쁘더라고요.", nextId: null }] }
+  ],
+  night_4: [
+    { type: 'narrative', content: "마크가 그렇게 말하고는 재현의 곁으로 향한다. 조심스러운 듯한 태도로 재현의 곁에 앉는다. 재현이 다시 침대 헤드에 기댄다. 고개를 살짝 돌려 마크를 내려다 본다. 창에서부터 새벽의 서늘함을 머금은 바람이 기분 좋게 불어온다." },
+    { type: 'text', sender: '재현', content: "어린애 같네. 그런 생각도. 오늘 신났어?" },
+    { type: 'choice', options: [{ text: "신나기도 하고··· 신기하기도 해요. 매번 느끼는 거지만 낯선 곳으로 비행할 때마다 제가 지금 있는 곳이 가끔 모호하다고 생각해요.", nextId: 'night_5' }, { text: "그냥 좀... 얼떨떨해요.", nextId: null }, { text: "여행 온 기분 제대로 나요.", nextId: null }] }
+  ],
+  night_5: [
+    { type: 'narrative', content: "조금 골똘히 생각하며, 재현의 팔을 조금 붙잡다 흔들고는 뗀다." },
+    { type: 'choice', options: [{ text: "형은 그런 생각 안 해 봤어요? 어떻게 순식간에 이런 곳에서 얘기를 하고, 밥을 먹고··· 그럴 수 있을까요?", nextId: 'night_6' }, { text: "형도 그런 생각 들 때 있죠?", nextId: null }, { text: "가끔은 꿈꾸는 기분이에요.", nextId: null }] }
+  ],
+  night_6: [
+    { type: 'narrative', content: "재현은 마크의 뜬구름 잡는 이야기에도 지루한 기색 하나 없이 곧잘 경청하고 있다. 마크는 그런 재현의 태도에 또박또박 발음하려고 노력한다. 같이 있는 시간을 실망시키고 싶지 않다는 듯이." },
+    { type: 'text', sender: '재현', content: "왜 안 하겠어. 어디 가서 그런 얘길 하면 공상적인 사람처럼 보이니까 말을 아낄 뿐이야. 요즘엔 다들 그런 이야기보다 현실적인 일들에 좀 더 마음이 쏠려 있으니까." },
+    { type: 'choice', options: [{ text: "왜요? 아, 하긴요. 저조차도 그런 말 받아 주는 사람을 잘 못 본 것 같아요.", nextId: 'night_7' }, { text: "형도 그런 편이에요?", nextId: null }, { text: "저는 그런 생각 자주 하는데.", nextId: null }] }
+  ],
+  night_7: [
+    { type: 'text', sender: '재현', content: "있지 않아? 예외인 사람." },
+    { type: 'text', sender: 'Mark', content: "누구요?" },
+    { type: 'text', sender: '재현', content: "눈을 조금 가늘게 뜨며 알면서도 모르는 척하는 게 특기인 걸까, 아니면 정말 모르는 걸까." },
+    { type: 'choice', options: [{ text: "음··· 전자에 가까운 것 같아요.", nextId: 'night_8' }, { text: "후자면 형이 좀 섭섭하려나?", nextId: null }, { text: "글쎄요, 잘 모르겠네요.", nextId: null }] }
+  ],
+  night_8: [
+    { type: 'text', sender: '재현', content: "그럼 오히려 눈치라는 걸 키워야 할 사람은 나인 것 같네." },
+    { type: 'narrative', content: "그 말에 마크가 재현을 관찰하듯이 들여다 본다. 재현이 눈을 두어 번 깜빡일 때까지 말이 없다가 제대로 눈이 마주친다. 그제야 입을 뗀다." },
+    { type: 'choice', options: [{ text: "있잖아요. 형은 말을 진짜 웃기고 재미있게 해요. 그냥 하는 말이 아닌 것 같고 한 번쯤 다시 생각하게 된다고 해야 할까요? 과장되게 말하면 밤마다 괜히 전화 걸고 싶어지는 그런.", nextId: 'night_9' }, { text: "형이랑 얘기하면 시간 가는 줄 모르겠어요.", nextId: null }, { text: "형은 눈치 100단?", nextId: null }] }
+  ],
+  night_9: [
+    { type: 'text', sender: '재현', content: "너 나한테 잘 보이고 싶나 봐." },
+    { type: 'choice', options: [{ text: "형한테 잘 안 보이고 싶은 사람도 있을까요.", nextId: 'night_10' }, { text: "당연하죠. 형이니까.", nextId: null }, { text: "그럼요, 완전 잘 보이고 싶죠.", nextId: null }] }
+  ],
+  night_10: [
+    { type: 'text', sender: '재현', content: "농담이었는데 그렇게 말해 주네." },
+    { type: 'choice', options: [{ text: "왜 농담이에요? 농담 아니고 진담 같았는데.", nextId: 'night_11' }, { text: "아, 농담이었어요? 실망.", nextId: null }, { text: "진담 반 농담 반?", nextId: null }] }
+  ],
+  night_11: [
+    { type: 'narrative', content: "빠르게 핑퐁이 이어지다가 재현이 약간 머뭇거린다. 재현은 이어지는 대화가 즐겁다고 생각하면서도 자주 당혹스러움을 느끼는 듯하다. 마크를 조금 떠 보는 듯한 말을 던지면, 그 말을 마크가 덥석 무는 식이다." },
+    { type: 'text', sender: '재현', content: "그래? 나 너한테 잘 보이고 싶나 보다." },
+    { type: 'choice', options: [{ text: "형 말이라도 잘 받아칠 수 있게 과외라도 받아 올걸 그랬어요.", nextId: 'night_12' }, { text: "제가 말주변이 좀 없어서요.", nextId: null }, { text: "형한테 과외 받으면 되겠다.", nextId: null }] }
+  ],
+  night_12: [
+    { type: 'narrative', content: "마크의 말을 듣는 재현의 얼굴이 약간 상기되어 있다. 느릿한 속도로 하고 싶은 말을 전하는 와중에도 자주 귀가 빨개졌던 재현이다. 재현이 다시 몸을 고쳐 세우고는 협탁 위 접시에 놓인 청포도 한 알을 베어 문다. 입 안에서 청포도가 토독, 하고 터지며 물큰한 소리가 난다." },
+    { type: 'narrative', content: "때아닌 정적에 마크가 조용히 과일만 씹어 삼키고 있는 재현을 말간 얼굴로 들여다 본다. 잠시 멈칫하던 재현이 협탁으로 손을 뻗어 청포도 몇 알을 조심히 골라 담고는, 가볍게 한 알을 그러쥐고 마크의 입으로 갖다 댄다. 자연스럽게 입을 벌리고 청포도를 쏙 넣게 된 마크가 천천히 과육을 씹는다." },
+    { type: 'text', sender: '재현', content: "달다, 그치." },
+    { type: 'narrative', content: "청포도 특유의 상큼하고 시원한 향이 침대를 가득 채운다. 마크는 알게 모르게 재현의 표정, 몸짓 하나에도 신경이 곤두선다. 자꾸만 재현에게 몰두하게 된다. 마치 재현을 받아쓰기라도 하는 사람처럼 행동 하나하나를 답습하게 된다." },
+    { type: 'choice', options: [{ text: "달아요. 진짜로요.", nextId: 'night_13' }, { text: "와, 이거 진짜 맛있다.", nextId: null }, { text: "더 주세요.", nextId: null }] }
+  ],
+  night_13: [
+    { type: 'narrative', content: "재현과 마크의 필로우 토크가 새벽의 끝자락을 향해 계속 달려가지만, 둘은 끝을 모르는 사람 같다. 함께 있는 시간이 무한으로 뻗어나갈 수 있도록 자꾸만 여지를 두며 말을 고른다. 활동하면서 겪었던 일들, 쉬면서 무슨 일을 하는지 같은 것들을 서로에게 묻는 듯하다." },
+    { type: 'narrative', content: "재현은 어느 때에도 마크의 질문을 쉽게 여기지 않고 답한다. 장난스럽게 미간을 좁히며 진지한 투로 답하기도 하고, 특유의 흐느적한 말투로 편안히 답하기도 한다. 그럴 때마다 마크의 발이 침대 위에서 까딱거린다. 마크는 오늘따라 수줍은 소년의 얼굴을 하고 있다. 곤란하기라도 한 사람처럼 입술을 자주 짓씹기도 한다." },
+    { type: 'choice', options: [{ text: "오늘 기분이 좀 영화 속에 있는 것 같아요.", nextId: 'night_14' }, { text: "우리 지금 영화 찍는 것 같지 않아요?", nextId: null }, { text: "낭만적이네요.", nextId: null }] }
+  ],
+  night_14: [
+    { type: 'text', sender: '재현', content: "느긋한 말투로 그럼 넌 영화 속에서 지금 어떤 위치에 있어. 사물이야? 아니면 주인공이야. 관찰자가 될 수도 있고." },
+    { type: 'choice', options: [{ text: "막연하게 생각만 했는데 형은 되게 자세히 짚어 주네요. 그래서 좋아요. 대화가 끊이지 않아서 솔직히 너무 즐거워요. 음, 잠시만요. 생각해 볼게요.", nextId: 'night_15' }, { text: "형은 참 디테일한 사람이네요.", nextId: null }, { text: "관객?", nextId: null }] }
+  ],
+  night_15: [
+    { type: 'text', sender: '재현', content: "그래, 궁금하다." },
+    { type: 'narrative', content: "마크가 재현이 던진 질문에 대해 골똘히 생각한다. 눈을 가늘게 뜨고는 상상의 나래를 펼치는 듯하다. 그럼, 분위기도 영화답게 갖추는 게 좋겠지. 재현이 익숙하게 협탁 위 휴대용 스피커에 블루투스를 연결하고 노래를 재생한다." },
+    { type: 'youtube', videoId: 'aawiJ74rHRc', title: "I've Never Been In Love Before (Vocal Version)" },
+    { type: 'choice', options: [{ text: "오늘은 주인공 할래요.", nextId: 'night_16' }, { text: "음... 주인공?", nextId: null }, { text: "저는 감독 할래요.", nextId: null }] }
+  ],
+  night_16: [
+    { type: 'text', sender: '재현', content: "보통은 망설임 없이 주인공한다고 하지 않아? 주인공으로 닿기까지 로딩 시간이 꽤 기네." },
+    { type: 'choice', options: [{ text: "주인공으로부터 비껴나간 시점도 재미있지 않아요? 그래서 고민했어요. 근데 오늘은 저도 제가 종일 느낀 감정을 통 뭐라고 해야 할지 잘 모르겠거든요. 보통 주인공들이 그러니까. 아, 아닌가? 오히려 저를 관찰하는 게 좋을까요?", nextId: 'night_17' }, { text: "조연이 더 매력적일 수도 있잖아요.", nextId: null }, { text: "엑스트라도 좋아요.", nextId: null }] }
+  ],
+  night_17: [
+    { type: 'text', sender: '재현', content: "어디서 베껴온 말 같은데." },
+    { type: 'narrative', content: "재현이 양손으로 카메라 프레임 모양을 만들고는 각을 잰다. 재현이 만든 직사각형 프레임 속에 마크의 얼굴이 담긴다. 뭔가를 가늠해 보겠다는 듯, 재현이 한쪽 눈을 찡그리기도 한다. 재현이 무얼 하고 있는지 눈치채지 못한 마크는 계속 창가쪽을 바라보며 고민한다." },
+    { type: 'choice', options: [{ text: "뭐가 좋을까요? 전 제가 주인공에 적합한 사람인지 잘 모르겠는 걸요.", nextId: 'night_18' }, { text: "추천해 주세요, 감독님.", nextId: null }, { text: "저 시켜 주세요.", nextId: null }] }
+  ],
+  night_18: [
+    { type: 'narrative', content: "인내심 있게 이쪽을 바라봐 주길 기다린 재현이 이내 엉성하게 만든 프레임 바깥쪽으로 고개를 빼내고는 마크의 턱을 가볍게 잡는다. 갑작스러운 재현의 행동에 마크가 턱끝을 힐끔 바라본다. 거길 보라는 게 아니고. 나를 봐. 재현이 조심스레 마크의 턱을 돌려 세우자 눈이 마주친다." },
+    { type: 'narrative', content: "재현의 시선이 집요하게 닿는 곳마다 마크의 얼굴에 열이 오른다. 상당히 가까워진 거리에 마크가 조금 뒤로 무르며 재현과의 틈을 벌린다. 재현은 굴하지 않고 손가락으로 가볍게 그러쥔 턱끝을 조금 올려 들고는 다시 마크의 얼굴을 이곳저곳 훑는다. 재현이 낮게 침음하며 고민한다. 마크는 고개를 홱 돌리려다가도, 절로 재현의 입술 쪽으로 시선이 뺏긴다." },
+    { type: 'text', sender: '재현', content: "아무래도 주인공이 좋겠어." },
+    { type: 'text', sender: 'Mark', content: "어···" },
+    { type: 'text', sender: '재현', content: "주인공을 해 보는 것도 나쁘지 않지. 너를 관찰하는 건 너 말고도 해 줄 사람이 많잖아. 그러니까 스스로 느낀 감정에 대해 한껏 골몰해 보는 게 좋을 것 같아." },
+    { type: 'narrative', content: "마크가 슬그머니 몸을 빼고는 다른 쪽을 살피는 척하며 얼굴을 식힌다. 스스로도 인지하지 못한 것인지 숨을 한껏 참고 있다. 재현이 하는 말은 딱히 들리지 않는 듯하다. 뭐라 말을 더 얹던 재현이 마크의 어깨에 손을 턱 올린다. 깜짝 놀란 마크가 황급하게 재현을 돌아본다. 동시에 마크의 볼에 재현의 검지가 쿡 찔린다." },
+    { type: 'text', sender: '재현', content: "내 말에 집중하고 있어?" },
+    { type: 'choice', options: [{ text: "예? 어, 네.", nextId: 'night_19' }, { text: "아, 깜짝이야.", nextId: null }, { text: "부담스러워요.", nextId: null }] }
+  ],
+  night_19: [
+    { type: 'narrative', content: "다시 한 번 성큼 다가온 재현의 얼굴에 마크가 느릿하게 눈을 끔뻑인다. 그제야 참았던 숨을 내쉬는데 딸꾹, 하며 민망한 소리가 난다." },
+    { type: 'text', sender: '재현', content: "아까 분명 긴장 풀으라고 했던 것 같은데?" },
+    { type: 'narrative', content: "마크가 딸꾹질을 참아 보겠다는 요량으로 입을 꾹 막자 재현이 가까이 하던 얼굴을 뒤로 하고 웃는다. 짧은 사이에 조금 긴장이 풀린 마크가 더욱 세게 두 손으로 입을 가린다. 딸꾹, 딸꾹. 마크의 어깨를 괜히 꾹 누르고 침대에서 일어선 재현이 문가에 서고는 낮게 웃으며 읊조린다." },
+    { type: 'text', sender: '재현', content: "물 가져올게." },
+    { type: 'narrative', content: "마크가 고개를 세차게 끄덕이고는 재현이 사라진 것을 확인하고 침대에 엎어진다. 머리를 틀어박듯이 엎드린 채다. 침대 위 마크는 어쩐지 한껏 나약하고 막막해 보인다. 이불을 꾹 쥐었다가 다시 놓기도 하고 팡팡, 쳐대기도 한다. 그런 와중에도 딸꾹질은 멈추지 않는다. 마크가 머리를 잘래잘래 흔들고는 두 손으로 얼굴을 꼭 감싼다." },
+    { type: 'choice', options: [{ text: "망했다.", nextId: 'night_20' }, { text: "아, 진짜 타이밍...", nextId: null }, { text: "집중하고 있어요.", nextId: null }] }
+  ],
+  night_20: [
+    { type: 'narrative', content: "마크는 안 되겠다는 듯 자세를 바로 하고 숨을 꾹 참아 본다. 그것도 모자라다는 듯 빗장뼈와 목덜미 어딘가를 양손으로 꾹 쥔 채로다. 얼굴 끝자락에서부터 붉은기가 올라오며 눈가에 눈물이 찔끔 고인다. 얼마간 숨을 계속 참던 마크가 이내 침대에 풀썩 쓰러지고는 가쁜 숨을 내쉰다. 세찬 기침이 쿨럭 터져나오기도 한다. 괜스레 기분이 이상해진 마크가 서늘한 이불에 볼을 부비며 멍을 때린다. 위층에서는 은재가 대차게 웃는 소리가 끊이지 않고 있다. 마크는 가슴께가 뻑적지근한 사람처럼 고통스러워하고 있다." },
+    { type: 'choice', options: [{ text: "대체 왜 이럴까.", nextId: 'night_21' }, { text: "진정해, 진정해.", nextId: null }, { text: "살려 주세요.", nextId: null }] }
+  ],
+  night_21: [
+    { type: 'narrative', content: "얼마 지나지 않아 아래 층에서부터 나무 계단이 삐걱거리는 소리가 들린다. 마크는 그 소리에 퍼뜩 자리에서 일어나 엉성하게 앉는다. 열 손가락을 쭉 펴고는 발걸음 소리에 맞춰 초를 세기도 한다. 거꾸로 초를 세던 마크의 손가락이 넷을 가리킬 때쯤, 재현이 다시금 문가에 서서 마크의 동태를 살핀다." },
+    { type: 'narrative', content: "재현이 들고 온 투명한 글라스에는 물이 찰랑거리고 있다. 그 위로 얕게 썰어 낸 레몬 하나가 유람하듯 글라스의 이쪽저쪽에 부딪히며 흔들리고 있다. 마크는 달뜬 숨을 내쉬며 재현이 쥐고 있는 글라스, 그보다는 글라스에 감긴 재현의 손가락 마디마디를 훑어 본다. 재현이 걸음을 내딛을 때마다 글라스 속 레몬이 잘게 흔들리며 노란 빛을 반사시킨다. 그 모습에 헛침이 괴는지 마크가 괜스레 입을 앙 다문다." },
+    { type: 'text', sender: '재현', content: "냉장고에 레몬이 하나 있길래. 물이 비리지는 않을 거야. 설탕도 조금 섞었는데 그게 더 딸꾹질에 해로우려나?" },
+    { type: 'narrative', content: "재현이 고개를 약간 갸우뚱한다. 마크가 재현의 말에 고개를 끄덕거리는 사이, 재현이 마크의 손에 붙들린 글라스가 미끄러지거나 흘러내리지 않도록 더 단단히 쥐여 준다. 그렇지 않아도 마크는 침대 위에서의 대형 사고를 피하기 위해 손끝이 빨개지도록 글라스를 쥐고 있는 참이다. 더 이상 재현에게 속이 꿰뚫리는 듯한 모습은 보이고 싶지 않은 듯하다. 어쨌든 양순한 표정으로 잔을 받아든 마크가 조심스레 입가로 레몬이 담긴 물을 흘려 보낸다." },
+    { type: 'narrative', content: "마크가 꼴깍대며 물을 삼키는 사이, 재현은 가볍게 몸을 풀며 방 이곳저곳을 정리한다. 창가 쪽으로 다가가 리스본의 야경을 구경하기도 한다. 배려해 주는 것 같은 태도에 마크 또한 긴장이 풀린다. 레몬의 씁쓸함과 달콤함이 섞인 물을 조금씩 홀짝이던 마크가 이내 잔을 완전히 비우고는 입술을 훔친다. 잔을 탁, 소리가 나게 협탁 위에 두기까지 했는데 재현은 여전히 창밖의 야경에 시선을 떼지 않고 있다. 꾸물꾸물 침대로 몸을 반쯤 뉘인 마크가 재현의 뒷모습을 지켜본다. 괜히 말이라도 걸고 싶은 것인지 마크가 입을 달싹인다." },
+    { type: 'choice', options: [{ text: "그럼 형은요?", nextId: 'night_22' }, { text: "형은 뭐 하고 싶은데요?", nextId: null }, { text: "형 뭐해요?", nextId: null }] }
+  ],
+  night_22: [
+    { type: 'text', sender: '재현', content: "천천히 고개를 돌리며, 뭐가?" },
+    { type: 'narrative', content: "창틀에 팔을 붙박이고 서 있던 재현이 마크를 향해 몸을 돌리고는 천천히 팔을 뗀다. 재현이 팔짱을 낀 채로 질문을 던지며 고개를 창가에 기댄다." },
+    { type: 'choice', options: [{ text: "영화라고 친다면, 형은 어떤 걸 하고 싶어요?", nextId: 'night_23' }, { text: "아까 하던 얘기요.", nextId: null }, { text: "형의 역할이요.", nextId: null }] }
+  ],
+  night_23: [
+    { type: 'narrative', content: "재현이 살짝 웃는다. 고개를 돌려 야경을 몇 초간 바라보더니 말을 잇는다." },
+    { type: 'text', sender: '재현', content: "난 정해져 있지 않아?" },
+    { type: 'choice', options: [{ text: "어떤 걸로요?", nextId: 'night_24' }, { text: "이미 정했어요?", nextId: null }, { text: "뭔데요? 알려 줘요.", nextId: null }] }
+  ],
+  night_24: [
+    { type: 'narrative', content: "재현이 팔짱 낀 손을 풀고는 마크를 향해 서서히 다가간다. 협탁 위에 놓인 글라스를 눈높이까지 들어 두세 번 짤랑이고는, 다 마셨네? 묻는다. 물 위를 가볍게 찰랑이던 레몬이 어느새 바닥에 고요히 가라앉아 있다. 글라스를 다시 협탁 위에 둔 재현이 침대 끝에 살짝 걸터 앉고는 마크의 말에 다시금 응수한다." },
+    { type: 'text', sender: '재현', content: "잘 생각해 봐. 네가 주인공이잖아." },
+    { type: 'choice', options: [{ text: "제가 주인공인 거랑, 형이랑 무슨 연관이 있어요?", nextId: 'night_25' }, { text: "형도 주인공 하고 싶어요?", nextId: null }, { text: "혹시 빌런?", nextId: null }] }
+  ],
+  night_25: [
+    { type: 'text', sender: '재현', content: "서운하게 한다." },
+    { type: 'choice', options: [{ text: "뭔데요?", nextId: 'night_26' }, { text: "뜸 들이지 말고요.", nextId: null }, { text: "형은 제 상대역?", nextId: null }] }
+  ],
+  night_26: [
+    { type: 'text', sender: '재현', content: "나는 네 상대역이 되지 않겠어?" },
+    { type: 'choice', options: [{ text: "아.", nextId: 'night_27' }, { text: "그렇구나.", nextId: null }, { text: "로맨스?", nextId: null }] }
+  ],
+  night_27: [
+    { type: 'narrative', content: "재현이 마크의 머리에 가만히 손을 얹고는 머리칼을 조금 흩트린다." },
+    { type: 'text', sender: '재현', content: "탈락이면 어쩔 수 없고. 널 관찰하는 역할도 나쁘지 않긴 해. 그래도 이왕이면··· 하는 거지." },
+    { type: 'narrative', content: "마크가 얼이 빠진 사람처럼 재현의 말에 바로 대답하지 못한다. 직전에 재현이 머리칼을 흩트리는 바람에 전체적인 머리의 모양새가 부스스하다. 재현이 웃음을 참는 표정으로 마크의 대답을 끈질기게 기다린다. 더운 숨을 내쉰 마크가 고개를 푹 수그린다. 저는 진짜 형한테 못 당하는 것 같아요. 그리고." },
+    { type: 'text', sender: '재현', content: "그리고?" },
+    { type: 'choice', options: [{ text: "NG 많이 낼 거예요.", nextId: 'night_28' }, { text: "저 연기 못하는데 괜찮아요?", nextId: null }, { text: "형이랑 연기라니.", nextId: null }] }
+  ],
+  night_28: [
+    { type: 'narrative', content: "재현이 결국엔 소탈하게 웃는다. 마크, 너 눈치챘는지 모르겠는데··· 침대 끝에 걸터 앉아 있던 재현이 몸을 살짝 일으켜 마크 쪽을 향해 몸을 붙인다. 그러고는 슬금슬금 손을 올린다. 마크는 또 무슨 일이 벌어질지 한치 앞조차 예상할 수 없어 자연스럽게 몸을 뒤로 뺀다. 그럴수록 재현의 상체는 마크를 향해 기울어지면서 더욱이 밀착된다. 허공에서 잠시 멈칫한 재현의 손이 익숙하게 마크의 콧잔등을 향한다. 톡, 치는 손길도 그대로다." },
+    { type: 'text', sender: '재현', content: "너 딸꾹질 멈췄다." },
+    { type: 'narrative', content: "몰랐지? 재현이 씩 웃고는 마크에게 시선을 고정한 채로 협탁에 놓인 글라스를 쥔다." },
+    { type: 'text', sender: '재현', content: "개수대에 정리하고 올게. 이제 슬슬 자야 하지 않을까? 잠시만 기다리고 있어." },
+    { type: 'choice', options: [{ text: "아니, 형. 그건 제가 갖다 둘게요.", nextId: 'night_29' }, { text: "같이 가요.", nextId: null }, { text: "대본 숙지 잘 할게요.", nextId: null }] }
+  ],
+  night_29: [
+    { type: 'text', sender: '재현', content: "대충 주인공의 특권이라고 생각하고 있어 봐." },
+    { type: 'narrative', content: "마크가 허둥대며 잔을 빼앗으려고 들자, 재현이 재빠르게 방을 빠져 나간다. 마크는 다시 또 방에 혼자 덩그러니 남겨진다. 애꿎은 시선으로 천장을 바라보고 있자, 기다렸다는 듯 웃음 소리가 파하하 퍼진다. 마크는 그 웃음 소리에 안도감을 느끼며 한숨을 쉰다. 어느새 마크는 침대에서 벗어나 방을 초조하게 돌아다닌다. 입술을 잘근잘근 씹으며 생각이 많아 보인다. 기분이 좋으면서도 심란한 마음을 어찌 해야 할 줄 모르는 사람처럼 좁은 방을 이리저리 쏘다닌다. 시간은 어느새 새벽 두 시를 향해 가고 있다." },
+    { type: 'narrative', content: "반쯤 열려 있는 문을 멈춰 서서 바라보던 마크가 살금살금 그쪽을 향해 다가간다. 문고리를 쥐고는 바깥쪽을 향해 고개를 빼고 계단 층계참을 바라본다. 얼마 지나지 않아 재현이 성큼성큼 계단을 밟고 올라온다. 주인을 기다리는 고양이처럼 어깨를 움츠리고 주위를 살피던 마크가 재현을 향해 살포시 웃는다." },
+    { type: 'narrative', content: "계단을 오르며 머리칼을 가볍게 정리하던 재현이 시선을 느끼고 고개를 든다. 비스듬하게 엇갈려 있는 마크를 향해 재현이 작게 입을 뻐끔거린다. 왜? 뭐가 웃긴 것인지 마크가 별말 않고 쿡쿡 웃기만 한다. 궁금함에 계단을 두 칸씩 뛰어오른 재현이 빠른 걸음으로 방을 향한다. 고개를 빼고 있던 마크가 재현을 위해 몸을 뒤로 무르고는 얌전히 기다린다." },
+    { type: 'text', sender: '재현', content: "너 말이야. 하는 짓이 가끔 고양이 같다." },
+    { type: 'choice', options: [{ text: "러닝 타임에서 형이 지금 3분 정도 자리를 비웠어요.", nextId: 'night_30' }, { text: "어디 갔다 왔어요? 보고 싶었는데.", nextId: null }, { text: "제가 할게요.", nextId: null }] }
+  ],
+  night_30: [
+    { type: 'text', sender: '재현', content: "손해 봤네. 상대역으로 인정받기 쉽지 않은데." },
+    { type: 'narrative', content: "문가에 서 있던 재현을 마주하고 마크가 천천히 침대에 앉는다. 침대 가장자리에 위태롭게 걸터앉은 모양새다. 재현의 시선이 마크를 따라 내려간다." },
+    { type: 'choice', options: [{ text: "사실 영화 같다고 느낀 건 여행지의 분위기도 있는데요.", nextId: 'night_31' }, { text: "리스본이라서 더 그런 것 같아요.", nextId: null }, { text: "빨리 와요.", nextId: null }] }
+  ],
+  night_31: [
+    { type: 'text', sender: '재현', content: "응." },
+    { type: 'narrative', content: "재현이 나긋한 목소리를 들으며 마크의 침대 옆자리로 향한다. 재현의 움직임에 따라 마크의 자세도 자연스럽게 바뀐다. 재현이 걸치고 있던 카디건을 벗고는 마크의 옆에 나란히 앉는다." },
+    { type: 'choice', options: [{ text: "형이 저를 오늘 너무 잘 챙겨 준 것도 있어요.", nextId: 'night_32' }, { text: "형 덕분이에요, 전부 다.", nextId: null }, { text: "분위기 탓도 크죠.", nextId: null }] }
+  ],
+  night_32: [
+    { type: 'text', sender: '재현', content: "알아. 그래서 앞으로 하고 싶은 게 많아질 것 같다고 적은 거 아니야?" },
+    { type: 'narrative', content: "대화의 결이 순간 달라진다. 마크가 그 말에 고개를 홱 든다. 놀란 눈이 재현과 마주친다. 보고 있으면 정신이 섬약해질 것만 같은 열띤 눈이다. 마크는 예상치 못한 지점에서 속을 꿰뚫린 얼굴이다." },
+    { type: 'choice', options: [{ text: "이거 비밀 아니었어요? 마음으로만 간직하는?", nextId: 'night_33' }, { text: "아, 다 들켰네.", nextId: null }, { text: "비밀이에요.", nextId: null }] }
+  ],
+  night_33: [
+    { type: 'text', sender: '재현', content: "누가 봐도 알아 달라고 적은 건데, 어떻게 모르는 척을 해?" },
+    { type: 'narrative', content: "재현의 입가에 옅은 미소가 걸려 있다. 마크의 서툰 수를 훤히 알겠다는 듯 짐짓 어른의 여유를 보인다. 마크는 괜스레 민망한지 시선을 어디에 둬야 할지 모르는 눈치다." },
+    { type: 'choice', options: [{ text: "그럼 저도 형이 쓴 거 막, 읽어도 돼요? 오늘 느낀 감정을 뭐라고 정의해야 할지 잘 모르겠다고···", nextId: 'night_34' }, { text: "형 것도 공개해요, 그럼.", nextId: null }, { text: "형 마음 알 것 같아요.", nextId: null }] }
+  ],
+  night_34: [
+    { type: 'text', sender: '재현', content: "슬슬 피곤한 것 같아. 그 말이 얼마나 인상 깊었으면 나한테 두 번씩이나 쫑알대고." },
+    { type: 'narrative', content: "재현이 부드러우면서도 단호하게 대화의 흐름을 끊는다. 설득력 없는 하품을 하는 척하고는 눈을 슬쩍 감는다. 그 얄팍한 연기에 마크가 억울하다는 듯 재현을 향해 살짝 돌아 눕는다." },
+    { type: 'text', sender: 'Mark', content: "형, 자요? 잘 거예요? 졸려요?" },
+    { type: 'text', sender: '재현', content: "아직 안 잤으면 해?" },
+    { type: 'choice', options: [{ text: "그건 아닌데, 뭔가 아쉽기도 하고. 형은 보통 언제쯤 자요?", nextId: 'night_35' }, { text: "벌써 자게요?", nextId: null }, { text: "피곤하면 자요.", nextId: null }] }
+  ],
+  night_35: [
+    { type: 'text', sender: '재현', content: "규칙적인 타입은 아닌데. 보통은 새벽에 대부분 깨어 있는 것 같아. 그래서 정해진 시간에 자고 일어나는 사람들이 신기해. 자고 싶을 때 자는 게 나쁜 버릇인 것 같기도 하고." },
+    { type: 'choice', options: [{ text: "저도요. 근데 직업상 이유도 있지 않을까요? 잘 잔다는 게 어떤 기분인지 실은 잘 기억이 안 나요.", nextId: 'night_36' }, { text: "불면증은 아닌데, 밤이 되면 정신이 말똥말똥해요.", nextId: null }, { text: "불면증인가 봐요.", nextId: null }] }
+  ],
+  night_36: [
+    { type: 'text', sender: '재현', content: "오늘 밤은 잘 자야겠네." },
+    { type: 'narrative', content: "재현의 어조가 거스를 수 없는 예언처럼 들린다. 재현의 시선에 붙들린 마크는 마른 침을 삼킨다." },
+    { type: 'choice', options: [{ text: "네, 좋은 꿈을 꾸고 싶어요.", nextId: 'night_37' }, { text: "형이 옆에 있으니까 잘 잘 수 있을 것 같아요.", nextId: null }, { text: "노력해 볼게요.", nextId: null }] }
+  ],
+  night_37: [
+    { type: 'narrative', content: "마크는 대답하면서 이불 끝을 두 손으로 말아 쥔다. 이불이 손가락 사이로 구겨졌다가 펴지기를 반복한다." },
+    { type: 'text', sender: '재현', content: "어떤 꿈?" },
+    { type: 'choice', options: [{ text: "그런 거 있잖아요. 일어났을 땐 하나도 기억이 안 나는데, 좋은 꿈을 꾼 것 같다는 느낌만 남는.", nextId: 'night_38' }, { text: "그냥 막연하게 행복한 꿈?", nextId: null }, { text: "로또 당첨 꿈?", nextId: null }] }
+  ],
+  night_38: [
+    { type: 'text', sender: '재현', content: "가끔 그게 너한테 영감이 돼? 노래를 만든다거나, 가사를 쓸 때···" },
+    { type: 'narrative', content: "재현이 정말 궁금하다는 듯 미간을 살짝 좁힌다. 목소리에는 경외 비슷한 무언가가 섞여 있다." },
+    { type: 'choice', options: [{ text: "음··· 그런 것 같아요. 저도 모르게 기억하는 어떤 꿈의 끝자락 같은 게 있지 않을까요.", nextId: 'night_39' }, { text: "무의식 중에 남아있는 것 같기도 하고요.", nextId: null }, { text: "영감이 되긴 하죠.", nextId: null }] }
+  ],
+  night_39: [
+    { type: 'text', sender: '재현', content: "오늘은 기억해 줘. 네가 꾸는 꿈." },
+    { type: 'choice', options: [{ text: "형은 어떤 꿈을 꾸고 싶어요?", nextId: 'night_40' }, { text: "형의 꿈 취향도 궁금해요.", nextId: null }, { text: "알았어요, 기억할게요.", nextId: null }] }
+  ],
+  night_40: [
+    { type: 'narrative', content: "재현이 꿈의 풍경을 눈꺼풀 뒤에 그리고 있는 사람처럼 잠시 눈을 감았다 뜬다. 마크는 이불을 쥐고 있던 손을 풀어, 무릎 위에 가지런히 올려 둔다." },
+    { type: 'text', sender: '재현', content: "식상한 꿈 꾸고 싶어. 예를 들면··· 자전거를 타고 있는데 날씨가 좋아. 멀리서 애들이 노는 소리도 들려. 누군가 리코더나 오카리나를 불고 있어. 미지근한 바람이 기분 좋아." },
+    { type: 'text', sender: '재현', content: "커피 하나를 테이크 아웃하고 벤치에 앉아. 멀리서 봤을 땐 잘 몰랐는데, 눈앞 가까이에서 나뭇잎이 흔들리고 있어. 언제든지 볼 수 있는 장면인데도 이상하게 자꾸 눈이 가. 나는 꿈속에 카메라를 들고 오지 않은 걸 아쉬워해." },
+    { type: 'choice', options: [{ text: "그리고요? 그 옆에 저도 있어요?", nextId: 'night_41' }, { text: "저도 출연시켜 줘요.", nextId: null }, { text: "재미있는 꿈?", nextId: null }] }
+  ],
+  night_41: [
+    { type: 'text', sender: '재현', content: "너도 자전거 탈래? 하나 훔쳐 줄게." },
+    { type: 'choice', options: [{ text: "훔쳐 준다는 말을 그렇게 로맨틱하게 하는 사람은 처음 봐요.", nextId: 'night_42' }, { text: "형은 진짜... 선수 같아요.", nextId: null }, { text: "훔치는 건 범죄인데요.", nextId: null }] }
+  ],
+  night_42: [
+    { type: 'text', sender: '재현', content: "그렇게 따지면 앞으로도 자주 로맨틱할걸." },
+    { type: 'narrative', content: "그 말에 마크가 가만히 내려둔 손을 다시 이불에 올리고는 꼼지락거린다. 간지러운 마음을 숨기려는 듯한 태도다. 마크의 손가락이 이불의 퀼팅선을 따라 더듬더듬 길을 만들어 나간다. 재현이 던진 말의 의미를 가늠해 보려는 듯하지만 의미가 딱히 있는 행동은 아니다. 재현은 그런 마크의 소극적인 반응을 가만히 지켜보고 있다. 방 안의 공기는 두 사람의 낮은 숨소리로만 채워져 있다." },
+    { type: 'choice', options: [{ text: "그리고 그 다음 장면은 뭐예요?", nextId: 'night_43' }, { text: "결말은 해피엔딩인가요?", nextId: null }, { text: "기대할게요.", nextId: null }] }
+  ],
+  night_43: [
+    { type: 'text', sender: '재현', content: "내가 꾸는 꿈은 자주 슬픈 것 같아. 그래서 슬픈 장면이 이어질 것 같아. 갑자기 꿈의 장르가 바뀐다는 말은 아니야. 직접적으로 울게 되는 장면은 아니지만, 그냥 마음 한쪽이 저린 거 있잖아." },
+    { type: 'choice', options: [{ text: "섬세해요.", nextId: 'night_44' }, { text: "형은 감수성이 풍부하네요.", nextId: null }, { text: "슬픈 건 싫은데.", nextId: null }] }
+  ],
+  night_44: [
+    { type: 'text', sender: '재현', content: "꿈 꾸는 게 좋아. 내가 무심코 자주 지나치는 것들을 꿈은 제대로 목격하게 해 줘. 슬로우 모션처럼. 분명히 다르게 보이는 것들이 있어." },
+    { type: 'choice', options: [{ text: "슬픔은 아름다움의 동의어 같기도 하네요.", nextId: 'night_45' }, { text: "슬픈 게 아름답다는 말, 알 것 같아요.", nextId: null }, { text: "감성적이네요.", nextId: null }] }
+  ],
+  night_45: [
+    { type: 'text', sender: '재현', content: "그러게. 아마 오늘 꿈에서 너를 보면 슬프기도 하면서 아름답다고 느낄지 몰라." },
+    { type: 'narrative', content: "재현의 목소리는 담담하지만, 어째 하는 말은 결코 가볍지 않다. 아까 전의 장난스럽게 빛나던 눈동자는 어디 가고 고요한 눈빛만이 남아 있다. 마크는 재현이 한 말이 칭찬인 것인지 가늠하기 어려운 듯하다. 재현이라는 사람이 가진 감정의 결을 조금이나마 이해하려 애쓸 뿐이다." },
+    { type: 'choice', options: [{ text: "형이 그런 것들을 지나치지 않고 소중하게 여겨서 좋은 것 같아요. 유독 기억나는 꿈이 있어요?", nextId: 'night_46' }, { text: "형의 감성이 좋아요. 기억에 남는 꿈 있나요?", nextId: null }, { text: "어렵네요.", nextId: null }] }
+  ],
+  night_46: [
+    { type: 'text', sender: '재현', content: "그런 꿈을 꿨었지, 하고 기억이 나는 꿈은 대체로 없는 것 같아. 그게 참 이상해. 잠에서 깼을 땐 정말이지 선명한 기억인데, 시간이 조금 지나면 언제 그런 꿈을 꿨었지? 하게 되는 게. 그래도 기억나는 게 있다면···" },
+    { type: 'narrative', content: "재현이 어두운 방 안을 응시하며 뭔가를 떠올리려 애쓴다." },
+    { type: 'choice', options: [{ text: "있다면?", nextId: 'night_47' }, { text: "뜸 들이지 말고 말해 봐요.", nextId: null }, { text: "알려 주세요.", nextId: null }] }
+  ],
+  night_47: [
+    { type: 'text', sender: '재현', content: "모든 인류의 흐름이 결국엔 나였다는 게 신기했어. 그런 거대한 꿈을 꿀 수 있다니. 미래가 과거일 수도 있고, 과거가 미래일 수도 있다··· 같은 허무맹랑한 생각을 하기도 했고." },
+    { type: 'text', sender: '재현', content: "물론 그런 게 기억에 남았다는 거창한 말을 하려는 건 아니야. 꿈의 마지막에서 누군가 나를 다정히 안아 주고 맛있는 음식을 먹여 줬거든. 아주 향긋하고 맛이 좋은 음식이었어. 그 음식을 꼭꼭 씹어 삼키는데 열이 나고··· 이상한 만족감이 느껴졌어." },
+    { type: 'choice', options: [{ text: "그 사람은 누구였을까요? 형의 또 다른 삶이었다고 생각하면 그 삶에 끼어 들어서 형을 만나 보고 싶어요.", nextId: 'night_48' }, { text: "그 꿈에 제가 들어가 보고 싶어요.", nextId: null }, { text: "궁금해요.", nextId: null }] }
+  ],
+  night_48: [
+    { type: 'text', sender: '재현', content: "만나지 않았을까? 그랬으면 좋겠다." },
+    { type: 'narrative', content: "얼마간 정적이 이어진다. 재현이 협탁 위 조명의 조도를 조금 더 어둡게 낮춘다. 조도가 낮아짐에 따라 마크의 눈도 조금씩 감긴다. 슬슬 잠이 오는 표정이다. 다락방에선 여전히 웃음 소리가 오가고 있다. 아까보다 왁자지껄한 분위기는 아니지만 듣기만 해도 즐거운 대화를 나누는 듯하다." },
+    { type: 'narrative', content: "마크가 슬쩍 눈을 뜬다." },
+    { type: 'choice', options: [{ text: "다들 무슨 얘길 그렇게 재미있게 할까요?", nextId: 'night_49' }, { text: "위층 엄청 시끄럽네요.", nextId: null }, { text: "형이었으면 좋겠어요.", nextId: null }] }
+  ],
+  night_49: [
+    { type: 'text', sender: '재현', content: "추측해 봐." },
+    { type: 'choice', options: [{ text: "음, 다락방은 은재 누나가 있으니까 재미있는 얘기가 많이 오갈 것 같아요. 옆 방은 왠지 작가님이랑 감독님이랑 티키타카, 그런 거 하고 있을 것 같고요. 그걸 재경 형이 중재하고 있을 것 같아요.", nextId: 'night_50' }, { text: "다락방은 왁자지껄할 것 같아요.", nextId: null }, { text: "궁금하네요.", nextId: null }] }
+  ],
+  night_50: [
+    { type: 'text', sender: '재현', content: "우리는 어떤 것 같아?" },
+    { type: 'text', sender: 'Mark', content: "우리요?" },
+    { type: 'text', sender: '재현', content: "그러니까, 너랑 나는 어떤 것 같아?" },
+    { type: 'narrative', content: "질문이 무척이나 명료하다. 마크는 그 질문에 즉시 답하지 못한다. 입술을 감쳐물고 있다가, 결국 시선을 아래로 떨어트린다. 무릎 위에 얌전히 놓인 손을 내려다보는 마크의 얼굴에는 당혹스러움이 역력하다. 재현이 그런 마크를 끈기 있게 기다린다. 결국 마크가 혼잣말처럼 중얼거린다." },
+    { type: 'choice', options: [{ text: "왠지··· 부끄러운 것 같아요.", nextId: 'night_51' }, { text: "좀... 간질간질해요.", nextId: null }, { text: "글쎄요.", nextId: null }] }
+  ],
+  night_51: [
+    { type: 'text', sender: '재현', content: "왜 부끄러워? 이것도 내가 눈치를 키워야 하는 그런 부분일까?" },
+    { type: 'choice', options: [{ text: "네. 형은 눈치가 없어도 너무 없어요.", nextId: 'night_52' }, { text: "그걸 이제 알았어요?", nextId: null }, { text: "비밀.", nextId: null }] }
+  ],
+  night_52: [
+    { type: 'text', sender: '재현', content: "뭐 때문에 갑자기 그렇게 심통을 부리는지 모르겠는데, 오늘 하루쯤은 이해해 줄게. 정말 눈치가 없는 쪽이 누구인지 따지다가는 우리 둘 다 눈도 못 붙이게 생겼으니까." },
+    { type: 'narrative', content: "재현의 목소리에 웃음기가 묻어 있지만 마크의 반응을 집요하게 좇고 있다. 마크가 그 시선을 피하듯 고개를 살짝 돌린다. 재현의 입꼬리가 보일 듯 말 듯, 아주 미세하게 올라간다." },
+    { type: 'choice', options: [{ text: "장난이에요. 그런 게 아니에요. 형은 좀 짓궂은 면이 있어요. 고작 하루를 봤는데도 형이 저를 놀리는 게 느껴져요.", nextId: 'night_53' }, { text: "형이 자꾸 놀리니까 그렇죠.", nextId: null }, { text: "형 바보.", nextId: null }] }
+  ],
+  night_53: [
+    { type: 'text', sender: '재현', content: "아직 시작도 안 했어." },
+    { type: 'choice', options: [{ text: "시작도 안 했다니요?", nextId: 'night_54' }, { text: "무서운 소리 하지 마요.", nextId: null }, { text: "긴장되네요.", nextId: null }] }
+  ],
+  night_54: [
+    { type: 'text', sender: '재현', content: "반응 보니까 너를 영영 못 볼 각오 정도는 하려고. 제대로 작정하고 놀리게 되면 말이야." },
+    { type: 'choice', options: [{ text: "이 정도면 시작한 걸로 치는 게 어때요. 아니다, 시작도 하지 마요. 영영 못 보는 건 좀 그럴 것 같아요. 그렇게 되면 꿈에서나 형을 볼 수 있을 텐데, 내가 큰 잘못을 한 것 같잖아요.", nextId: 'night_55' }, { text: "알았어요, 제가 졌어요.", nextId: null }, { text: "장난치지 마요.", nextId: null }] }
+  ],
+  night_55: [
+    { type: 'text', sender: '재현', content: "하긴 영영을 내가 영분 영초로 느끼게 할 만큼 재능이 있는 것 같진 않아." },
+    { type: 'choice', options: [{ text: "아, 센스. 진짜로.", nextId: 'night_56' }, { text: "형은 못 당하겠네요.", nextId: null }, { text: "센스 쟁이.", nextId: null }] }
+  ],
+  night_56: [
+    { type: 'narrative', content: "재현이 칭찬에 설핏 웃으며 마크의 어깨를 두어 번 토닥거린다. 이젠 정말 슬슬 자야지. 오늘도 정신없는 하루가 될 거야. 마크가 재현의 말에 고개를 끄덕거리지만, 아쉽다는 표정은 감추지 못한다." },
+    { type: 'narrative', content: "베개에 머리를 댄 마크가 눈을 굴리며 오늘 있었던 일을 떠올리는 듯하다. 재현이 불을 완전히 꺼도 되냐는 무언의 말을 마크에게 전한다. 마크가 어쩔 수 없다는 듯 다시 한 번 고개를 끄덕거린다." },
+    { type: 'text', sender: '재현', content: "깨워 줄 테니까 걱정 말고 자." },
+    { type: 'choice', options: [{ text: "걱정은 안 하는데요. 다른 걱정이 들어요.", nextId: 'night_57' }, { text: "잠이 안 와서요.", nextId: null }, { text: "네, 자야죠.", nextId: null }] }
+  ],
+  night_57: [
+    { type: 'text', sender: '재현', content: "그건 무슨 말이야? 엉성한 얘기를 하는 거 보니, 졸린 거 맞는 것 같은데. 눈만 감았다 뜨면 아침일 거야." },
+    { type: 'choice', options: [{ text: "그런 게 아니라요. 형이 잠을 설칠까 봐요. 저는 제가 언제 잠들었는지도 모르게 잠드는 반면, 형은 잠을 기다리는 쪽에 가까운 것 같아서요.", nextId: 'night_58' }, { text: "형이 저 챙기느라 못 잘까 봐.", nextId: null }, { text: "형이나 잘 자요.", nextId: null }] }
+  ],
+  night_58: [
+    { type: 'narrative', content: "소박한 걱정에 재현이 마크를 향해 돌아 눕는다. 어둠 속에서도 마크가 움찔, 하는 것이 보인다. 살짝 굳은 채로 재현이 하는 말을 멍하니 듣는다. 정신이 혼곤한 와중에도 재현이 하는 말은 놓치고 싶지 않은 듯하다." },
+    { type: 'text', sender: '재현', content: "걱정해 주는 건 고마워. 근데 오늘은 쓸데없는 오기를 좀 부리고 싶거든." },
+    { type: 'choice', options: [{ text: "어떤 오기요?", nextId: 'night_59' }, { text: "오기라니, 형답지 않네요.", nextId: null }, { text: "착각이에요.", nextId: null }] }
+  ],
+  night_59: [
+    { type: 'text', sender: '재현', content: "컷 욕심이라고 해야 하나. 주인공을 먼저 재우는 데 성공한···" },
+    { type: 'choice', options: [{ text: "말도 안 돼. 형이 빌런이었다니.", nextId: 'night_60' }, { text: "와, 반전이다.", nextId: null }, { text: "승부욕?", nextId: null }] }
+  ],
+  night_60: [
+    { type: 'text', sender: '재현', content: "당신은 이제 깊은 잠에 빠져듭니다." },
+    { type: 'choice', options: [{ text: "그런 유치한 최면술은 통하지 않아요. 아무리 형이라고 하더라도요.", nextId: 'night_61' }, { text: "제가 그렇게 쉬운 남자가 아닙니다.", nextId: null }, { text: "안 통해요.", nextId: null }] }
+  ],
+  night_61: [
+    { type: 'text', sender: '재현', content: "그래? 그럼 노력할게." },
+    { type: 'narrative', content: "재현이 이불 바깥에 놓인 마크의 손을 천천히 쥐고는 중얼거린다. 내가 어렸을 때 잠이 안 오면 할머니가 이렇게 손을 만져 줬거든. 우리 아가, 잘 자라. 하면서. 그게 좋아서 쏟아지던 잠을 일부러 참았던 적도 있어. 결국엔 까무룩 잠들었지만." },
+    { type: 'narrative', content: "마크는 갑작스러운 재현의 손길에 당황해하면서도, 가만히 재현의 목소리를 들으며 손을 내어 준다. 엄지와 검지 사이를 꾹꾹 누르던 재현이 느릿하게 손등을 쓸고는 조심스레 깍지를 낀다. 한결 수월해진 것인지 다시 손바닥 이곳저곳을 지압한다." },
+    { type: 'narrative', content: "금세 정신이 노곤해진 것인지 마크가 뜨고 있던 눈을 서서히 감는다. 살결이 맞닿는 소리가 이어진다. 마크가 눈을 감은 것을 확인한 재현이 천천히 손을 빼고는 이불 속으로 넣어 준다. 다시 눈을 살며시 뜬 마크가 몽롱한 기운이 가득한 말을 건넨다." },
+    { type: 'choice', options: [{ text: "자전거 훔쳐 줄 거예요?", nextId: 'night_62' }, { text: "약속... 지켜요.", nextId: null }, { text: "노력은 가상하네요.", nextId: null }] }
+  ],
+  night_62: [
+    { type: 'text', sender: '재현', content: "뭐든 다 훔쳐 줄 테니까." },
+    { type: 'choice', options: [{ text: "네.", nextId: 'night_63' }, { text: "(끄덕인다)", nextId: null }, { text: "기대할게요.", nextId: null }] }
+  ],
+  night_63: [
+    { type: 'text', sender: '재현', content: "꿈에서 만나." },
+    { type: 'choice', options: [{ text: "네, 형.", nextId: 'night_64' }, { text: "잘 자요.", nextId: null }, { text: "네네.", nextId: null }] }
+  ],
+  night_64: [
+    { type: 'narrative', content: "고른 숨소리가 이어지더니 마크가 눈을 퍼뜩 뜬다. 근데요, 형. 낮게 가라앉은 목소리에 재현이 고개를 살짝 돌려 마크를 본다. 반쯤 감긴 눈으로 뭔가를 말한다." },
+    { type: 'choice', options: [{ text: "도착하면 연락해 주나요? 꿈에서.", nextId: 'night_65' }, { text: "기다릴게요.", nextId: null }, { text: "안녕히 주무세요.", nextId: null }] }
+  ],
+  night_65: [
+    { type: 'text', sender: '재현', content: "무슨 방식을 써서라도 너한테 갈게. 그런 말이 듣고 싶은 거지?" },
+    { type: 'choice', options: [{ text: "그럼요.", nextId: 'night_66' }, { text: "꼭이에요.", nextId: null }, { text: "당연하죠.", nextId: null }] }
+  ],
+  night_66: [
+    { type: 'text', sender: '재현', content: "그럴게, 그럼." },
+    { type: 'narrative', content: "만족스러운 답을 들은 듯 마크가 깊은 잠에 빠져든다. 재현은 마크가 잠든 것을 확인하고 살짝 입꼬리를 올린다. 어둠 속에서 눈을 느릿하게 깜빡거린다. 잠이 잘 오지 않는 듯, 심란한 얼굴로 방 안 이곳저곳을 뜯어 보고 있다." },
+    { type: 'narrative', content: "얼마 지나지 않아 비가 내리기 시작하며 투타타타, 하는 빗소리가 들린다. 몸을 반쯤 일으킨 재현이 창을 멍하니 바라본다. 침대에서 일어선 재현이 창을 닫기 위해 창쪽으로 향한다." },
+    { type: 'narrative', content: "재현은 창가에 서서 한동안 빗줄기가 그려내는 뭉뭉한 풍경을 바라본다. 문을 닫자 바닥으로 날카롭게 꽂히던 빗소리가 잦아들며 몽글거리는 소음으로 바뀐다. 조심스레 다시 침대로 몸을 옮긴 재현이 편안하게 눕는다." },
+    { type: 'narrative', content: "끊임없이 이어지는 상념을 애써 미뤄둔 채로 눈을 감는다. 마크를 데리러 가는 꿈을 꿀 차례다. 함께 자전거를 타고 익숙하면서도 낯선 풍경을 볼 것이다. 슬픈 것과 아름다운 것 사이에서 종종 헷갈리기도 하겠지만, 종국에는 좋은 꿈을 꿨다는 기억만이 남을 것이다." },
+    { type: 'typing_narrative', content: "다음 날 아침...", nextId: 'morning_1' }
+  ],
+  morning_1: [
+    { type: 'narrative', content: "다음 날, 아침 식사 시간. 마크는 아침 일찍 산책을 나간 재현에게 서운한 상태다." },
+    { type: 'text', sender: '재경', content: "자, 아침 식사 다 됐습니다!" },
+    { type: 'narrative', content: "재경의 목소리에 각기 흩어져 있던 모든 시선이 주방으로 향한다. 나머지 5인이 차례차례 원목 식탁 위에 둘러앉는다. 시계 방향으로 연덕, 은재, 니코, 지원, 재현, 마크, 재경, 선우가 앉는다. 모두가 자리에 둘러앉자, 가장 먼저 포크를 든 것은 은재다." },
+    { type: 'text', sender: '은재', content: "주방 어벤져스 솜씨가 장난이 아니네. 잘 먹겠습니다!" },
+    { type: 'narrative', content: "은재의 활기찬 인사에 다들 웃으며 포크를 든다. 니코는 눈을 동그랗게 뜨고 스크램블 에그를 한입 맛본다." },
+    { type: 'text', sender: '니코', content: "진짜 부드러워요! 토마토 때문에 상큼하기도 하고요." },
+    { type: 'text', sender: '지원', content: "다행이네. 요리책이 아주 훌륭했어." },
+    { type: 'narrative', content: "식탁의 분위기는 화기애애하다. 다들 어젯밤의 피로를 잊은 듯, 맛있는 음식과 함께하는 아침의 여유를 만끽한다." },
+    { type: 'text', sender: '은재', content: "근데 이 빵, 진짜 물건이다. 아침 산책 나간 보람이 있네. 작가님, 근데 솔직히 궁금해요. 산책하면서 무슨 얘기 했어요? 어색해서 풍경 얘기만 한 거 아니에요?" },
+    { type: 'text', sender: '재현', content: "누나 말마따나 세기의 커플답게 멋들어진 데이트를 하고 왔는지도 모르죠." },
+    { type: 'text', sender: '선우', content: "도시의 정의에 대해 논했습니다. 풍경이 곧 이야기고, 이야기가 곧 그 사람이라는 결론을 내렸죠." },
+    { type: 'text', sender: '연덕', content: "아침부터 또 피곤한 소리 한다. 밥 먹을 때만이라도 진지한 얘기는 하지 말자고." },
+    { type: 'text', sender: '선우', content: "선생님이야말로." },
+    { type: 'narrative', content: "두 사람의 티격태격하는 모습에 다들 웃음을 터트린다. 은재가 눈을 반짝이며 마크를 쳐다본다." },
+    { type: 'text', sender: '은재', content: "우리 마크는 아침부터 서운했겠네. 룸메이트 형이 자기는 쏙 빼놓고 산책을 나가 버려서." },
+    { type: 'choice', options: [
+        { text: "아, 아니에요! 무슨···", nextId: 'morning_2' },
+        { text: "서운하긴요, 그냥 배고파서...", nextId: null },
+        { text: "좀 그렇긴 하네요.", nextId: null }
+      ]
+    }
+  ],
+  morning_2: [
+    { type: 'narrative', content: "재현이 자연스럽게 물컵을 마크 쪽으로 밀어주고는 등을 두드려 준다. 마크가 재현의 손길에 몸이 약간 굳으며 조용히 켁켁댄다." },
+    { type: 'text', sender: '재현', content: "너무 아기처럼 자고 있어서요. 못 데려갔어요." },
+    { type: 'narrative', content: "마크가 물을 마시며 재현을 힐끗 쳐다본다. 모두가 옆에 있는 사람과 함께 스몰 토크를 이어가느라 재현이 하는 말을 자세히 듣지 못한다. 오직 대화의 중심에서 살짝 비껴나 있던 지원과 재경만이 재현의 말을 듣고는 가만히 웃는다." },
+    { type: 'text', sender: '재경', content: "저런 식으로 사람 다루는 건 선수지." },
+    { type: 'text', sender: '지원', content: "원래 그러잖아요. 미워할 수 없게 만드는 거." },
+    { type: 'narrative', content: "마크는 지원과 재경의 미소에 속내가 들킨 것처럼 얼굴이 화끈거린다. 이내 마크가 재현쪽으로 몸을 조금 가까이하고 소곤소곤 묻는다." },
+    { type: 'choice', options: [
+        { text: "형, 좀 자긴 잤어요?", nextId: 'morning_3' },
+        { text: "사람들이 우리 보고 웃잖아요.", nextId: null },
+        { text: "저 아기 아니거든요.", nextId: null }
+      ]
+    }
+  ],
+  morning_3: [
+    { type: 'text', sender: '재현', content: "잘 잤지, 덕분에." },
+    { type: 'narrative', content: "재현의 답은 늘 그렇듯 느긋하다. 마크는 재현의 말에 긴가민가하며 잠시 눈을 굴린다. 지원은 커피를 젓는 척하며 머리가 맞닿을 듯한 두 사람을 바라본다. 티스푼이 컵 벽에 부딪히는 소리가 유난히 날카롭기도 하다." },
+    { type: 'choice', options: [
+        { text: "저 때문에요?", nextId: 'morning_4' },
+        { text: "덕분이라뇨?", nextId: null },
+        { text: "거짓말.", nextId: null }
+      ]
+    }
+  ],
+  morning_4: [
+    { type: 'text', sender: '재현', content: "자전거 타기로 약속했잖아." },
+    { type: 'choice', options: [
+        { text: "진짜 탔어요?", nextId: 'morning_5' },
+        { text: "꿈에서요?", nextId: null },
+        { text: "기억 안 나는데.", nextId: null }
+      ]
+    }
+  ],
+  morning_5: [
+    { type: 'text', sender: '재현', content: "마크, 기억 안 나? 세 발 자전거 타는 것부터 내가 아주 열심히 알려 줬는데." },
+    { type: 'choice', options: [
+        { text: "제가 기억 못하는 거 보면 형이 연락을 안 줬나 봐요.", nextId: 'morning_6' },
+        { text: "세 발 자전거라뇨. 저 두 발 자전거 잘 타거든요.", nextId: null },
+        { text: "형 진짜 너무해.", nextId: null }
+      ]
+    }
+  ],
+  morning_6: [
+    { type: 'text', sender: '재현', content: "내가 기억하면 됐지." },
+    { type: 'narrative', content: "그럴 듯한 말이지만 마크는 왠지 모르게 재현을 향해 속상한 마음을 느끼는 듯하다. 더 이상 말할 게 없다는 듯 앉아만 있다. 마크는 포크로 빵 조각을 의미 없이 쿡 찌른다. 부드러운 속살이 속절없이 뭉개진다. 재현이 그 모습을 물끄러미 바라본다." },
+    { type: 'text', sender: '재현', content: "입맛이 없는 거야, 아니면 나한테 하고 싶은 말이라도 있는 거야." },
+    { type: 'narrative', content: "재현이 나직하게 묻는다. 마크가 결국 참지 못하고 중얼거린다." },
+    { type: 'choice', options: [
+        { text: "형이 깨워 준다고 했는데요, 분명. 근데 아침부터 산책을 나갈 줄 몰랐어요.", nextId: 'morning_7' },
+        { text: "그냥 빵이 너무 부드러워서요.", nextId: null },
+        { text: "아무것도 아니에요.", nextId: null }
+      ]
+    }
+  ],
+  morning_7: [
+    { type: 'narrative', content: "기어들어가는 목소리임에도, 그 안에는 서운함이 고스란히 담겨 있다. 그럼에도 재현의 입가에는 예의 그렇듯 넉넉하고 희물그레한 미소가 걸려 있다. 피시시 웃기까지 한다. 그 탓에 마크가 자꾸만 뭔가를 종알대는 것일지 모른다." },
+    { type: 'text', sender: '재현', content: "알았어. 내가 잘못했네." },
+    { type: 'choice', options: [
+        { text: "아니, 잘못했다는 건 아니고요. 그냥 그렇다고요. 이렇게 속상한, 아니, 이런 마음이 들 거였다면 어제 저녁부터 형한테 물었어야 했나 봐요. 아침에 뭘 할···", nextId: 'morning_8' },
+        { text: "네, 형이 잘못했어요.", nextId: null },
+        { text: "다음에 또 그러면 진짜 화낼 거예요.", nextId: null }
+      ]
+    }
+  ],
+  morning_8: [
+    { type: 'text', sender: '재현', content: "다음부턴 꼭 깨울게. 아무리 네가 세상 모르고 자고 있어도, 무슨 좋은 꿈을 꾸는 것처럼 웃고 있어도 그냥 깨울게. 약속." },
+    { type: 'narrative', content: "재현이 새끼 손가락을 슬며시 내밀자, 마크는 잠시 망설이다가 손가락을 건다. 깍지를 끼던 새벽과는 또 다른 종류의 간지러움이다. 마크가 손을 슬며시 빼려고 하자, 재현이 검지로 마크의 손바닥을 간지럽힌다. 마크가 슬쩍 헛기침을 하고는 접시 위로 코를 박는다. 헛기침을 틀어 막으며 뭉개진 빵 조각을 입으로 가져간다." },
+    { type: 'typing_narrative', content: "몇 시간 뒤...", nextId: 'mission_start' }
+  ],
+  mission_start: [
+    { type: 'narrative', content: "아침 식사가 끝난 뒤, 미션 논의 중인 재현과 마크." },
+    { type: 'narrative', content: "재현이 마크와 함께 두루마리를 빤히 들여다 보고 있다. 재현이 고개를 살짝 비스듬하게 꺾어 집중하고 있는 마크의 눈을 바라본다. 마크는 도무지 두루마리의 뜻을 해석하지 못하고 있는 듯하다." },
+    { type: 'text', sender: '재현', content: "우리 위에 올라가서 볼까?" },
+    { type: 'text', sender: 'Mark', content: "어, 네. 좋아요." },
+    { type: 'narrative', content: "말이 끝나기 무섭게 재현이 먼저 몸을 일으켜 계단 쪽으로 향한다. 마크는 소파에 앉은 채 멍하니 재현의 뒷모습을 보다가, 한 박자 늦게 자리에서 일어선다. 마크가 따라오지 않는 것을 느낀 것인지 재현이 조금 느릿하게 계단을 오른다. 마크는 서너 칸의 거리를 둔 채 재현의 뒤를 따른다. 아래층 거실의 왁자지껄한 소음이 한 계단, 한 계단 오를 수록 멀어진다." },
+    { type: 'narrative', content: "2층의 긴 복도는 정적에 잠겨 있고, 창문으로 들어온 빛이 바닥에 길고 네모난 모양을 그리고 있다. 마크는 재현의 어깨에 닿아 있는 빛을 보며 흐리멍덩한 목소리로 중얼거린다." },
+    { type: 'choice', options: [
+        { text: "저는··· 진짜 모르겠는데. 형은 좀 알겠어요?", nextId: 'mission_room_1' },
+        { text: "너무 어려워요.", nextId: null },
+        { text: "형은 알 것 같아요.", nextId: null }
+      ]
+    }
+  ],
+  mission_room_1: [
+    { type: 'narrative', content: "마크는 질문을 던지고도 재현의 어깨 끝자락만 바라보고 있다. 복도 끝에 멈춰 선 재현이 대답 대신 창밖을 바라본다. 재현은 시선을 창밖에 둔 채로 대답한다." },
+    { type: 'text', sender: '재현', content: "같이 얘기해서 단서를 좁히면 되지 않을까? 난 별로 걱정은 안 들어." },
+    { type: 'choice', options: [
+        { text: "왜요?", nextId: 'mission_room_2' },
+        { text: "자신만만하네요.", nextId: null },
+        { text: "걱정 좀 해요.", nextId: null }
+      ]
+    }
+  ],
+  mission_room_2: [
+    { type: 'narrative', content: "마크가 가볍게 묻자 재현이 그제야 홱 몸을 돌리고는 마크를 바라본다. 걱정을 덜어 주려는 것인지 흐릿하게 입꼬리를 올리고는 마크의 어깨를 양손으로 잡아채고 단단하게 붙든다." },
+    { type: 'text', sender: '재현', content: "어차피 실패해도 가이드북이니 뭐니 끄적이는 거면 재미있을 거야. 너도 마음 편히 먹어. 무조건 성공해야 한다는 생각은 하지 마." },
+    { type: 'choice', options: [
+        { text: "그래도 형은 잘할 것 같아요.", nextId: 'mission_room_3' },
+        { text: "형만 믿을게요.", nextId: null },
+        { text: "부담 갖지 마요.", nextId: null }
+      ]
+    }
+  ],
+  mission_room_3: [
+    { type: 'text', sender: '재현', content: "그렇게 말하면 정말 잘해야 할 것 같잖아." },
+    { type: 'narrative', content: "재현이 닫혀 있는 문을 열며 침대 위에 지도와 두루마리를 내려 놓는다. 더는 농담을 이어갈 생각이 없다는 듯, 재현의 움직임에는 무게가 실려 있다. 재현이 두루마리를 손바닥으로 부드럽게 쓸어 펴고는 침대 위에 가볍게 엎드린 뒤 복잡한 지도와 두루마리를 번갈아 들여다본다. 지도 위에 그려진 복잡한 선들을 가느다란 손가락으로 짚어 나가기 시작한다." },
+    { type: 'text', sender: '재현', content: "이제는 집중 좀 해 볼게." },
+    { type: 'text', sender: 'Mark', content: "아까는 안 했어요?" },
+    { type: 'text', sender: '재현', content: "보는 눈이 많아서." },
+    { type: 'narrative', content: "재현의 시선은 지도 위에만 고정되어 있다. 마크는 문가에 서서 그런 재현을 어색하게 한참이나 바라본다." },
+    { type: 'text', sender: '재현', content: "왜, 또 나랑 낯가리고 싶어?" },
+    { type: 'choice', options: [
+        { text: "아뇨, 아뇨. 그런 게 아니라.", nextId: 'mission_room_4' },
+        { text: "아닌데요.", nextId: null },
+        { text: "들켰다.", nextId: null }
+      ]
+    }
+  ],
+  mission_room_4: [
+    { type: 'text', sender: '재현', content: "그럼? 안 그래도 비좁은 와중에 정신까지 비좁게 하지 말고 얼른 옆으로 와." },
+    { type: 'narrative', content: "마크가 어쩔 수 없이 소극적인 움직임으로 재현의 곁에 어정쩡하게 선다. 민망함을 숨기려 애먼 창밖으로 시선을 돌리는 꼴을, 재현이 말없이 지켜보다가 이내 혀를 차는 듯한 소리를 낸다." },
+    { type: 'text', sender: '재현', content: "자꾸 리셋되네? 왜 또 그렇게 물렁하게 굴어. 하룻밤 같이 잤다고 이렇게 내외할 거였으면 자처해서라도 바닥에서 잤을 거야." },
+    { type: 'narrative', content: "재현이 가지런히 정리된 침대 곁을 두드리며 행동을 재촉한다. 가까이 와. 우리 얘기해야 하잖아. 재현의 손길이 머물렀다 떠난 자리에 옅은 주름이 생긴다. 마크가 가만히 침대를 내려다보며 흐느적흐느적 재현의 곁에 앉는다." },
+    { type: 'text', sender: '재현', content: "어쩌지. 침대 하나를 두 개로 가를 수도 없고. 앞으로도 이러면 곤란할 것 같은데." },
+    { type: 'choice', options: [
+        { text: "그게... 형이랑 가까이 붙으면 지도나 두루마리에 그림자가 질까 봐요.", nextId: 'mission_room_5' },
+        { text: "그냥 좀 좁아서요.", nextId: null },
+        { text: "불편해서 그런 거 아니에요.", nextId: null }
+      ]
+    }
+  ],
+  mission_room_5: [
+    { type: 'text', sender: '재현', content: "변명 하나는 좋았어." },
+    { type: 'narrative', content: "재현이 신경 쓰지 않는다는 듯 무심하게 다시 시선을 아래로 둔다. 마크는 그런 재현의 옆얼굴을 내려다본다. 부드러운 얼굴 위로 언뜻 서늘함이 스친다. 방 안 깊숙이 들어오는 빛이 재현의 콧날과 턱선에 날카로운 경계를 만든다. 유려하게 떨어지는 얼굴 선을 천천히 따라가던 마크가 조용히 중얼거리는 입술을 바라만 보고 있자, 재현이 의문스럽다는 표정으로 마크를 응시한다." },
+    { type: 'text', sender: '재현', content: "나중엔 내 사진을 갖고서 멍 때리기 대회를 나가 봐." },
+    { type: 'choice', options: [
+        { text: "예? 왜요?", nextId: 'mission_room_6' },
+        { text: "아, 보고 있던 거 아니에요.", nextId: null },
+        { text: "그럴까요?", nextId: null }
+      ]
+    }
+  ],
+  mission_room_6: [
+    { type: 'text', sender: '재현', content: "지금 잘하고 있길래." },
+    { type: 'narrative', content: "마크의 얼굴이 홧홧하게 달아오른다. 마크는 아무런 대꾸도 하지 못하고, 고개만 푹 숙인 채 무릎만 내려다 본다. 그런 마크를 향해 재현이 싱겁게 웃는다." },
+    { type: 'text', sender: '재현', content: "나중에 실컷 해. 일단 이거부터 끝내고." },
+    { type: 'narrative', content: "재현이 그렇게 말하며 두루마리를 손끝으로 툭, 친다. 마지못해 시선을 돌린 마크의 눈앞으로 고풍스러운 글씨가 들이밀어진다. 재현이 두루마리를 조금 더 가운데로 끌어당긴다." },
+    { type: 'text', sender: '재현', content: "다시 읽어 봐. 우리한테 주어진 첫 번째 암호니까." },
+    { type: 'narrative', content: "마크가 홀린 듯 두루마리 위로 시선을 내린다. 재현이 마크의 손등을 넌지시 살피고는 엎드려 있던 몸을 일으킨다. 침대 맞은편에 놓인 책상으로 다가가, 서랍을 드르륵 열고 뭔가를 꺼낸다. 바스락거리는 소리가 들리더니 재현이 밴드와 연고를 들고 다시 한 번 침대에 반쯤 엎어진다." },
+    { type: 'text', sender: '재현', content: "난 읽었으니까 너 천천히 읽어. 손은 이리 나한테 주고." },
+    { type: 'choice', options: [
+        { text: "죄송해요. 최대한 물 안 닿게 하려고 했는데요. 어쩌다 보니 계속 닿았어요. 잘 붙여 두고 싶었는데······", nextId: 'mission_hand_1' },
+        { text: "괜찮은데...", nextId: null },
+        { text: "감사합니다.", nextId: null }
+      ]
+    }
+  ],
+  mission_hand_1: [
+    { type: 'narrative', content: "마크가 말끝을 흐리자 재현이 조용히 웃는 낯이 된다." },
+    { type: 'text', sender: '재현', content: "걱정도 많다. 뽀로로 말고도 너 닮은 애들 많아. 굶어 죽기 직전에 동냥질로 밴드를 팔아도 될 만큼." },
+    { type: 'text', sender: 'Mark', content: "그걸 말한 건 아닌데. 아, 어찌 됐든요." },
+    { type: 'narrative', content: "마크가 조금 뾰로통한 얼굴로 손등 위에 연고를 펴바르는 재현을 바라본다. 공연히 침을 꼴깍꼴깍 삼키게 된 마크가 결국엔 입 안 가득 여린 살을 씹어대자, 재현이 슬쩍 눈을 치뜨고는 마크의 눈치를 살핀다. 재현의 시선이 연고를 바르던 손길만큼이나 느릿하게 마크의 턱과 입술, 눈동자를 차례로 훑는다." },
+    { type: 'text', sender: '재현', content: "알아, 나도 유난인 거." },
+    { type: 'text', sender: 'Mark', content: "네?" },
+    { type: 'text', sender: '재현', content: "연고에, 밴드에 지극정성으로 너 신경 쓰는 거 말이야." },
+    { type: 'choice', options: [
+        { text: "저는 형이 신경 써 주는 게 좋은 걸요. 유난이라고는 생각도 안 했어요.", nextId: 'mission_hand_2' },
+        { text: "좀 유난이긴 하네요.", nextId: null },
+        { text: "형이니까 괜찮아요.", nextId: null }
+      ]
+    }
+  ],
+  mission_hand_2: [
+    { type: 'text', sender: '재현', content: "알아, 동생." },
+    { type: 'narrative', content: "입으로 지익, 밴드의 포장을 뜯은 재현이 손등 위에 펴바른 연고가 잘 마르도록 바람을 후 분다. 마크는 재현이 뱉은 동생이라는 말에 의미라도 부여한 듯싶다. 동생. 동생. 두 글자를 계속 반복하던 마크가 이내 조금 흐릿한 인상이 된다. 동생이라는 단어로 뭔가가 딱 정의가 내려진 것이 껄끄러운지 마크가 입술을 자학하듯이 짓씹는다. 재현이 그런 마크의 어깨를 슬그머니 두드린다." },
+    { type: 'text', sender: '재현', content: "입술은 좀 곤란해." },
+    { type: 'narrative', content: "마크가 그제야 정신을 차린 듯 미숙한 표정으로 재현을 본다. 보고만 있는 것이지 생각은 어디 딴 데로 외출한 얼굴이다." },
+    { type: 'text', sender: '재현', content: "듣고 있어? 어디 열이라도 나는 거야? 오늘따라 왜 이렇게 맹물단지 같지? 고작 우리가 하루 본 사이이긴 하다만." },
+    { type: 'text', sender: 'Mark', content: "입술, 입술요. 입술이 왜요? 네? 뭐가요?" },
+    { type: 'narrative', content: "재현이 허탈하게 웃고는 엄지와 검지를 그러쥐고 마크의 이마에 살짝 튕겨낸다." },
+    { type: 'text', sender: '재현', content: "아니, 그렇게 입술을 세게 꾹 깨무는 버릇이 있으면 안 좋아. 상처라도 나면 그건 내가 어떻게 해 줄 수가 없잖아." },
+    { type: 'choice', options: [
+        { text: "뭘 어떻게 해요?", nextId: 'mission_hand_3' },
+        { text: "형이 치료해 주면 되죠.", nextId: null },
+        { text: "안 그럴게요.", nextId: null }
+      ]
+    }
+  ],
+  mission_hand_3: [
+    { type: 'text', sender: '재현', content: "그건 그때 봐서. 뭐 어떤 걸 생각하고 있는 거야?" },
+    { type: 'narrative', content: "재현이 가늘게 웃으며 마크의 이마를 검지로 꾹 누른다. 하여튼 귀여워. 내가 볼 때 너 열은 없는 것 같아. 그게 어설픈 꾀병이었다면 아쉽지만··· 어쨌든, 우리도 이제 집중이라는 걸 해 보자고." },
+    { type: 'choice', options: [
+        { text: "집중. 네, 좋아요. 근데 이번엔 곰돌이네요?", nextId: 'mission_puzzle_1' },
+        { text: "네, 집중할게요.", nextId: null },
+        { text: "밴드 귀엽다.", nextId: null }
+      ]
+    }
+  ],
+  mission_puzzle_1: [
+    { type: 'narrative', content: "공연히 들뜬 마음이 된 마크가 손등에 새롭게 붙어 있는 밴드를 만지작거리며 두루마리를 들여다본다. 하지만 여전히 정신은 딴 데 가 있다. 언뜻 보았던 재현의 도톰한 입술과, 또······ 곁눈질로 재현의 입술을 훔쳐 본 마크가 눈을 질끈 감았다 뜬다. 속엣말을 모르고 중얼거리기까지 한다. 말캉해 보여요." },
+    { type: 'text', sender: '재현', content: "뭐라고? 나 너랑 새벽에 멀쩡한 손목 분질러지고 싶지 않아. 마크, 지금 집중하고 있는 거 맞지." },
+    { type: 'text', sender: 'Mark', content: "네? 아니, 아까는 꼭 성공하지 않아도 좋겠다고 했잖아요. 그리고 하고 있어요, 집중." },
+    { type: 'text', sender: '재현', content: "넌 흐물텅해 보여." },
+    { type: 'narrative', content: "재현이 믿지 못하겠다는 듯 의심의 끈을 놓지 않자, 마크가 눈을 끔뻑거리며 두루마리를 열심히 살피는 티를 낸다. 정신을 차리려 고개를 주억거리자, 재현이 마크의 손을 쥐고는 지도의 어느 한 지점에 가져다 둔다. 마크는 어설프게 손등을 덮고 있는 재현의 커다란 손을 가만히 응시한다. 어찌 이렇게 아무런 대응도 하지 못하는 것인지 스스로가 무능하다고 생각하는 것만 같다. 재현이 이내 아무렇지 않게 손을 떼고는, 두루마리에 쓰인 것을 손가락으로 가리킨다. 고풍스러운 글자로 된 한 편의 짧은 시와, 그 아래 의미를 알 수 없는 세 개의 단어가 적혀 있다." },
+    { type: 'poem', text: "☩\n\n땅이 끝나고\n바다가 시작되는 곳에서\n\n하얀 돛들은\n돌아오지 않는 왕을 향해 뻗어 나가고\n\n일곱 개의 언덕 중\n가장 굳건한 첫 번째 언덕 위\n\n이름 없는 여인은 눈물 대신\n돌을 쌓아 도시를 지켰다\n\n☩", subText: "Calçada / Elétrico / Fado" },
+    { type: 'text', sender: '재현', content: "같이 다시 보자. 다른 팀 두루마리는 우리가 못 봤으니, 일단 이것만으로 해석해 봐야 해. 이 시가 오늘 우리가 찾아야 할 사람을 말하는 것 같지?" },
+    { type: 'choice', options: [
+        { text: "음, 이름 없는 여인. 이게 누구일까요? 일단 지원 누나, 은재 누나, 니코··· 세 명인 것 같은데요.", nextId: 'mission_puzzle_2' },
+        { text: "여인이면 여자 멤버들이겠죠?", nextId: null },
+        { text: "모르겠어요.", nextId: null }
+      ]
+    }
+  ],
+  mission_puzzle_2: [
+    { type: 'narrative', content: "마크의 목소리에는 자신감이 없다. 재현은 대답 대신, 펼쳐진 지도 위로 손을 뻗어 한쪽 모서리를 누른다. 말려 올라가려는 지도를 고정시키는 무심한 행동이다. 그 바람에 재현의 팔이 마크의 어깨를 살짝 스치고 지나간다. 마크가 조심히 어깨를 움츠린다." },
+    { type: 'text', sender: '재현', content: "시의 다른 구절이랑 연결시켜서 봐야 할 것 같아. 눈물 대신 돌을 쌓아 도시를 지켰다는 구절." },
+    { type: 'choice', options: [
+        { text: "도시를 지켰다는 뭔가 강한 이미지인데, 은재 누나일까요? 사실 셋에게서 강하다는 느낌은 못 받은 것 같아요. 근데 ‘눈물 대신‘ 이라는 구절이 조금 걸려요.", nextId: 'mission_puzzle_3' },
+        { text: "지원 누나일 것 같아요.", nextId: null },
+        { text: "니코 아닐까요?", nextId: null }
+      ]
+    }
+  ],
+  mission_puzzle_3: [
+    { type: 'narrative', content: "마크는 말을 뱉고서 아차, 한다. 너무 단정적으로 말한 건 아닌지 싶어 재현의 눈치를 살핀다. 재현은 마크의 말을 듣고 고개를 선선히 끄덕이고는, 다시 두루마리 위로 시선을 떨어트리기만 한다." },
+    { type: 'text', sender: '재현', content: "꼭 강해야만 지킬 수 있는 건 아니잖아. 버티는 것도 지키는 거니까?" },
+    { type: 'text', sender: 'Mark', content: "버티는 거요?" },
+    { type: 'text', sender: '재현', content: "생각해 보면 은재 누나도 말이 되지. 분위기 메이커로 우리를 잘 지키고 있으니까. 니코는··· 아직 잘 모르겠지만. 지원 누나는 어땠던 것 같아?" },
+    { type: 'choice', options: [
+        { text: "얘기도 잘 들어 주고요. 형처럼 조용히 있었던 것 같아요. 사실 돌을 쌓는다고 생각하면 그 셋 중에서 제일 잘 어울리는 건 지원 누나인 것 같아요.", nextId: 'mission_puzzle_4' },
+        { text: "지원 누나는 조용한 편이죠.", nextId: null },
+        { text: "잘 모르겠어요.", nextId: null }
+      ]
+    }
+  ],
+  mission_puzzle_4: [
+    { type: 'narrative', content: "재현이 마크의 말에 멈칫한다. 지원을 생각하는 것인지 아주 잠시나마 멀건 얼굴이 된다. 마크는 괜한 소리를 한 건가 싶어 눈을 바쁘게 굴린다." },
+    { type: 'text', sender: '재현', content: "그렇지······ 은재 누나랑 니코는 우리랑 같은 팀이었고, 지원 누나는 혼자 B팀이었으니까. 조용히 주위를 살피고 뭔가를 견디는 게 돌을 쌓는 걸 수도 있겠네. 일단은 지원 누나라고 가정하고 다음 단서 볼까? 인물은 계속해서 단서가 나올 테니까. 장소를 보면서 추려나가자." },
+    { type: 'text', sender: '재현', content: "그럼 이 단어들. Ca···çada···, Elé···trico···, Fado." },
+    { type: 'narrative', content: "그 모습을 보고 있던 마크가 퍼뜩 무언가 생각난 듯, 자리에서 일어나 캐리어가 있는 곳으로 향한다. 마크가 잠시 가방을 뒤적이더니, 손바닥만 한 크기의 여행 책자가 나온다." },
+    { type: 'text', sender: 'Mark', content: "어제 숙소 책장에 꽂혀 있더라고요." },
+    { type: 'narrative', content: "마크가 침대 위에 다시 앉아 재현의 곁에서 책장을 빠르게 넘기기 시작한다. 책장을 넘기는 마크의 손가락 끝이 미세하게 떨린다. 쓸모를 증명하고 싶은 것처럼 필사적이다." },
+    { type: 'choice', options: [
+        { text: "보통 이런 여행 책자 끝에는 영어로 단어가 번역되어··· 있는데. 어, 찾았어요.", nextId: 'mission_puzzle_5' },
+        { text: "찾았다!", nextId: null },
+        { text: "여기 있어요.", nextId: null }
+      ]
+    }
+  ],
+  mission_puzzle_5: [
+    { type: 'text', sender: '재현', content: "그래? 뭐라고 적혀 있어?" },
+    { type: 'narrative', content: "재현은 턱을 괸 채로 단어장을 들여다보는 마크의 동그란 머리를 가만히 내려다본다." },
+    { type: 'text', sender: 'Mark', content: "음, Calçada는 보도블록이고요. Elétrico는 트램, 그리고 Fado는 노래요." },
+    { type: 'text', sender: '재현', content: "덕분에 금방 찾을 것 같은데." },
+    { type: 'choice', options: [
+        { text: "진짜요?", nextId: 'mission_puzzle_6' },
+        { text: "다행이네요.", nextId: null },
+        { text: "제가 좀 잘 찾죠.", nextId: null }
+      ]
+    }
+  ],
+  mission_puzzle_6: [
+    { type: 'text', sender: '재현', content: "근데 이상하지 않아? 이 세 단어 전부 다 리스본을 상징하는 거잖아. 너무 일반적이라서 이상하다고 해야 하나." },
+    { type: 'text', sender: 'Mark', content: "그러게요. 어디에나 다 있는 거잖아요." },
+    { type: 'text', sender: '재현', content: "맞아, 그러니까 저 이름 없는 여인이랑 이 단어들의 의미를 억지로 연결하라는 건 아닐 것 같아. 너무 섣부르기도 하고. 장소에 대한 직접적인 힌트일까?" },
+    { type: 'narrative', content: "재현이 몸을 일으켜 침대 위에 펼쳐진 지도를 훑어 본다. 재현의 손끝이 리스본의 구시가지를 맴돈다. 마크가 고심하며 지도를 뚫어져라 본다. 절로 재현 쪽을 향해 몸이 기울게 된다. 서로의 뭉근한 숨소리가 들리기까지 한다. 집중하는 탓에 재현과 마크의 손이 계속해서 맞부딪힌다." },
+    { type: 'text', sender: '재현', content: "일단 확실한 것부터 짚어 보자. 시의 첫 구절을 보면 ‘일곱 개의 언덕 중 가장 굳건한 첫 번째 언덕 위‘. 이건 지도에서도 찾을 수 있어. 리스본의 역사가 시작된 언덕이니까." },
+    { type: 'choice', options: [
+        { text: "아, 여기··· 알파마 지구. 어제 우리가 올랐던 곳이요.", nextId: 'mission_puzzle_7' },
+        { text: "여기네요.", nextId: null },
+        { text: "알파마 지구!", nextId: null }
+      ]
+    }
+  ],
+  mission_puzzle_7: [
+    { type: 'text', sender: '재현', content: "그럼 우리 활동 반경은 적어도 이 안일 것 같아." },
+    { type: 'narrative', content: "재현이 빨간색 펜을 들어 알파마 지구 둘레에 커다랗고 옅은 원을 안정감 있게 그린다." },
+    { type: 'text', sender: '재현', content: "다음 단서. Elétrico, 트램. 지도에 트램 노선이 표시되어 있어. 붉은색 점선." },
+    { type: 'narrative', content: "재현의 손가락이 알파마 지구를 관통하는 붉은 점선을 천천히 따라간다. 28번 트램의 경로다." },
+    { type: 'text', sender: 'Mark', content: "그럼 이 선 위에 있는 곳 중 하나겠네요." },
+    { type: 'text', sender: '재현', content: "그럴 것 같아. Fado는··· 마크, 네가 들고 있는 책에 혹시 파두 레스토랑이 밀집된 구역 같은 거 나와 있어?" },
+    { type: 'narrative', content: "마크가 기다렸다는 듯 책장을 빠르게 넘긴다." },
+    { type: 'choice', options: [
+        { text: "여기요! 파두 박물관 근처, 이 골목에 유명한 레스토랑들이 모여 있대요.", nextId: 'mission_puzzle_8' },
+        { text: "여기 있어요.", nextId: null },
+        { text: "찾았습니다.", nextId: null }
+      ]
+    }
+  ],
+  mission_puzzle_8: [
+    { type: 'narrative', content: "마크가 가리킨 지점은, 재현이 그려놓은 붉은 점선과 아슬아슬하게 교차하는 곳이다. 재현이 펜으로 교차점 주변에 작은 원 세 개를 그린다." },
+    { type: 'text', sender: '재현', content: "좋아. 그럼 후보는 이 세 군데 중 하나인 것 같아. 산타 루치아 전망대랑···" },
+    { type: 'choice', options: [
+        { text: "파두 박물관 앞 광장도요. 그리고, 포르타스 두 솔 전망대요. 전부 28번 트램이 지나가요.", nextId: 'mission_puzzle_9' },
+        { text: "박물관이랑 전망대요.", nextId: null },
+        { text: "포르타스 두 솔 전망대!", nextId: null }
+      ]
+    }
+  ],
+  mission_puzzle_9: [
+    { type: 'text', sender: '재현', content: "파두 레스토랑이 근처에 있고." },
+    { type: 'narrative', content: "재현이 펜을 내려놓고 팔짱을 낀다. 고민스러운 듯, 한쪽 손바닥에 얼굴을 묻는다." },
+    { type: 'text', sender: '재현', content: "Calçada, 보도블록. 이건 대체 뭘까." },
+    { type: 'text', sender: 'Mark', content: "근데 보도블록은 어디에나 있잖아요." },
+    { type: 'text', sender: '재현', content: "그렇지. 우리가 찾은 이 교차점 근처에 보도블록과 관련된 뭔가가 있지 않을까?" },
+    { type: 'choice', options: [
+        { text: "시를 다시 보면 눈물 대신 돌을 쌓아 도시를 지켰다고 하잖아요. 우린 이걸 지원 누나로 가정했고요. 그럼 이 보도블록은 뭔가를 지켜낸 역사를 가지고 있어야 하지 않을까요?", nextId: 'mission_puzzle_10' },
+        { text: "역사적인 보도블록 아닐까요?", nextId: null },
+        { text: "뭔가 특별한 돌일 것 같아요.", nextId: null }
+      ]
+    }
+  ],
+  mission_puzzle_10: [
+    { type: 'narrative', content: "마크가 서둘러 책장을 넘겨 전망대 페이지를 펼친다. 두 사람이 책에 실린 작은 사진 위로 머리를 맞댄다. 산타 루치아 전망대의 아름다운 아줄레주 타일 벽, 파두 박물관 앞의 평범한 광장 풍경, 마지막으로 포르타스 두 솔 전망대의 상세 페이지를 살핀다." },
+    { type: 'text', sender: 'Mark', content: "여기는··· 19세기에 조성되었으며, 아름다운 아줄레주 타일 벽이 특징이래요. 타일 얘기밖에 없는 것 같은데요?" },
+    { type: 'text', sender: '재현', content: "음, 타일은 Calçada로 보긴 어렵지. 탈락." },
+    { type: 'text', sender: 'Mark', content: "박물관 앞 광장은 최근 현대적인 디자인으로 재단장했다···." },
+    { type: 'text', sender: '재현', content: "지켜낸 역사로 보긴 어렵지 않나?" },
+    { type: 'narrative', content: "마크가 재현의 웃음에 키득댄다. 그럼 마지막 하나 남았네요. 마크가 긴장한 채로 목을 가다듬고 포르타스 전망대의 첫 문장을 읽어 내려간다." },
+    { type: 'text', sender: 'Mark', content: "태양의 문이라는 뜻의 이 전망대는··· 리스본 대지진 때에도 무너지지 않은 옛 무어인들의 성벽 위에 세워졌다. 전망대를 이루는 바닥의 일부는, 어? Calçada라고 쓰여 있어요. 바닥의 일부는 도시를 지켰던 바로 그 성벽의 잔해를 그대로 사용한 것이다." },
+    { type: 'text', sender: '재현', content: "여기네. 포르타스 두 솔 전망대." },
+    { type: 'narrative', content: "재현의 목소리에 확신이 담겨 있다. 재현이 만족스러운 듯 고개를 끄덕이려다, 문득 책의 다음 문장에서 시선이 멈춘다. 재현의 눈이 가늘어진다." },
+    { type: 'text', sender: '재현', content: "잠깐만, 마크. 그 다음 문장도 읽어 봐." },
+    { type: 'choice', options: [
+        { text: "또한, 이 전망대에는 리스본의 수호성인인 성 빈센트의 동상이 서 있는데, 그는 평생을 바쳐 도시를 지켜낸 인물로······", nextId: 'mission_hug_1' },
+        { text: "성 빈센트 동상이 있대요!", nextId: null },
+        { text: "도시를 지켜낸 인물이 있대요.", nextId: null }
+      ]
+    }
+  ],
+  mission_hug_1: [
+    { type: 'narrative', content: "마크가 더는 볼 것도 없다는 듯, 책자를 큰 소리가 나게 덮는다. 마크가 벅찬 감정을 억누르지 못하고 재현을 와락 껴안는다. 갑작스레 몸을 내어 준 재현이 약간 놀라며 마크의 등을 껴안고 조금 쓸어내린다. 그러자 마크가 깜짝 놀라며 몸을 확 뒤로 내뺀다. 등허리가 괜히 간지러운 것인지 손을 어색하게 뒤로 빼고는 더듬거리기까지 한다." },
+    { type: 'text', sender: 'Mark', content: "뭐예요?" },
+    { type: 'narrative', content: "재현이 어이가 없다는 듯 웃는다. 언제나 여유로워 보이던 재현의 얼굴에 다소 당혹스러움이 스친다. 침착하려고 애를 쓰는 듯하지만 귀끝이 빨개지는 것은 어찌 하지 못한다." },
+    { type: 'text', sender: '재현', content: "지금 뭐냐고 물은 거야?" },
+    { type: 'choice', options: [
+        { text: "저도 모르게 너무 신났나 봐요.", nextId: 'mission_hug_2' },
+        { text: "죄송해요.", nextId: null },
+        { text: "너무 좋아서요.", nextId: null }
+      ]
+    }
+  ],
+  mission_hug_2: [
+    { type: 'text', sender: '재현', content: "너 낯 가린다는 말 취소할게." },
+    { type: 'choice', options: [
+        { text: "가슴이 덜컥 내려앉는 건 이런 건가 봐요.", nextId: 'mission_hug_3' },
+        { text: "놀라셨죠?", nextId: null },
+        { text: "저도 놀랐어요.", nextId: null }
+      ]
+    }
+  ],
+  mission_hug_3: [
+    { type: 'text', sender: '재현', content: "내려앉을 일도 참 많네?" },
+    { type: 'narrative', content: "재현이 의젓하고 여유있는 체하며 벽에 걸린 시계를 확인한다. 20분 정도 남았네. 슬슬 나가자." },
+    { type: 'text', sender: '재현', content: "이 정도면 환상의 콤비 근처 정도는 기웃거릴 수 있겠어. 그럼 아이스크림 하나 사서 나눠 먹자고 해도 화내지 않을 용의가 있겠지? 바가지는 안 당할게." },
+    { type: 'choice', options: [
+        { text: "형, 그 말 되게 믿음직스러웠어요. 환상의 콤비라는 말이요.", nextId: 'mission_end_1' },
+        { text: "아이스크림 사 주세요.", nextId: null },
+        { text: "환상의 콤비 좋네요.", nextId: null }
+      ]
+    }
+  ],
+  mission_end_1: [
+    { type: 'text', sender: '재현', content: "당연하지. 너 먹여 살릴 짬은 되니까." },
+    { type: 'narrative', content: "재현이 장난스럽게 불룩한 바지 주머니를 손가락으로 가리킨다. 주머니 위로 공동 경비의 봉투가 삐죽 솟아 있다. 재현이 씩 웃자 하얀 얼굴에 보조개가 푹 패인다. 가만히 있으면 냉철해 보이는 얼굴이 환하게 웃을 때면 다소 온순하게 바뀐다. 재현이 제법 날카로운 눈매를 휘어지게 빼고 웃으며 앞머리를 쓸어 올린다." },
+    { type: 'choice', options: [
+        { text: "그거 들고 어디로 토낄 건 아니죠?", nextId: 'mission_end_2' },
+        { text: "돈 관리 잘 해야 돼요.", nextId: null },
+        { text: "맛있는 거 사 줘요.", nextId: null }
+      ]
+    }
+  ],
+  mission_end_2: [
+    { type: 'text', sender: '재현', content: "믿음직스러운 사람한테 할 말이야, 그게?" },
+    { type: 'narrative', content: "반쯤 열린 창으로 길쭉한 햇빛이 방 안쪽으로 더 깊숙하게 들어온다. 재현의 얼굴이 전보다 더 선명하게 보인다. 마크는 조금 맥없이 헤실헤실 웃으며 재현의 팔을 쿡쿡 찌른다. 너 이거 되게 조심성 없는 행동이야. 알아? 쉽사리 오도 가도 못하는 좁은 방에서 괜스레 하릴없이 옷소매를 잡고 시간을 떼운다." },
+    { type: 'text', sender: 'Mark', content: "하고 싶은 말은 해야 되는 걸 어떡해요." },
+    { type: 'text', sender: '재현', content: "그래? 그럼 지금 하고 싶은 말은 뭔데." },
+    { type: 'narrative', content: "마크가 입을 조금 달싹거리고는 공연히 시계를 바라본다. 어젯밤 저녁처럼, 시계 소리가 유난히도 둔탁하게 째깍댄다. 마크가 눈을 꾹 감았다 뜨고는 용기 있게 말한다. 그러니까, 지금 18분 정도가 남았잖아요. 재현이 말없이 웃으며 언제나처럼 마크의 말을 끈기 있게 기다린다. 그러니까······ 어, 그러니까." },
+    { type: 'choice', options: [
+        { text: "10분만 좀 더 있다가 내려가면 안 돼요?", nextId: 'mission_end_final' },
+        { text: "조금만 더 있다 가요.", nextId: null },
+        { text: "나가기 싫어요.", nextId: null }
+      ]
+    }
+  ],
+  mission_end_final: [
+    { type: 'end' }
+  ]
+};
+export default function App() {
+  const [currentView, setCurrentView] = useState('friendList');
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [messages, setMessages] = useState([]); 
+  const [currentSequence, setCurrentSequence] = useState([]); 
+  const [stepIndex, setStepIndex] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingSender, setTypingSender] = useState(null); 
+  const [isNarrating, setIsNarrating] = useState(false);
+  const [isChoiceFading, setIsChoiceFading] = useState(false); 
+  const [typingNarrativeText, setTypingNarrativeText] = useState("");
+  const [isTypingNarrative, setIsTypingNarrative] = useState(false);
+  const [choices, setChoices] = useState([]);
+  const [wrongChoiceIndex, setWrongChoiceIndex] = useState(null);
+  const [helperText, setHelperText] = useState("뭐라고 말하는 게 좋을까?");
+  const [timeStr, setTimeStr] = useState("12:00");
+  const [dateStr, setDateStr] = useState("");
+
+  const scrollRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+        scrollRef.current.scrollTo({
+            top: scrollRef.current.scrollHeight,
+            behavior: "smooth",
+        });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping, isTypingNarrative, choices, isNarrating]);
+
+  useEffect(() => {
+    const now = new Date();
+    setDateStr(`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`);
+    const interval = setInterval(() => {
+      const t = new Date();
+      setTimeStr(`${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleProfileClick = (profile) => {
+    setSelectedProfile(profile);
+  };
+
+  const handleStartIntro = () => {
+    setSelectedProfile(null);
+    setCurrentView('intro');
+  };
+
+  const handleStartChat = (startSceneId) => {
+    playSound('narrative');
+    setCurrentView('chat');
+    setMessages([]);
+    setCurrentSequence([]); 
+    setStepIndex(0);
+    setTimeout(() => {
+      loadScene(startSceneId);
+    }, 500);
+  };
+
+  const handleBackToFriends = () => {
+    setCurrentView('friendList');
+    setMessages([]); 
+    setCurrentSequence([]); 
+    setStepIndex(0);
+  };
+
+  useEffect(() => {
+    if (currentView !== 'chat') return;
+    if (choices.length > 0) scrollToBottom();
+  }, [choices, currentView]);
+
+  useEffect(() => {
+    if (currentView !== 'chat') return;
+    if (isTypingNarrative) return;
+    if (stepIndex >= currentSequence.length) return;
+
+    const step = currentSequence[stepIndex];
+    
+    const processStep = async () => {
+      if (step.type === 'narrative') {
+        setTimeout(() => {
+            setIsNarrating(true);
+            playSound('narrative'); 
+            setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: step.content }]);
+            scrollToBottom();
+            
+            const readingTime = (step.content.length * 30) + 1000;
+            setTimeout(() => {
+              setIsNarrating(false);
+              setStepIndex(prev => prev + 1);
+            }, readingTime);
+        }, 1000);
+
+      } else if (step.type === 'text') {
+        if (step.sender === 'Mark') {
+            setTimeout(() => {
+                playSound('message'); 
+                setMessages(prev => [...prev, { 
+                  id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() 
+                }]);
+                setStepIndex(prev => prev + 1);
+            }, 1500);
+        } else {
+            setTimeout(() => {
+                setTypingSender(step.sender);
+                setIsTyping(true);
+                scrollToBottom();
+                
+                setTimeout(() => {
+                  setIsTyping(false);
+                  setTypingSender(null); 
+                  playSound('message'); 
+                  setMessages(prev => [...prev, { 
+                    id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() 
+                  }]);
+                  setStepIndex(prev => prev + 1);
+                }, 2000); 
+            }, 800);
+        }
+
+      } else if (step.type === 'youtube') {
+        setTimeout(() => {
+            playSound('message');
+            setMessages(prev => [...prev, {
+                id: Date.now(), type: 'youtube', videoId: step.videoId, title: step.title, time: getTime()
+            }]);
+            setStepIndex(prev => prev + 1);
+        }, 1000);
+
+      } else if (step.type === 'poem') {
+        setTimeout(() => {
+            playSound('narrative');
+            setMessages(prev => [...prev, {
+                id: Date.now(), type: 'poem', text: step.text, subText: step.subText
+            }]);
+            setStepIndex(prev => prev + 1);
+        }, 1500);
+
+      } else if (step.type === 'choice') {
+        setChoices(shuffleArray(step.options));
+        setHelperText("뭐라고 말하는 게 좋을까?");
+        scrollToBottom();
+
+      } else if (step.type === 'next') {
+        loadScene(step.nextId);
+
+      } else if (step.type === 'typing_narrative') {
+        setIsTypingNarrative(true);
+        setTypingNarrativeText("");
+        setTimeout(() => scrollToBottom(), 0);
+
+        let i = 0;
+        const text = step.content;
+        
+        const interval = setInterval(() => {
+          setTypingNarrativeText(text.slice(0, i + 1));
+          
+          // 공백이 아닐 때만 소리 재생
+          if (text[i] !== ' ') {
+             playSound('typing');
+          }
+          
+          i++;
+          if (i === text.length) {
+            clearInterval(interval);
+            setTimeout(() => {
+              setIsTypingNarrative(false);
+              // 타이핑 끝난 후 일반 메시지로 변환해서 기록
+              setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: step.content }]);
+              loadScene(step.nextId);
+            }, 1000);
+          }
+        }, 100); // 속도 0.1초
+
+      } else if (step.type === 'end') {
+         setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: "(대화가 종료되었습니다.)" }]);
+      }
+    };
+    processStep();
+  }, [stepIndex, currentSequence, currentView, isTypingNarrative]);
+
+  const loadScene = (sceneId) => {
+    if (!SCENARIO_SEQUENCE[sceneId]) return;
+    setCurrentSequence(SCENARIO_SEQUENCE[sceneId]);
+    setStepIndex(0);
+    setChoices([]);
+    setWrongChoiceIndex(null);
+  };
+
+  const handleChoice = (option, index) => {
+    if (!option.nextId) {
+      playSound('error'); 
+      setWrongChoiceIndex(index);
+      setHelperText("다시 선택해 보자.");
+      setTimeout(() => { setWrongChoiceIndex(null); }, 500);
+      return;
+    }
+    
+    setIsChoiceFading(true);
+    
+    playSound('message'); 
+    setMessages(prev => [...prev, { 
+      id: Date.now(), type: 'text', sender: 'Mark', text: option.text, time: getTime() 
+    }]);
+    
+    requestAnimationFrame(() => scrollToBottom());
+
+    setTimeout(() => {
+        setChoices([]);
+        setIsChoiceFading(false);
+        loadScene(option.nextId);
+    }, 400);
+  };
+
+  const getSenderInfo = (sender) => {
+    if (sender === '재현') return { color: COLORS.jaehyun, isImage: true };
+    
+    if (sender === '은재') return { color: COLORS.eunjae, avatarBg: 'bg-orange-200' };
+    if (sender === '지원') return { color: COLORS.jiwon, avatarBg: 'bg-yellow-200' };
+    if (sender === '니코') return { color: COLORS.niko, avatarBg: 'bg-pink-200' };
+    if (sender === '선우') return { color: COLORS.seonwoo, avatarBg: 'bg-purple-200' };
+    if (sender === '연덕') return { color: COLORS.yeondeok, avatarBg: 'bg-[#D7CCC8]' };
+    if (sender === '재경') return { color: COLORS.jaekyung, avatarBg: 'bg-blue-200' };
+
+    return { color: COLORS.other, avatarBg: 'bg-gray-300' };
+  };
+
+  const renderIntro = () => (
+    <div className="flex flex-col h-full bg-white p-8 items-center justify-center animate-fade-in relative">
+      <button onClick={handleBackToFriends} className="absolute top-6 left-6 p-2 rounded-full hover:bg-gray-100 text-gray-400 transition"><ChevronLeft size={24} /></button>
+      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6 text-gray-400">
+        <BookOpen size={32} />
+      </div>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">안내사항</h2>
+      <div className="text-sm text-gray-600 text-center space-y-4 leading-relaxed mb-10">
+        <p>본 시뮬레이션은 <span className="font-bold text-gray-800">&lt;당신 집에서 잘 수 있나요?&gt;</span><br/>3화를 기준으로 만들어졌습니다.</p>
+        <p>글 전체를 다 넣을 순 없기 때문에<br/>주요 대화 구간만 넣었습니다.</p>
+        <p>안 읽고 플레이하셔도 괜찮지만<br/>전반적인 깊이나 내용은 이해하기 어려울 수 있습니다.</p>
+        <p className="text-blue-600 font-medium">해당 글을 읽고 플레이하시는 것을 더 추천드립니다.</p>
+      </div>
+      <button onClick={() => setCurrentView('chapterSelect')} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition shadow-lg">확인했습니다</button>
+    </div>
+  );
+const renderChapterSelect = () => (
+    <div className="flex flex-col h-full bg-gray-50 animate-fade-in">
+      <div className="px-6 py-6 bg-white sticky top-0 z-10 shadow-sm flex items-center">
+        <button onClick={() => setCurrentView('intro')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 text-gray-600 transition"><ChevronLeft size={24} /></button>
+        <h1 className="text-xl font-bold text-gray-900 ml-2">챕터 선택</h1>
+      </div>
+      <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+        <div className="text-sm text-gray-500 mb-2 ml-1">어디서부터 플레이하시겠어요?</div>
+        {CHAPTERS.map((chapter) => (
+          <button 
+            key={chapter.id} 
+            onClick={() => handleStartChat(chapter.sceneId)}
+            className="w-full bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center text-left hover:border-blue-200 hover:shadow-md transition group"
+          >
+            <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold mr-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+              {chapter.id}
+            </div>
+            <div>
+              <div className="font-bold text-gray-800 text-lg">{chapter.title}</div>
+              <div className="text-xs text-gray-500 mt-1">{chapter.desc}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderFriendList = () => (
+    <div className="flex flex-col h-full">
+      <div className="px-5 py-4 flex justify-between items-end pb-2 bg-white/50 backdrop-blur-md sticky top-0 z-10">
+        <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">친구</h1>
+        <div className="flex space-x-4 text-gray-600 mb-1">
+          <Search size={20} />
+          <User size={20} strokeWidth={2.5} />
+          <Bell size={20} />
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-5 custom-scrollbar space-y-2">
+        <div>
+            <span className="text-xs font-bold text-gray-400 mb-2 block pl-1">나의 프로필</span>
+            <div onClick={() => handleProfileClick('mark')} className="flex items-center space-x-3.5 mb-6 cursor-pointer hover:bg-white/40 p-2 -mx-2 rounded-xl transition">
+              <div className="relative">
+                  <img src={IMAGES.mark} alt="Mark" className="w-[68px] h-[68px] rounded-[26px] object-cover border border-gray-100 shadow-sm" onError={(e) => {e.target.src='https://via.placeholder.com/68?text=Mark'}} />
+              </div>
+              <div className="flex flex-col min-w-0">
+                  <span className="font-bold text-gray-900 text-lg">마크</span>
+                  <span className="text-xs text-gray-400 mt-0.5 truncate">🚲</span>
+              </div>
+            </div>
+        </div>
+        <hr className="border-gray-200 mb-4" />
+        <div className="mb-4">
+          <span className="text-xs font-bold text-gray-400 mb-2 block pl-1">즐겨찾기</span>
+          <div onClick={() => handleProfileClick('jaehyun')} className="flex items-center space-x-3.5 py-2 cursor-pointer hover:bg-white/40 p-2 -mx-2 rounded-xl transition active:scale-[0.98]">
+             <div className="relative">
+               <img src={IMAGES.jaehyun} alt="Jaehyun" className="w-[54px] h-[54px] rounded-[22px] object-cover border border-gray-100 shadow-sm" onError={(e) => {e.target.src='https://via.placeholder.com/54?text=Jaehyun'}} />
+               <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 border-2 border-white rounded-full"></div>
+             </div>
+             <div className="flex flex-col min-w-0">
+               <span className="font-semibold text-gray-800 text-[15px]">재현</span>
+               <span className="text-xs text-gray-400 mt-0.5 truncate">당신 집에서 잘 수 있나요?</span>
+             </div>
+          </div>
+        </div>
+        <hr className="border-gray-200 mb-4" />
+        <div>
+          <span className="text-xs font-bold text-gray-400 mb-2 block pl-1">친구 {FRIENDS_DATA.length}</span>
+          <div className="space-y-1">
+            {FRIENDS_DATA.map((friend, index) => (
+              <React.Fragment key={friend.id}>
+                <div onClick={() => handleProfileClick(friend)} className="flex items-center space-x-3.5 py-2 cursor-pointer hover:bg-white/40 p-2 -mx-2 rounded-xl transition">
+                   <div className="relative">
+                      <div className={`w-[46px] h-[46px] rounded-[18px] flex items-center justify-center text-white shadow-sm ${friend.color}`}>
+                          <User size={20} fill="rgba(255,255,255,0.5)" strokeWidth={2} />
+                      </div>
+                      {friend.isOnline && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>}
+                   </div>
+                   <div className="flex flex-col min-w-0 flex-1">
+                     <span className="font-medium text-gray-700 text-sm">{friend.name}</span>
+                     <span className="text-xs text-gray-400 truncate pr-2">
+                       <span className={friend.link ? "font-bold" : ""}>{friend.status}</span>
+                       {friend.statusSuffix || ''}
+                     </span>
+                   </div>
+                </div>
+                {index < FRIENDS_DATA.length - 1 && <div className="ml-[60px] border-b border-gray-200" />}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderProfileModal = () => {
+    if (!selectedProfile) return null;
+    const isMark = selectedProfile === 'mark';
+    const isJaehyun = selectedProfile === 'jaehyun';
+    let name, status, statusSuffix, link, color;
+    let imageSrc = null;
+
+    if (isMark) {
+      name = '마크'; status = '🚲'; imageSrc = IMAGES.mark;
+    } else if (isJaehyun) {
+      name = '재현'; status = '당신 집에서 잘 수 있나요?'; imageSrc = IMAGES.jaehyun;
+    } else {
+      name = selectedProfile.name; status = selectedProfile.status; statusSuffix = selectedProfile.statusSuffix; link = selectedProfile.link; color = selectedProfile.color;
+    }
+
+    return (
+      <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center animate-fade-in">
+         <div className="bg-white w-[320px] rounded-[32px] overflow-hidden shadow-2xl flex flex-col items-center p-6 relative">
+            <button onClick={() => setSelectedProfile(null)} className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 text-gray-400 transition"><X size={24} /></button>
+            <div className="mt-4 mb-4 relative">
+               {imageSrc ? (
+                 <>
+                   <img src={imageSrc} alt={name} className="w-28 h-28 rounded-[40px] object-cover shadow-md" onError={(e) => {e.target.src='https://via.placeholder.com/112?text=User'}} />
+                   <div className="absolute bottom-1 right-1 w-5 h-5 bg-green-400 border-[3px] border-white rounded-full"></div>
+                 </>
+               ) : (
+                 <div className={`w-28 h-28 rounded-[40px] flex items-center justify-center text-white shadow-md ${color}`}>
+                    <User size={48} fill="rgba(255,255,255,0.5)" strokeWidth={1.5} />
+                 </div>
+               )}
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">{name}</h2>
+            <div className="text-sm text-gray-600 text-center mb-8 px-2">
+              {link ? (
+                <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-gray-100 transition border border-gray-100 group">
+                  <span className="font-medium text-gray-800 underline decoration-gray-300 underline-offset-2 group-hover:text-blue-500 group-hover:decoration-blue-200">{status}</span>
+                  <span className="text-gray-400 font-light">{statusSuffix}</span>
+                  <Music size={12} className="text-gray-400 ml-1" />
+                </a>
+              ) : (
+                <span>{status}</span>
+              )}
+            </div>
+            <hr className="w-full border-gray-100 mb-6" />
+            <div className="flex w-full gap-4 justify-center">
+               {isMark ? (
+                 <button className="flex flex-col items-center gap-2 group cursor-pointer">
+                    <div className="w-12 h-12 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center shadow-sm group-hover:bg-gray-200 transition-colors duration-200"><Pencil size={20} /></div>
+                    <span className="text-xs font-medium text-gray-600">프로필 편집</span>
+                 </button>
+               ) : (
+                 <button onClick={handleStartIntro} className={`flex flex-col items-center gap-2 group ${isJaehyun ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 ${isJaehyun ? 'bg-gray-800 text-white group-hover:scale-110' : 'bg-gray-200 text-gray-400'}`}>
+                       <MessageCircle size={22} fill={isJaehyun ? "currentColor" : "none"} />
+                    </div>
+                    <span className="text-xs font-medium text-gray-600">대화하기</span>
+                 </button>
+               )}
+               <button className="flex flex-col items-center gap-2 group cursor-default opacity-50">
+                  <div className="w-12 h-12 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center"><User size={22} /></div>
+                  <span className="text-xs font-medium text-gray-400">프로필</span>
+               </button>
+            </div>
+         </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-gray-50 font-sans">
+      <div className={`w-full max-w-md h-[100dvh] flex flex-col shadow-2xl overflow-hidden relative ${COLORS.bg}`}>
+        <div className="bg-transparent z-20 pt-3 pb-2 sticky top-0">
+          <div className="flex justify-between px-6 mb-0 text-sm font-bold text-gray-700 items-center">
+            <span>{timeStr}</span>
+            <div className="flex space-x-1.5"><Signal size={16} fill="currentColor" /><Wifi size={16} /><Battery size={16} fill="currentColor" /></div>
+          </div>
+        </div>
+
+        {currentView === 'friendList' && renderFriendList()}
+        {currentView === 'intro' && renderIntro()}
+        {currentView === 'chapterSelect' && renderChapterSelect()}
+        {renderProfileModal()}
+
+        {currentView === 'chat' && (
+          <>
+            <div className="flex items-center justify-between px-4 py-2 bg-white/30 backdrop-blur-sm z-10">
+              <button onClick={handleBackToFriends} className="p-2 rounded-full hover:bg-white/20 transition"><ChevronLeft size={24} className="text-gray-800" /></button>
+              <div className="flex flex-col items-center">
+                <div className="flex items-center space-x-1">
+                  <span className="font-black text-lg tracking-tight text-gray-800">재현</span>
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                </div>
+                <span className="text-[11px] text-gray-500 font-medium -mt-0.5">당신 집에서 잘 수 있나요?</span>
+              </div>
+              <button className="p-2 rounded-full hover:bg-white/20 transition"><MoreHorizontal size={24} className="text-gray-800" /></button>
+            </div>
+
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar pb-64">
+              <div className="flex justify-center my-4">
+                <span className="bg-white/30 backdrop-blur-sm text-gray-600 text-xs px-3 py-1 rounded-full border border-white/40 shadow-sm">{dateStr}</span>
+              </div>
+
+              {messages.map((msg) => {
+                if (msg.type === 'narrative') {
+                  return (
+                    <div key={msg.id} className="flex justify-center my-4 w-full px-2 animate-fade-in">
+                      <span className="text-xs text-gray-600 text-justify leading-7 break-keep max-w-[95%] bg-white/40 backdrop-blur-md px-4 py-3 rounded-xl shadow-sm border border-white/20">{msg.text}</span>
+                    </div>
+                  );
+                } else if (msg.type === 'youtube') {
+                  return (
+                    <div key={msg.id} className="flex justify-center my-4 w-full px-6 animate-fade-in">
+                      <div className="bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden w-full max-w-[280px] shadow-md border border-white/40">
+                        <a href={`https://youtu.be/${msg.videoId}`} target="_blank" rel="noreferrer" className="block relative group">
+                            <img src={`https://img.youtube.com/vi/${msg.videoId}/hqdefault.jpg`} alt="Thumbnail" className="w-full object-cover aspect-video opacity-90 group-hover:opacity-100 transition-opacity"/>
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors">
+                                <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center shadow-lg text-white">
+                                    <Play size={16} fill="currentColor" className="ml-1"/>
+                                </div>
+                            </div>
+                        </a>
+                        <div className="p-3.5">
+                           <div className="text-xs font-bold text-gray-800 truncate mb-1">{msg.title}</div>
+                           <div className="text-[10px] text-gray-500 flex items-center gap-1.5">
+                                <Music size={12} className="text-red-500"/> 
+                                <span>YouTube Music</span>
+                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                } else if (msg.type === 'poem') {
+                  return (
+                    <div key={msg.id} className="flex justify-center my-6 w-full px-4 animate-fade-in">
+                       <div className="bg-[#FDFBF7] p-6 rounded-sm shadow-md border border-[#E8E4D9] text-center relative">
+                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#FDFBF7] px-2 text-gray-400">
+                            <Feather size={16} />
+                          </div>
+                          <div className="text-gray-800 font-serif text-sm leading-loose whitespace-pre-line">
+                             {msg.text}
+                          </div>
+                          <div className="mt-4 pt-4 border-t border-gray-200 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                             {msg.subText}
+                          </div>
+                       </div>
+                    </div>
+                  )
+                }
+                
+                const isMe = msg.sender === 'Mark';
+                const senderInfo = !isMe ? getSenderInfo(msg.sender) : {};
+                
+                return (
+                  <div key={msg.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
+                    {!isMe && (
+                       <div className="flex flex-col items-start max-w-[85%]">
+                          <span className="text-[11px] text-gray-500 ml-14 mb-1">{msg.sender}</span>
+                          <div className="flex items-start">
+                            {senderInfo.isImage ? (
+                                <img src={IMAGES.jaehyun} className="w-11 h-11 rounded-full object-cover mr-2 shadow-sm flex-shrink-0" alt="Jaehyun" onError={(e) => {e.target.src='https://via.placeholder.com/44?text=Jaehyun'}} />
+                            ) : (
+                                <div className={`w-11 h-11 rounded-[18px] flex items-center justify-center text-white shadow-sm mr-2 ${senderInfo.avatarBg} flex-shrink-0`}>
+                                   <User size={20} fill="rgba(255,255,255,0.5)" strokeWidth={2} />
+                                </div>
+                            )}
+                            <div className="flex items-end gap-1.5">
+                              <div className={`relative px-4 py-2.5 text-sm shadow-sm rounded-2xl rounded-tl-none ${senderInfo.color} text-gray-900 leading-relaxed`}>{msg.text}</div>
+                              <span className="text-[10px] text-gray-500 min-w-fit mb-0.5">{msg.time}</span>
+                            </div>
+                          </div>
+                       </div>
+                    )}
+                    {isMe && (
+                      <div className="flex flex-col items-end max-w-[85%]">
+                        <div className="flex items-start flex-row-reverse">
+                          <img src={IMAGES.mark} className="w-11 h-11 rounded-full object-cover ml-2 shadow-sm flex-shrink-0" alt="Mark" onError={(e) => {e.target.src='https://via.placeholder.com/44?text=Mark'}} />
+                          <div className="flex items-end gap-1.5">
+                             <span className="text-[10px] text-gray-500 min-w-fit mb-0.5">{msg.time}</span>
+                             <div className={`relative px-4 py-2.5 text-sm shadow-sm rounded-2xl rounded-tr-none ${COLORS.mark} ${COLORS.markText} leading-relaxed`}>{msg.text}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {isTypingNarrative && (
+                 <div className="flex justify-center my-4 w-full px-2 animate-fade-in">
+                    <span className="text-xs text-gray-600 text-justify leading-7 break-keep max-w-[95%] bg-white/40 backdrop-blur-md px-4 py-3 rounded-xl shadow-sm border border-white/20">{typingNarrativeText}</span>
+                 </div>
+              )}
+
+              {isTyping && (
+                 <div className="flex w-full justify-start">
+                   <div className="flex flex-col items-start max-w-[85%]">
+                     <span className="text-[11px] text-gray-500 ml-14 mb-1">{typingSender}</span>
+                     <div className="flex items-start">
+                        {(() => {
+                            const info = getSenderInfo(typingSender);
+                            return info.isImage ? (
+                                <img src={IMAGES.jaehyun} className="w-11 h-11 rounded-full object-cover mr-2 shadow-sm flex-shrink-0" alt="Jaehyun" onError={(e) => {e.target.src='https://via.placeholder.com/44?text=Jaehyun'}} />
+                            ) : (
+                                <div className={`w-11 h-11 rounded-[18px] flex items-center justify-center text-white shadow-sm mr-2 ${info.avatarBg} flex-shrink-0`}>
+                                   <User size={20} fill="rgba(255,255,255,0.5)" strokeWidth={2} />
+                                </div>
+                            );
+                        })()}
+                       <div className={`px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex space-x-1 items-center h-10 mt-0.5 ${getSenderInfo(typingSender).color}`}>
+                         <div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                         <div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                         <div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            <div className="absolute bottom-0 w-full z-20 bg-white/60 backdrop-blur-lg border-t border-white/50 p-4 pb-8 transition-all duration-500 ease-in-out">
+              {(choices.length > 0 || isChoiceFading) ? (
+                <div className={`flex flex-col space-y-2 ${isChoiceFading ? 'animate-collapse' : 'animate-fade-in-up'}`}>
+                  <div className={`text-xs text-center mb-1 font-medium transition-colors duration-300 ${helperText === "다시 선택해 보자." ? "text-red-500 font-bold" : "text-gray-500"}`}>{helperText}</div>
+                  {choices.map((choice, index) => (
+                    <button key={index} onClick={() => handleChoice(choice, index)} className={`w-full p-3.5 text-sm font-medium rounded-xl ${COLORS.button} ${wrongChoiceIndex === index ? 'animate-shake bg-red-50 border-red-200' : ''}`}>{choice.text}</button>
+                  ))}
+                </div>
+              ) : (
+                <div className={`flex items-center gap-2 opacity-80 ${isChoiceFading ? 'hidden' : 'animate-fade-in'}`}>
+                   <div className="p-2 rounded-full bg-white/50 text-gray-500 hover:bg-white transition"><Plus size={20} /></div>
+                   <div className="flex-1 bg-white/80 rounded-full h-10 px-4 flex items-center text-gray-400 text-xs shadow-inner border border-white/50">{isNarrating ? "이야기가 진행 중입니다..." : "상대방의 메시지를 기다리는 중..."}</div>
+                   <div className="p-2 rounded-full bg-[#4FD985] text-white shadow-sm opacity-50"><Send size={18} /></div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+        <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1/3 h-1 bg-gray-800/20 rounded-full z-30"></div>
+      </div>
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 0px; }
+        .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+        .animate-fade-out-down { animation: fadeOutDown 0.3s ease-out forwards; }
+        
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+        
+        @keyframes collapse {
+          0% { 
+            opacity: 1; 
+            transform: translateY(0); 
+            max-height: 500px; 
+            margin-bottom: 0;
+          }
+          100% { 
+            opacity: 0; 
+            transform: translateY(20px); 
+            max-height: 0; 
+            margin-bottom: 0;
+            padding: 0;
+            margin-top: 0;
+          }
+        }
+        .animate-collapse { animation: collapse 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOutDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(10px); } }
+      `}</style>
+    </div>
+  );
+}
