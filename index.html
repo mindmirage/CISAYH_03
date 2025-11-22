@@ -11,8 +11,23 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-body { font-family: Pretendard, sans-serif; }
+
+/* [수정] 화면 고정 및 스크롤 튕김 방지 */
+html, body { 
+    width: 100%; 
+    height: 100%; 
+    position: fixed; /* 화면이 안 움직이게 고정 */
+    overflow: hidden; 
+    margin: 0; 
+    padding: 0; 
+    touch-action: none; /* 모바일 확대/축소 제스처 막기 */
+    font-family: Pretendard, sans-serif; 
+}
+
+/* 내부 스크롤바 숨김 */
 .custom-scrollbar::-webkit-scrollbar { width: 0px; }
+
+/* 애니메이션 */
 .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
 .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
 .animate-collapse { animation: collapse 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
@@ -332,30 +347,27 @@ function App() {
     if (sender === '재경') return { color: COLORS.jaekyung, avatarBg: 'bg-blue-200' };
     return { color: COLORS.other, avatarBg: 'bg-gray-300' };
   };
-
 return (
-    // 바깥 배경: 모바일에서는 꽉 차게, PC에서는 중앙 정렬
-    <div className="relative flex justify-center items-center w-full h-[100dvh] bg-gray-100 overflow-hidden font-sans">
-      
-      {/* 스마트폰 컨테이너: 모바일(기본)은 꽉 차게, sm(PC) 이상은 폰 모양으로 */}
-      <div className={`w-full h-full sm:h-[92dvh] sm:max-w-[420px] sm:rounded-[2.5rem] flex flex-col shadow-2xl overflow-hidden relative ${COLORS.bg}`}>
+    <div className="fixed inset-0 w-full h-full bg-gray-100 flex justify-center items-center overflow-hidden font-sans">
+      {/* 모바일에서는 꽉 차게, PC에서는 스마트폰 모양 유지 */}
+      <div className={`w-full h-full sm:h-[90dvh] sm:max-w-[420px] sm:rounded-[2.5rem] flex flex-col shadow-2xl overflow-hidden relative ${COLORS.bg}`}>
         
-        {/* 상단 상태바 (시간/배터리) */}
-        <div className="bg-transparent z-20 pt-3 pb-2 sticky top-0 shrink-0">
+        {/* 상단바 */}
+        <div className="bg-transparent z-20 pt-3 pb-2 sticky top-0 shrink-0 select-none">
           <div className="flex justify-between px-6 mb-0 text-sm font-bold text-gray-700 items-center">
             <span>{timeStr}</span>
             <div className="flex space-x-1.5"><Signal size={16} fill="currentColor" /><Wifi size={16} /><Battery size={16} fill="currentColor" /></div>
           </div>
         </div>
 
-        {/* 뷰 렌더링 (친구목록/인트로/챕터선택/채팅 등) */}
+        {/* 친구 목록 화면 */}
         {currentView === 'friendList' && (
-            <div className="flex flex-col h-full">
-              <div className="px-5 py-4 flex justify-between items-end pb-2 bg-white/50 backdrop-blur-md sticky top-0 z-10">
+            <div className="flex flex-col h-full overflow-hidden">
+              <div className="px-5 py-4 flex justify-between items-end pb-2 bg-white/50 backdrop-blur-md sticky top-0 z-10 shrink-0">
                 <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">친구</h1>
                 <div className="flex space-x-4 text-gray-600 mb-1"><Search size={20} /><User size={20} strokeWidth={2.5} /><Bell size={20} /></div>
               </div>
-              <div className="flex-1 overflow-y-auto p-5 custom-scrollbar space-y-2">
+              <div className="flex-1 overflow-y-auto p-5 custom-scrollbar space-y-2 overscroll-contain touch-auto">
                 <div><span className="text-xs font-bold text-gray-400 mb-2 block pl-1">나의 프로필</span>
                     <div onClick={() => handleProfileClick('mark')} className="flex items-center space-x-3.5 mb-6 cursor-pointer hover:bg-white/40 p-2 -mx-2 rounded-xl transition">
                       <div className="relative"><img src={IMAGES.mark} alt="Mark" className="w-[68px] h-[68px] rounded-[26px] object-cover border border-gray-100 shadow-sm" onError={(e) => {e.target.src='https://via.placeholder.com/68?text=Mark'}} /></div>
@@ -386,21 +398,25 @@ return (
               </div>
             </div>
         )}
+
+        {/* 인트로 화면 */}
         {currentView === 'intro' && (
-            <div className="flex flex-col h-full bg-white p-8 items-center justify-center animate-fade-in relative">
+            <div className="flex flex-col h-full bg-white p-8 items-center justify-center animate-fade-in relative overflow-hidden">
               <button onClick={handleBackToFriends} className="absolute top-6 left-6 p-2 rounded-full hover:bg-gray-100 text-gray-400 transition"><ChevronLeft size={24} /></button>
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6 text-gray-400"><BookOpen size={32} /></div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">안내사항</h2>
               <div className="text-sm text-gray-600 text-center space-y-4 leading-relaxed mb-10"><p>본 시뮬레이션은 <span className="font-bold text-gray-800">&lt;당신 집에서 잘 수 있나요?&gt;</span><br/>3화를 기준으로 만들어졌습니다.</p><button onClick={() => setCurrentView('chapterSelect')} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition shadow-lg mt-4">확인했습니다</button></div>
             </div>
         )}
+
+        {/* 챕터 선택 화면 */}
         {currentView === 'chapterSelect' && (
-            <div className="flex flex-col h-full bg-gray-50 animate-fade-in">
-              <div className="px-6 py-6 bg-white sticky top-0 z-10 shadow-sm flex items-center">
+            <div className="flex flex-col h-full bg-gray-50 animate-fade-in overflow-hidden">
+              <div className="px-6 py-6 bg-white sticky top-0 z-10 shadow-sm flex items-center shrink-0">
                 <button onClick={() => setCurrentView('intro')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 text-gray-600 transition"><ChevronLeft size={24} /></button>
                 <h1 className="text-xl font-bold text-gray-900 ml-2">챕터 선택</h1>
               </div>
-              <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+              <div className="flex-1 p-6 space-y-4 overflow-y-auto custom-scrollbar overscroll-contain touch-auto">
                 {CHAPTERS.map((chapter) => (
                   <button key={chapter.id} onClick={() => handleStartChat(chapter.sceneId)} className="w-full bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center text-left hover:border-blue-200 hover:shadow-md transition group">
                     <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold mr-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">{chapter.id}</div>
@@ -410,6 +426,8 @@ return (
               </div>
             </div>
         )}
+
+        {/* 프로필 모달 */}
         {selectedProfile && (
             <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center animate-fade-in px-4">
                  <div className="bg-white w-full max-w-[320px] rounded-[32px] overflow-hidden shadow-2xl flex flex-col items-center p-6 relative">
@@ -437,6 +455,8 @@ return (
                  </div>
             </div>
         )}
+
+        {/* 채팅 화면 */}
         {currentView === 'chat' && (
           <>
             <div className="flex items-center justify-between px-4 py-2 bg-white/30 backdrop-blur-sm z-10 shrink-0">
@@ -444,7 +464,8 @@ return (
               <div className="flex flex-col items-center"><div className="flex items-center space-x-1"><span className="font-black text-lg tracking-tight text-gray-800">재현</span><div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div></div><span className="text-[11px] text-gray-500 font-medium -mt-0.5">당신 집에서 잘 수 있나요?</span></div>
               <button className="p-2 rounded-full hover:bg-white/20 transition"><MoreHorizontal size={24} className="text-gray-800" /></button>
             </div>
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar pb-32">
+            {/* 채팅 스크롤 영역 */}
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar pb-32 overscroll-contain touch-auto">
               <div className="flex justify-center my-4"><span className="bg-white/30 backdrop-blur-sm text-gray-600 text-xs px-3 py-1 rounded-full border border-white/40 shadow-sm">{dateStr}</span></div>
               {messages.map((msg) => {
                 if (msg.type === 'narrative') {
