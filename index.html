@@ -375,8 +375,13 @@ function App() {
   };
 return (
     <div className="fixed inset-0 w-full h-full bg-gray-100 flex justify-center items-center overflow-hidden font-sans">
-      {/* 모바일에서는 꽉 차게, PC에서는 스마트폰 모양 유지 */}
+      {/* ▼▼▼ [1] 메인 컨테이너 (테두리 추가됨) ▼▼▼ */}
       <div className={`w-full h-full sm:w-[390px] sm:h-[800px] sm:max-h-[90vh] sm:rounded-[3rem] sm:border-[14px] sm:border-gray-900 flex flex-col shadow-2xl overflow-hidden relative ${COLORS.bg}`}>
+        
+        {/* ▼▼▼ [2] 여기에 노치 코드를 붙여넣으세요 ▼▼▼ */}
+        <div className="hidden sm:block absolute top-0 left-1/2 transform -translate-x-1/2 w-[120px] h-[30px] bg-gray-900 rounded-b-[1.2rem] z-50 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-1.5 bg-gray-800 rounded-full opacity-60"></div>
+        </div>
         
         {/* 상단바 */}
         <div className="bg-transparent z-20 pt-3 pb-2 sticky top-0 shrink-0 select-none">
