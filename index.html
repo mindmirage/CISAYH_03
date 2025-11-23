@@ -271,31 +271,67 @@ function App() {
   const [dateStr, setDateStr] = useState("");
   const scrollRef = useRef(null);
   const messagesEndRef = useRef(null);
+  // [수정 1] 스크롤 함수: 애니메이션 여부(instant)에 따라 즉시 이동할지 부드럽게 이동할지 결정
+  const scrollToBottom = (instant = false) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: instant ? 'auto' : 'smooth'
+      });
+    }
+  };
 
-  const scrollToBottom = () => { if (scrollRef.current) { scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); } };
-  useEffect(() => { scrollToBottom(); }, [messages, isTyping, isTypingNarrative, choices, isNarrating]);
+  // [수정 2] 메시지가 오거나 타이핑 중일 때 스크롤 내림
+  useEffect(() => {
+    scrollToBottom(false);
+  }, [messages, isTyping, isTypingNarrative, isNarrating, choices]);
+
+  // [수정 3] ★핵심★ 선택지가 사라지는 애니메이션(0.5초) 동안 스크롤을 바닥에 강제로 고정
+  // 이 코드가 있어야 선택지가 사라질 때 채팅창이 위로 튀지 않고 자연스럽게 따라 내려옵니다.
+  useEffect(() => {
+    if (isChoiceFading) {
+      scrollToBottom(true); // 1. 즉시 바닥으로 내림 (내 말풍선 보이기 위해)
+      
+      const intervalId = setInterval(() => {
+        if (scrollRef.current) {
+          // 2. 애니메이션 진행되는 동안 0.01초마다 스크롤을 맨 아래로 잡아당김
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+      }, 10);
+
+      const timeoutId = setTimeout(() => {
+        clearInterval(intervalId);
+        scrollToBottom(false); // 3. 애니메이션 끝난 후 마무리 정렬
+      }, 500);
+
+      return () => { clearInterval(intervalId); clearTimeout(timeoutId); };
+    }
+  }, [isChoiceFading]);
+
+  // [기존 코드 유지] 시간/날짜 관련 useEffect ...
   useEffect(() => {
     const now = new Date(); setDateStr(`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`);
     const interval = setInterval(() => { const t = new Date(); setTimeStr(`${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`); }, 1000);
     return () => clearInterval(interval);
   }, []);
 
+  // [기존 코드 유지] 핸들러들 ...
   const handleProfileClick = (profile) => setSelectedProfile(profile);
   const handleStartIntro = () => { setSelectedProfile(null); setCurrentView('intro'); };
   const handleStartChat = (startSceneId) => { playSound('narrative'); setCurrentView('chat'); setMessages([]); setCurrentSequence([]); setStepIndex(0); setTimeout(() => { loadScene(startSceneId); }, 500); };
   const handleBackToFriends = () => { setCurrentView('friendList'); setMessages([]); setCurrentSequence([]); setStepIndex(0); };
 
-  useEffect(() => { if (currentView !== 'chat') return; if (choices.length > 0) scrollToBottom(); }, [choices, currentView]);
-
+  // [기존 코드 유지] 시나리오 진행 useEffect ...
   useEffect(() => {
     if (currentView !== 'chat') return;
     if (isTypingNarrative) return;
     if (stepIndex >= currentSequence.length) return;
     const step = currentSequence[stepIndex];
     const processStep = async () => {
+      // ... (기존 시나리오 처리 로직 그대로 유지) ...
       if (step.type === 'narrative') {
         setTimeout(() => {
-            setIsNarrating(true); playSound('narrative'); setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: step.content }]); scrollToBottom();
+            setIsNarrating(true); playSound('narrative'); setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: step.content }]);
             const readingTime = (step.content.length * 30) + 1000;
             setTimeout(() => { setIsNarrating(false); setStepIndex(prev => prev + 1); }, readingTime);
         }, 1000);
@@ -304,7 +340,7 @@ function App() {
             setTimeout(() => { playSound('message'); setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() }]); setStepIndex(prev => prev + 1); }, 1500);
         } else {
             setTimeout(() => {
-                setTypingSender(step.sender); setIsTyping(true); scrollToBottom();
+                setTypingSender(step.sender); setIsTyping(true);
                 setTimeout(() => { setIsTyping(false); setTypingSender(null); playSound('message'); setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() }]); setStepIndex(prev => prev + 1); }, 2000); 
             }, 800);
         }
@@ -313,11 +349,11 @@ function App() {
       } else if (step.type === 'poem') {
         setTimeout(() => { playSound('narrative'); setMessages(prev => [...prev, { id: Date.now(), type: 'poem', text: step.text, subText: step.subText }]); setStepIndex(prev => prev + 1); }, 1500);
       } else if (step.type === 'choice') {
-        setChoices(shuffleArray(step.options)); setHelperText("뭐라고 말하는 게 좋을까?"); scrollToBottom();
+        setChoices(shuffleArray(step.options)); setHelperText("뭐라고 말하는 게 좋을까?");
       } else if (step.type === 'next') {
         loadScene(step.nextId);
       } else if (step.type === 'typing_narrative') {
-        setIsTypingNarrative(true); setTypingNarrativeText(""); setTimeout(() => scrollToBottom(), 0);
+        setIsTypingNarrative(true); setTypingNarrativeText("");
         let i = 0; const text = step.content;
         const interval = setInterval(() => {
           setTypingNarrativeText(text.slice(0, i + 1));
@@ -332,10 +368,23 @@ function App() {
   }, [stepIndex, currentSequence, currentView, isTypingNarrative]);
 
   const loadScene = (sceneId) => { if (!SCENARIO_SEQUENCE[sceneId]) return; setCurrentSequence(SCENARIO_SEQUENCE[sceneId]); setStepIndex(0); setChoices([]); setWrongChoiceIndex(null); };
+
+  // [수정 4] 선택지 클릭 핸들러: 클릭 즉시 메시지 추가 및 애니메이션 트리거
   const handleChoice = (option, index) => {
     if (!option.nextId) { playSound('error'); setWrongChoiceIndex(index); setHelperText("다시 선택해 보자."); setTimeout(() => { setWrongChoiceIndex(null); }, 500); return; }
-    setIsChoiceFading(true); playSound('message'); setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: 'Mark', text: option.text, time: getTime() }]); requestAnimationFrame(() => scrollToBottom());
-    setTimeout(() => { setChoices([]); setIsChoiceFading(false); loadScene(option.nextId); }, 400);
+    
+    setIsChoiceFading(true); 
+    playSound('message'); 
+    
+    // 즉시 내 말풍선 추가
+    setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: 'Mark', text: option.text, time: getTime() }]);
+    
+    // 애니메이션 시간(0.5초) 뒤에 선택지 데이터 비우기
+    setTimeout(() => { 
+        setChoices([]); 
+        setIsChoiceFading(false); 
+        loadScene(option.nextId); 
+    }, 500);
   };
   const getSenderInfo = (sender) => {
     if (sender === '재현') return { color: COLORS.jaehyun, isImage: true };
@@ -489,10 +538,9 @@ return (
               {isTyping && (<div className="flex w-full justify-start mb-4"><div className="flex flex-col items-start max-w-[85%]"><span className="text-[11px] text-gray-500 ml-14 mb-1">{typingSender}</span><div className="flex items-start">{(() => { const info = getSenderInfo(typingSender); return info.isImage ? (<img src={IMAGES.jaehyun} className="w-11 h-11 rounded-full object-cover mr-2 shadow-sm flex-shrink-0" alt="Jaehyun" onError={(e) => {e.target.src='https://via.placeholder.com/44?text=Jaehyun'}} />) : (<div className={`w-11 h-11 rounded-[18px] flex items-center justify-center text-white shadow-sm mr-2 ${info.avatarBg} flex-shrink-0`}><User size={20} fill="rgba(255,255,255,0.5)" strokeWidth={2} /></div>); })()}<div className={`px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex space-x-1 items-center h-10 mt-0.5 ${getSenderInfo(typingSender).color}`}><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div></div></div></div></div>)}
               
               {/* 
-                 [수정된 스페이서] 
-                 - 역할: 입력창+선택지 높이만큼 채팅 공간 확보
-                 - 선택지가 있으면 커지고(21rem), 없으면 작아짐(6rem) 
-                 - 선택지가 사라질 때 높이가 줄어들며 채팅 메시지들이 자연스럽게 아래로 채워짐
+                 [수정 5] 스페이서 높이 조절
+                 - 선택지가 있으면(active) 21rem 높이로 채팅을 위로 밀어올림
+                 - 선택지가 사라지면(inactive) 6rem으로 줄어들면서 채팅이 자연스럽게 내려옴
               */}
               <div 
                  style={{ 
@@ -506,8 +554,7 @@ return (
 
             {/* 하단 영역 (고정) */}
             <div className="absolute bottom-0 w-full z-20">
-              
-              {/* 선택지 영역 (입력창 위로 떠오르는 오버레이) */}
+              {/* 선택지 영역 */}
               <div 
                 className={`absolute bottom-[60px] w-full px-4 pb-2 transition-all duration-500 ease-in-out origin-bottom ${
                   (choices.length > 0 || isChoiceFading) 
@@ -527,7 +574,7 @@ return (
                   </div>
               </div>
 
-              {/* 입력창 (항상 하단 고정) */}
+              {/* 입력창 */}
               <div className="bg-white/80 backdrop-blur-lg border-t border-white/50 p-3 pb-8 shadow-[0_-5px_20px_rgba(0,0,0,0.02)] relative z-30">
                 <div className="flex items-center gap-2 opacity-80">
                   <div className="p-2 rounded-full bg-white/50 text-gray-500 hover:bg-white transition"><Plus size={20} /></div>
