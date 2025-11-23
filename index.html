@@ -587,20 +587,17 @@ return (
         {currentView === 'notifications' && (
             <div className="flex flex-col h-full bg-gray-50 animate-fade-in overflow-hidden relative">
               
-              {/* [1] 메시지 상세 보기 (수정됨: 파스텔 그라데이션 + 기본 폰트) */}
+              {/* [1] 메시지 상세 보기 */}
               {selectedMessage && (
                 <div className="absolute inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in">
-                  {/* 배경 클릭 시 닫기 */}
                   <div className="absolute inset-0" onClick={() => setSelectedMessage(null)}></div>
                   
-                  {/* 메시지 카드 */}
                   <div className={`w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden relative flex flex-col max-h-[80%] animate-fade-in-up
                     ${selectedMessage.type === 'received' 
-                      ? 'bg-gradient-to-b from-sky-100 via-white to-white' // 받은 메시지: 하늘색
-                      : 'bg-gradient-to-b from-green-100 via-white to-white' // 보낸 메시지: 연두색
+                      ? 'bg-gradient-to-b from-sky-100 via-white to-white' 
+                      : 'bg-gradient-to-b from-green-100 via-white to-white'
                     }`}>
                     
-                    {/* 상단 헤더 */}
                     <div className="px-7 py-6 flex justify-between items-start shrink-0">
                       <div>
                         <h3 className="font-bold text-gray-800 text-xl leading-tight tracking-tight">{selectedMessage.title}</h3>
@@ -613,14 +610,10 @@ return (
                       </button>
                     </div>
 
-                    {/* 본문 스크롤 영역 */}
                     <div className="px-7 pb-8 overflow-y-auto custom-scrollbar">
-                      {/* font-serif 제거 -> 기본 폰트(Pretendard) 적용 */}
                       <div className="text-[15px] text-gray-700 leading-loose whitespace-pre-line text-justify font-sans">
                         {selectedMessage.content}
                       </div>
-                      
-                      {/* 하단 장식 아이콘 */}
                       <div className="mt-10 text-center opacity-40">
                         <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${selectedMessage.type === 'received' ? 'bg-sky-100 text-sky-400' : 'bg-green-100 text-green-400'}`}>
                           <Feather size={14} />
@@ -640,8 +633,8 @@ return (
               {/* [3] 메시지 리스트 */}
               <div className="flex-1 overflow-y-auto p-5 custom-scrollbar space-y-6">
                 
-                {/* 받은 메시지 섹션 */}
-                <div className="animate-fade-in-up" style={{ animationDelay: '0ms' }}>
+                {/* 받은 메시지 섹션 (수정: animate-fade-in-up -> animate-fade-in, 딜레이 제거) */}
+                <div className="animate-fade-in">
                   <span className="text-xs font-bold text-gray-400 mb-2 block pl-1">받은 메시지함</span>
                   {NIGHT_MESSAGES.filter(m => m.type === 'received').map((msg) => (
                     <button 
@@ -663,8 +656,8 @@ return (
                   ))}
                 </div>
 
-                {/* 보낸 메시지 섹션 */}
-                <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                {/* 보낸 메시지 섹션 (수정: animate-fade-in-up -> animate-fade-in, 딜레이 제거) */}
+                <div className="animate-fade-in">
                   <span className="text-xs font-bold text-gray-400 mb-2 block pl-1">보낸 메시지함</span>
                   {NIGHT_MESSAGES.filter(m => m.type === 'sent').map((msg) => (
                     <button 
