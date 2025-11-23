@@ -556,10 +556,10 @@ return (
                   ))}
                 </div>
               ) : (
-                /* 입력창 영역 */
+                /* 입력창 영역: animate-fade-in 제거하여 하얀 배경이 깜빡이는 현상 해결 */
                 <div 
                   onClick={() => { if(choices.length > 0) setIsChoiceMinimized(false); }}
-                  className={`flex items-center gap-2 opacity-80 ${isChoiceFading ? 'hidden' : 'animate-fade-in'} ${choices.length > 0 ? 'cursor-pointer' : ''}`}
+                  className={`flex items-center gap-2 opacity-80 ${isChoiceFading ? 'hidden' : ''} ${choices.length > 0 ? 'cursor-pointer' : ''}`}
                 >
                   <div className="p-2 rounded-full bg-white/50 text-gray-500 hover:bg-white transition">
                     <Plus size={20} />
