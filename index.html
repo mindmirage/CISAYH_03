@@ -385,10 +385,10 @@ function App() {
 return (
     <div className="fixed inset-0 w-full h-full bg-gray-100 flex justify-center items-center overflow-hidden font-sans">
       
-      {/* ▼▼▼ [수정] 웹에서는 아이폰 모양(sm:...), 모바일은 꽉 찬 화면(w-full h-full) ▼▼▼ */}
+      {/* 폰 프레임: 웹에서는 아이폰 모양, 모바일은 꽉 찬 화면 */}
       <div className={`w-full h-full sm:w-[390px] sm:h-[800px] sm:max-h-[90vh] sm:rounded-[3rem] sm:border-[8px] sm:border-gray-900 flex flex-col shadow-2xl overflow-hidden relative ${COLORS.bg}`}>
         
-        {/* ▼▼▼ [수정] 노치: 모바일엔 숨기고(hidden), 웹에서만 보임(sm:block) ▼▼▼ */}
+        {/* 노치: 웹에서만 보임 */}
         <div className="hidden sm:block absolute top-0 left-1/2 transform -translate-x-1/2 w-[120px] h-[28px] bg-gray-900 rounded-b-[1rem] z-50 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-1 bg-gray-800 rounded-full opacity-60"></div>
         </div>
@@ -532,11 +532,10 @@ return (
               <div ref={messagesEndRef} />
             </div>
 
-{/* ▼▼▼ [수정] 하단바 영역 (여기서부터 교체하세요) ▼▼▼ */}
+            {/* 하단바 영역 (수정됨: 깜빡임 방지 및 잔상 해결) */}
             <div className="absolute bottom-0 w-full z-20 p-4 pb-8 ease-in-out sm:rounded-b-[2.5rem] transition-all duration-500 bg-white/80 backdrop-blur-md border-t border-white/50">
               
               {/* 1. 입력창 영역 (선택지가 사라지는 동안 미리 렌더링하여 깜빡임 방지) */}
-              {/* 조건: 선택지가 없거나, 접혀있거나, '사라지는 중'일 때 보임 */}
               {(!choices.length || isChoiceMinimized || isChoiceFading) && (
                 <div 
                   onClick={() => { if(choices.length > 0) setIsChoiceMinimized(false); }}
@@ -559,11 +558,9 @@ return (
               )}
 
               {/* 2. 선택지/접기 버튼 영역 */}
-              {/* 조건: 선택지가 있고 + (펼쳐져 있거나 OR 사라지는 중일 때) */}
               {(choices.length > 0 && (!isChoiceMinimized || isChoiceFading)) && (
                 <div className={`flex flex-col space-y-2 ${isChoiceFading ? 'absolute bottom-0 left-0 w-full px-4 pb-8 z-10 animate-collapse' : 'animate-fade-in-up'}`}>
                   
-                  {/* 접기 버튼 */}
                   <button onClick={() => setIsChoiceMinimized(true)} className="mx-auto p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100/50 rounded-full transition mb-1">
                     <ChevronDown size={20} />
                   </button>
@@ -577,29 +574,6 @@ return (
                       {choice.text}
                     </button>
                   ))}
-                </div>
-              )}
-
-            </div>
-              ) : (
-                /* 입력창 영역: animate-fade-in 제거하여 하얀 배경이 깜빡이는 현상 해결 */
-                <div 
-                  onClick={() => { if(choices.length > 0) setIsChoiceMinimized(false); }}
-                  className={`flex items-center gap-2 opacity-80 ${isChoiceFading ? 'hidden' : ''} ${choices.length > 0 ? 'cursor-pointer' : ''}`}
-                >
-                  <div className="p-2 rounded-full bg-white/50 text-gray-500 hover:bg-white transition">
-                    <Plus size={20} />
-                  </div>
-                  
-                  <div className={`flex-1 bg-white/80 rounded-full h-10 px-4 flex items-center text-xs shadow-inner border border-white/50 ${choices.length > 0 ? 'text-gray-800 font-bold bg-blue-50/80 border-blue-200' : 'text-gray-400'}`}>
-                    {choices.length > 0 
-                      ? "답장 선택하기 (터치)" 
-                      : (isNarrating ? "이야기가 진행 중입니다..." : "상대방의 메시지를 기다리는 중...")}
-                  </div>
-                  
-                  <div className={`p-2 rounded-full text-white shadow-sm transition-all ${choices.length > 0 ? 'bg-blue-500 animate-pulse' : 'bg-[#4FD985] opacity-50'}`}>
-                    <Send size={18} />
-                  </div>
                 </div>
               )}
             </div>
