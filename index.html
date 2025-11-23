@@ -278,24 +278,27 @@ function App() {
   const scrollRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  // [핵심] 스크롤을 바닥으로 내리는 함수
-  // instant=true면 애니메이션 없이 즉시 이동 (화면 깜빡임 방지용)
+  // [수정] 스크롤을 무조건 바닥으로 내리는 함수
   const scrollToBottom = (instant = false) => {
     if (scrollRef.current) {
-      const target = scrollRef.current.scrollHeight;
+      // scrollHeight는 전체 높이이므로, top을 scrollHeight로 설정하면 무조건 끝으로 갑니다.
       scrollRef.current.scrollTo({
-        top: target,
+        top: scrollRef.current.scrollHeight,
         behavior: instant ? 'auto' : 'smooth'
       });
     }
   };
 
-  // [수정] 선택지가 나타날 때 여백 확보 및 스크롤 조정
+  // [수정] 선택지가 나타날 때: 여백 확보 후 '즉시' 바닥으로 스크롤
   useEffect(() => {
     if (choices.length > 0) {
-      setSpacerHeight(260); // 선택지 높이만큼 여백 확보
-      // 레이아웃이 늘어난 뒤 스크롤을 내려서 마지막 대화가 선택지 위에 오게 함
-      setTimeout(() => scrollToBottom(false), 100);
+      // 1. 선택지 영역만큼 여백을 넉넉히 확보 (기존 260 -> 320으로 증가)
+      setSpacerHeight(320); 
+      
+      // 2. 렌더링 직후 스크롤을 강제로 바닥에 고정
+      // setTimeout을 두 번 사용하여 확실하게 처리
+      setTimeout(() => scrollToBottom(true), 10); // 1차 시도 (즉시)
+      setTimeout(() => scrollToBottom(true), 100); // 2차 시도 (레이아웃 안정화 후)
     }
   }, [choices]);
 
@@ -360,7 +363,7 @@ function App() {
 
   const loadScene = (sceneId) => { if (!SCENARIO_SEQUENCE[sceneId]) return; setCurrentSequence(SCENARIO_SEQUENCE[sceneId]); setStepIndex(0); setChoices([]); setWrongChoiceIndex(null); };
   
-  // [수정] 선택지 클릭 처리 (자연스러운 애니메이션 적용)
+  // [수정] 선택지 클릭 시: 자연스러운 전환 처리
   const handleChoice = (option, index) => {
     if (!option.nextId) { 
         playSound('error'); 
@@ -370,30 +373,31 @@ function App() {
         return; 
     }
     
-    // 1. 선택지 페이드 아웃 시작
+    // 1. 페이드 아웃 시작
     setIsChoiceFading(true); 
     playSound('message'); 
     
-    // 2. 메시지 '즉시' 추가 (이때 Spacer는 아직 높이 260px 유지 중 -> 스크롤 튐 방지)
+    // 2. 내 메시지 추가
     setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: 'Mark', text: option.text, time: getTime() }]);
     
-    // 3. 메시지 추가 직후 스크롤을 즉시 바닥으로 (새 메시지가 보이도록)
-    setTimeout(() => scrollToBottom(true), 0);
+    // 3. [중요] 메시지가 추가되었으니 스크롤을 바닥으로 유지 (여백은 아직 있음)
+    scrollToBottom(true);
 
-    // 4. 아주 짧은 딜레이 후 스페이서 제거 (메시지가 자리를 잡은 뒤 여백을 줄임)
+    // 4. 약간의 딜레이 후 여백 제거 및 다음 씬 로드
     setTimeout(() => {
-        setSpacerHeight(0); // CSS transition으로 부드럽게 줄어듦
+        // 여백을 0으로 줄임 (CSS transition으로 부드럽게)
+        setSpacerHeight(0);
         
-        // 스페이서가 줄어드는 0.3초 동안 스크롤을 바닥에 강제로 고정 (화면 밀림 방지)
-        const scrollLock = setInterval(() => scrollToBottom(true), 10);
-        setTimeout(() => clearInterval(scrollLock), 300);
+        // 여백이 줄어드는 동안 스크롤이 튀지 않게 바닥으로 계속 고정
+        const lockScroll = setInterval(() => scrollToBottom(true), 10);
+        setTimeout(() => clearInterval(lockScroll), 350);
 
-        // 5. 애니메이션 종료 후 데이터 정리 및 다음 씬 로드
+        // 데이터 정리 및 다음 장면 이동
         setTimeout(() => { 
             setChoices([]); 
             setIsChoiceFading(false); 
             loadScene(option.nextId); 
-        }, 300); 
+        }, 350); 
     }, 50);
   };
 
