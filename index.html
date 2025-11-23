@@ -261,51 +261,64 @@ function App() {
   const [typingSender, setTypingSender] = useState(null); 
   const [isNarrating, setIsNarrating] = useState(false);
   
-  // [수정] 선택지 관련 상태
-  const [isChoiceFading, setIsChoiceFading] = useState(false); 
+  // [상태 관리] 선택지 및 애니메이션 제어
   const [choices, setChoices] = useState([]);
+  const [isChoiceFading, setIsChoiceFading] = useState(false); // 선택지가 사라지는 중인지
+  const [spacerHeight, setSpacerHeight] = useState(0); // 채팅창 하단 여백 높이
+  
   const [wrongChoiceIndex, setWrongChoiceIndex] = useState(null);
   const [helperText, setHelperText] = useState("뭐라고 말하는 게 좋을까?");
-  
-  // [수정] 하단 여백 상태 (채팅 가림 방지용)
-  // 선택지가 있으면 400px, 없으면 100px. 이걸 state로 관리해서 덜컹거림 제어
-  const [bottomSpacerHeight, setBottomSpacerHeight] = useState(100);
-
   const [typingNarrativeText, setTypingNarrativeText] = useState("");
   const [isTypingNarrative, setIsTypingNarrative] = useState(false);
+  
   const [timeStr, setTimeStr] = useState("12:00");
   const [dateStr, setDateStr] = useState("");
   
   const scrollRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const scrollLockRef = useRef(null); // 스크롤 락킹용 RAF ID 저장
 
-  // [수정] 강력한 스크롤 함수 (애니메이션 프레임 사용)
+  // [핵심 1] 스크롤을 바닥으로 강제 이동 (애니메이션 프레임 사용으로 부드러움 극대화)
   const scrollToBottom = (instant = false) => {
-    if (!scrollRef.current) return;
+    if (scrollRef.current) {
+      const target = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTo({
+        top: target,
+        behavior: instant ? 'auto' : 'smooth'
+      });
+    }
+  };
+
+  // [핵심 2] 스크롤 락킹 (Locking): 레이아웃이 변하는 동안 스크롤을 바닥에 본드처럼 붙임
+  const startScrollLock = (duration) => {
+    const startTime = Date.now();
     
-    // 강제 스크롤: 브라우저가 레이아웃을 계산한 직후에 실행되도록 함
-    requestAnimationFrame(() => {
+    const lock = () => {
       if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       }
-    });
+      if (Date.now() - startTime < duration) {
+        scrollLockRef.current = requestAnimationFrame(lock);
+      }
+    };
+    cancelAnimationFrame(scrollLockRef.current);
+    scrollLockRef.current = requestAnimationFrame(lock);
   };
 
-  // 메시지, 타이핑, 선택지 등 상태가 변하면 무조건 스크롤 내림
-  useEffect(() => {
-    scrollToBottom(false);
-    // 혹시 모를 레이아웃 딜레이를 위해 50ms 뒤 한 번 더 실행
-    setTimeout(() => scrollToBottom(false), 50);
-  }, [messages, isTyping, isTypingNarrative, isNarrating, choices, bottomSpacerHeight]);
-
-  // 선택지가 생기면 공간 확보 (가려짐 방지)
+  // 선택지가 생기거나 사라질 때 Spacer 높이 조절
   useEffect(() => {
     if (choices.length > 0) {
-      setBottomSpacerHeight(400); // 넉넉하게 400px 확보
+      setSpacerHeight(280); // 선택지 높이만큼 확보
+      setTimeout(() => scrollToBottom(false), 50); // 약간 딜레이 후 스크롤 정리
     } else if (!isChoiceFading) {
-      setBottomSpacerHeight(100); // 평소엔 100px
+      setSpacerHeight(0); // 평소엔 0
     }
   }, [choices, isChoiceFading]);
+
+  // 메시지 추가시 스크롤 처리
+  useEffect(() => {
+    scrollToBottom(false);
+  }, [messages, isTyping, isTypingNarrative, isNarrating]);
 
   useEffect(() => {
     const now = new Date(); setDateStr(`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`);
@@ -364,27 +377,25 @@ function App() {
 
   const loadScene = (sceneId) => { if (!SCENARIO_SEQUENCE[sceneId]) return; setCurrentSequence(SCENARIO_SEQUENCE[sceneId]); setStepIndex(0); setChoices([]); setWrongChoiceIndex(null); };
   
-  // [수정] 덜컹거림 방지를 위한 선택지 핸들러 로직 개선
+  // [핵심 3] 선택지 처리 핸들러 (가장 중요한 수정)
   const handleChoice = (option, index) => {
     if (!option.nextId) { playSound('error'); setWrongChoiceIndex(index); setHelperText("다시 선택해 보자."); setTimeout(() => { setWrongChoiceIndex(null); }, 500); return; }
     
-    // 1. 애니메이션 시작 플래그 ON
+    // 1. 선택지 사라짐 애니메이션 시작 (높이는 유지됨)
     setIsChoiceFading(true); 
     playSound('message'); 
     
-    // 2. 메시지는 '즉시' 추가 (기다리지 않음)
+    // 2. 메시지 즉시 추가
     setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: 'Mark', text: option.text, time: getTime() }]);
     
-    // 3. ★핵심★: 메시지가 추가된 직후 스크롤을 바로 내림 (화면 튐 방지)
-    scrollToBottom(true);
+    // 3. 0.5초 동안 스크롤을 바닥에 강제 고정 (덜컹거림 방지)
+    startScrollLock(600);
 
-    // 4. 선택지 데이터 비우기 & 다음 씬 로드 (0.5초 딜레이)
-    // 이 시간 동안 bottomSpacerHeight는 400px을 유지하므로 화면이 꺼지지 않음
+    // 4. 애니메이션 후 데이터 정리 (이때 spacerHeight가 0이 되며 스르륵 내려옴)
     setTimeout(() => { 
         setChoices([]); 
         setIsChoiceFading(false); 
         loadScene(option.nextId); 
-        // 5. 모든 처리가 끝난 후 스페이서 높이가 100px로 줄어들며 자연스럽게 스크롤
     }, 500);
   };
 
@@ -518,15 +529,10 @@ return (
             </div>
 
             {/* 채팅 스크롤 영역 */}
-            {/* [수정] Spacer div 대신 style로 paddingBottom을 직접 제어하여 부드럽게 공간 확보 */}
+            {/* [수정] padding-bottom을 고정(90px)하고, 대신 마지막에 Spacer Div를 추가함 */}
             <div 
                 ref={scrollRef} 
-                className="flex-1 overflow-y-auto px-4 pt-4 custom-scrollbar overscroll-contain touch-auto relative"
-                style={{ 
-                    // [핵심] 선택지가 있으면 400px, 없으면 100px. transition을 줘서 부드럽게 변경.
-                    paddingBottom: `${bottomSpacerHeight}px`, 
-                    transition: 'padding-bottom 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)' 
-                }}
+                className="flex-1 overflow-y-auto px-4 pt-4 pb-24 custom-scrollbar overscroll-contain touch-auto relative"
             >
               <div className="flex justify-center my-4"><span className="bg-white/30 backdrop-blur-sm text-gray-600 text-xs px-3 py-1 rounded-full border border-white/40 shadow-sm">{dateStr}</span></div>
               {messages.map((msg) => {
@@ -547,12 +553,21 @@ return (
                 );
               })}
               {isTyping && (<div className="flex w-full justify-start mb-4"><div className="flex flex-col items-start max-w-[85%]"><span className="text-[11px] text-gray-500 ml-14 mb-1">{typingSender}</span><div className="flex items-start">{(() => { const info = getSenderInfo(typingSender); return info.isImage ? (<img src={IMAGES.jaehyun} className="w-11 h-11 rounded-full object-cover mr-2 shadow-sm flex-shrink-0" alt="Jaehyun" onError={(e) => {e.target.src='https://via.placeholder.com/44?text=Jaehyun'}} />) : (<div className={`w-11 h-11 rounded-[18px] flex items-center justify-center text-white shadow-sm mr-2 ${info.avatarBg} flex-shrink-0`}><User size={20} fill="rgba(255,255,255,0.5)" strokeWidth={2} /></div>); })()}<div className={`px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex space-x-1 items-center h-10 mt-0.5 ${getSenderInfo(typingSender).color}`}><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div></div></div></div></div>)}
+              
+              {/* [핵심] 가변 스페이서: 선택지가 있으면 280px만큼 자리를 차지해서 채팅을 밀어올림 */}
+              <div 
+                 style={{ 
+                    height: `${spacerHeight}px`, 
+                    transition: 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)' 
+                 }} 
+                 className="w-full shrink-0"
+              />
               <div ref={messagesEndRef} />
             </div>
 
             {/* 하단 고정 영역 */}
             <div className="absolute bottom-0 w-full z-20">
-              {/* 선택지 영역 */}
+              {/* 선택지 영역 (absolute로 띄우기) */}
               <div 
                 className={`absolute bottom-[60px] w-full px-4 pb-2 transition-all duration-500 ease-in-out origin-bottom ${
                   (choices.length > 0 || isChoiceFading) 
