@@ -461,20 +461,27 @@ return (
               </div>
               <div className="flex-1 p-6 space-y-4 overflow-y-auto custom-scrollbar overscroll-contain touch-auto">
                 {CHAPTERS.map((chapter, index) => {
-                  // [수정] 챕터별 파스텔 색상 지정
+                  // [수정] 투명도(/40)를 추가하여 훨씬 더 연하고 은은한 파스텔톤 적용
                   const colors = [
-                    "bg-pink-50 border-pink-100 hover:bg-pink-100",
-                    "bg-blue-50 border-blue-100 hover:bg-blue-100",
-                    "bg-yellow-50 border-yellow-100 hover:bg-yellow-100",
-                    "bg-purple-50 border-purple-100 hover:bg-purple-100",
-                    "bg-green-50 border-green-100 hover:bg-green-100",
-                    "bg-orange-50 border-orange-100 hover:bg-orange-100"
+                    "bg-rose-50/40 border-rose-100 hover:bg-rose-50",    // 아주 연한 핑크
+                    "bg-sky-50/40 border-sky-100 hover:bg-sky-50",       // 아주 연한 하늘색
+                    "bg-amber-50/40 border-amber-100 hover:bg-amber-50", // 아주 연한 노란색
+                    "bg-violet-50/40 border-violet-100 hover:bg-violet-50", // 아주 연한 보라색
+                    "bg-emerald-50/40 border-emerald-100 hover:bg-emerald-50", // 아주 연한 초록색
+                    "bg-orange-50/40 border-orange-100 hover:bg-orange-50"   // 아주 연한 주황색
                   ];
                   const colorClass = colors[index % colors.length];
                   
+                  // 아이콘 텍스트 색상도 테마에 맞춰 변경
+                  const textColors = [
+                    "text-rose-400", "text-sky-400", "text-amber-400", 
+                    "text-violet-400", "text-emerald-400", "text-orange-400"
+                  ];
+                  const textColorClass = textColors[index % textColors.length];
+
                   return (
                     <button key={chapter.id} onClick={() => handleStartChat(chapter.sceneId)} className={`w-full p-5 rounded-3xl shadow-sm border flex items-center text-left transition-all duration-200 group ${colorClass}`}>
-                      <div className="w-12 h-12 rounded-2xl bg-white/60 flex items-center justify-center font-black text-gray-700 text-lg mr-5 shadow-sm group-hover:scale-110 transition-transform">
+                      <div className={`w-12 h-12 rounded-2xl bg-white flex items-center justify-center font-black text-lg mr-5 shadow-sm group-hover:scale-110 transition-transform ${textColorClass}`}>
                         {chapter.id}
                       </div>
                       <div>
