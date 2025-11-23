@@ -260,60 +260,52 @@ function App() {
   const [isTyping, setIsTyping] = useState(false);
   const [typingSender, setTypingSender] = useState(null); 
   const [isNarrating, setIsNarrating] = useState(false);
+  
+  // [수정] 선택지 관련 상태
   const [isChoiceFading, setIsChoiceFading] = useState(false); 
-  const [typingNarrativeText, setTypingNarrativeText] = useState("");
-  const [isTypingNarrative, setIsTypingNarrative] = useState(false);
   const [choices, setChoices] = useState([]);
   const [wrongChoiceIndex, setWrongChoiceIndex] = useState(null);
   const [helperText, setHelperText] = useState("뭐라고 말하는 게 좋을까?");
+  
+  // [수정] 하단 여백 상태 (채팅 가림 방지용)
+  // 선택지가 있으면 400px, 없으면 100px. 이걸 state로 관리해서 덜컹거림 제어
+  const [bottomSpacerHeight, setBottomSpacerHeight] = useState(100);
+
+  const [typingNarrativeText, setTypingNarrativeText] = useState("");
+  const [isTypingNarrative, setIsTypingNarrative] = useState(false);
   const [timeStr, setTimeStr] = useState("12:00");
   const [dateStr, setDateStr] = useState("");
   
   const scrollRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  // [핵심] 스크롤을 바닥으로 내리는 함수
+  // [수정] 강력한 스크롤 함수 (애니메이션 프레임 사용)
   const scrollToBottom = (instant = false) => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: instant ? 'auto' : 'smooth'
-      });
-    }
+    if (!scrollRef.current) return;
+    
+    // 강제 스크롤: 브라우저가 레이아웃을 계산한 직후에 실행되도록 함
+    requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    });
   };
 
-  // [핵심 1] 메시지가 추가되거나 선택지가 생기면 무조건 바닥으로 스크롤 (가려짐 방지)
-  // useLayoutEffect를 써서 화면이 그려지기 전에 스크롤 위치를 잡음 (깜빡임 방지)
-  React.useLayoutEffect(() => {
-    if (choices.length > 0) {
-      scrollToBottom(false); // 부드럽게 선택지 위로 올림
-    } else {
-      scrollToBottom(false);
-    }
-  }, [messages, isTyping, choices, isTypingNarrative, isNarrating]);
-
-  // [핵심 2] 선택지 선택 후 애니메이션(0.5초) 동안 스크롤 튀는 것 방지 (Locking)
-  // 패딩이 줄어드는 동안 스크롤이 위로 도망가지 않게 계속 바닥으로 잡아당김
+  // 메시지, 타이핑, 선택지 등 상태가 변하면 무조건 스크롤 내림
   useEffect(() => {
-    if (isChoiceFading) {
-      // 1. 선택 즉시 바닥으로 이동 (내 말풍선 바로 보여야 함)
-      scrollToBottom(true); 
+    scrollToBottom(false);
+    // 혹시 모를 레이아웃 딜레이를 위해 50ms 뒤 한 번 더 실행
+    setTimeout(() => scrollToBottom(false), 50);
+  }, [messages, isTyping, isTypingNarrative, isNarrating, choices, bottomSpacerHeight]);
 
-      // 2. 애니메이션 진행되는 0.5초 동안 아주 짧은 간격으로 스크롤을 바닥에 고정
-      const intervalId = setInterval(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-      }, 10); // 10ms마다 고정
-
-      const timeoutId = setTimeout(() => {
-        clearInterval(intervalId);
-        scrollToBottom(false); // 애니메이션 끝난 후 최종 정렬
-      }, 500);
-
-      return () => { clearInterval(intervalId); clearTimeout(timeoutId); };
+  // 선택지가 생기면 공간 확보 (가려짐 방지)
+  useEffect(() => {
+    if (choices.length > 0) {
+      setBottomSpacerHeight(400); // 넉넉하게 400px 확보
+    } else if (!isChoiceFading) {
+      setBottomSpacerHeight(100); // 평소엔 100px
     }
-  }, [isChoiceFading]);
+  }, [choices, isChoiceFading]);
 
   useEffect(() => {
     const now = new Date(); setDateStr(`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`);
@@ -372,20 +364,27 @@ function App() {
 
   const loadScene = (sceneId) => { if (!SCENARIO_SEQUENCE[sceneId]) return; setCurrentSequence(SCENARIO_SEQUENCE[sceneId]); setStepIndex(0); setChoices([]); setWrongChoiceIndex(null); };
   
+  // [수정] 덜컹거림 방지를 위한 선택지 핸들러 로직 개선
   const handleChoice = (option, index) => {
     if (!option.nextId) { playSound('error'); setWrongChoiceIndex(index); setHelperText("다시 선택해 보자."); setTimeout(() => { setWrongChoiceIndex(null); }, 500); return; }
     
+    // 1. 애니메이션 시작 플래그 ON
     setIsChoiceFading(true); 
     playSound('message'); 
     
-    // 즉시 메시지 추가
+    // 2. 메시지는 '즉시' 추가 (기다리지 않음)
     setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: 'Mark', text: option.text, time: getTime() }]);
     
-    // 애니메이션 후 데이터 정리
+    // 3. ★핵심★: 메시지가 추가된 직후 스크롤을 바로 내림 (화면 튐 방지)
+    scrollToBottom(true);
+
+    // 4. 선택지 데이터 비우기 & 다음 씬 로드 (0.5초 딜레이)
+    // 이 시간 동안 bottomSpacerHeight는 400px을 유지하므로 화면이 꺼지지 않음
     setTimeout(() => { 
         setChoices([]); 
         setIsChoiceFading(false); 
         loadScene(option.nextId); 
+        // 5. 모든 처리가 끝난 후 스페이서 높이가 100px로 줄어들며 자연스럽게 스크롤
     }, 500);
   };
 
@@ -399,9 +398,9 @@ function App() {
     if (sender === '재경') return { color: COLORS.jaekyung, avatarBg: 'bg-blue-200' };
     return { color: COLORS.other, avatarBg: 'bg-gray-300' };
   };
+
 return (
     <div className="fixed inset-0 w-full h-full bg-gray-100 flex justify-center items-center overflow-hidden font-sans">
-      {/* 모바일 프레임 */}
       <div className={`w-full h-full sm:h-[90dvh] sm:max-w-[420px] sm:rounded-[2.5rem] flex flex-col shadow-2xl overflow-hidden relative ${COLORS.bg}`}>
         
         {/* 상단바 */}
@@ -412,7 +411,7 @@ return (
           </div>
         </div>
 
-        {/* [친구 목록 / 인트로 / 챕터 선택 화면은 기존과 동일하므로 생략하지 않고 전체 흐름 유지를 위해 포함] */}
+        {/* 친구 목록 화면 */}
         {currentView === 'friendList' && (
             <div className="flex flex-col h-full overflow-hidden">
               <div className="px-5 py-4 flex justify-between items-end pb-2 bg-white/50 backdrop-blur-md sticky top-0 z-10 shrink-0">
@@ -518,15 +517,15 @@ return (
               <button className="p-2 rounded-full hover:bg-white/20 transition"><MoreHorizontal size={24} className="text-gray-800" /></button>
             </div>
 
-            {/* 채팅 스크롤 영역 [핵심 수정: Spacer 제거하고 padding으로 공간 확보] */}
+            {/* 채팅 스크롤 영역 */}
+            {/* [수정] Spacer div 대신 style로 paddingBottom을 직접 제어하여 부드럽게 공간 확보 */}
             <div 
                 ref={scrollRef} 
                 className="flex-1 overflow-y-auto px-4 pt-4 custom-scrollbar overscroll-contain touch-auto relative"
-                style={{
-                    // 선택지가 있으면 360px, 없으면 100px의 패딩을 줌.
-                    // 이렇게 하면 콘텐츠가 위로 밀려 올라가서 가려지지 않음.
-                    paddingBottom: (choices.length > 0 || isChoiceFading) ? '360px' : '100px',
-                    transition: 'padding-bottom 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)'
+                style={{ 
+                    // [핵심] 선택지가 있으면 400px, 없으면 100px. transition을 줘서 부드럽게 변경.
+                    paddingBottom: `${bottomSpacerHeight}px`, 
+                    transition: 'padding-bottom 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)' 
                 }}
             >
               <div className="flex justify-center my-4"><span className="bg-white/30 backdrop-blur-sm text-gray-600 text-xs px-3 py-1 rounded-full border border-white/40 shadow-sm">{dateStr}</span></div>
