@@ -486,8 +486,8 @@ return (
               })}
               {isTyping && (<div className="flex w-full justify-start"><div className="flex flex-col items-start max-w-[85%]"><span className="text-[11px] text-gray-500 ml-14 mb-1">{typingSender}</span><div className="flex items-start">{(() => { const info = getSenderInfo(typingSender); return info.isImage ? (<img src={IMAGES.jaehyun} className="w-11 h-11 rounded-full object-cover mr-2 shadow-sm flex-shrink-0" alt="Jaehyun" onError={(e) => {e.target.src='https://via.placeholder.com/44?text=Jaehyun'}} />) : (<div className={`w-11 h-11 rounded-[18px] flex items-center justify-center text-white shadow-sm mr-2 ${info.avatarBg} flex-shrink-0`}><User size={20} fill="rgba(255,255,255,0.5)" strokeWidth={2} /></div>); })()}<div className={`px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex space-x-1 items-center h-10 mt-0.5 ${getSenderInfo(typingSender).color}`}><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div></div></div></div></div>)}
               
-              {/* [수정됨] duration-1000으로 늘려 아주 천천히 사라짐 & h-24로 줄여서 평소 여백 최소화 */}
-              <div className={`shrink-0 ease-in-out ${(choices.length > 0 && !isChoiceFading) ? 'h-[16rem] transition-none' : 'h-24 transition-[height] duration-1000'}`}></div>
+              {/* [수정됨] ease-out 적용으로 붕 뜨는 느낌 억제 & h-[5rem]으로 평소 여백 최소화 (딱 입력창 높이만큼만) */}
+              <div className={`shrink-0 ease-out ${(choices.length > 0 && !isChoiceFading) ? 'h-[16rem] transition-none' : 'h-[5rem] transition-[height] duration-1000'}`}></div>
               
               <div ref={messagesEndRef} />
             </div>
