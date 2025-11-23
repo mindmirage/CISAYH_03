@@ -42,6 +42,10 @@ html, body {
         opacity: 1; 
         transform: translateY(0); 
     }
+    50% { 
+        /* 핵심: 시간이 절반 지났을 때 이미 투명하게 만듦 -> 잔상 제거 */
+        opacity: 0; 
+    }
     100% { 
         opacity: 0; 
         transform: translateY(10px); 
