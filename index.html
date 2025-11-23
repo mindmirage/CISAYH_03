@@ -545,13 +545,15 @@ return (
                     <Plus size={20} />
                   </div>
                   
-                  <div className={`flex-1 bg-white/80 rounded-full h-10 px-4 flex items-center text-xs shadow-inner border border-white/50 ${(choices.length > 0 && !isChoiceFading) ? 'text-gray-800 font-bold bg-blue-50/80 border-blue-200' : 'text-gray-400'}`}>
+                  {/* [수정] 디자인을 기본 상태(회색 텍스트, 흰색 배경)로 통일 */}
+                  <div className="flex-1 bg-white/80 rounded-full h-10 px-4 flex items-center text-xs shadow-inner border border-white/50 text-gray-400">
                     {(choices.length > 0 && !isChoiceFading)
                       ? "답장 선택하기 (터치)" 
                       : (isNarrating ? "이야기가 진행 중입니다..." : "상대방의 메시지를 기다리는 중...")}
                   </div>
                   
-                  <div className={`p-2 rounded-full text-white shadow-sm transition-all ${(choices.length > 0 && !isChoiceFading) ? 'bg-blue-500 animate-pulse' : 'bg-[#4FD985] opacity-50'}`}>
+                  {/* [수정] 전송 버튼도 기본 상태(초록색, 반투명)로 통일 */}
+                  <div className="p-2 rounded-full text-white shadow-sm transition-all bg-[#4FD985] opacity-50">
                     <Send size={18} />
                   </div>
                 </div>
@@ -561,12 +563,11 @@ return (
               {(choices.length > 0 && (!isChoiceMinimized || isChoiceFading)) && (
                 <div className={`flex flex-col space-y-2 ${isChoiceFading ? 'absolute bottom-0 left-0 w-full px-4 pb-8 z-10 animate-collapse' : 'animate-fade-in-up'}`}>
                   
-                  {/* [수정] 안내 문구와 접기 버튼을 한 줄에 배치 (높이 절약) */}
+                  {/* 안내 문구와 접기 버튼 */}
                   <div className="relative flex items-center justify-center mb-1">
                     <span className={`text-xs font-medium transition-colors duration-300 ${helperText === "다시 선택해 보자." ? "text-red-500 font-bold" : "text-gray-500"}`}>
                       {helperText}
                     </span>
-                    {/* 접기 버튼: 오른쪽 끝에 절대 위치로 고정 */}
                     <button onClick={() => setIsChoiceMinimized(true)} className="absolute right-0 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition">
                       <ChevronDown size={16} />
                     </button>
