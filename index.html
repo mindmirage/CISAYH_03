@@ -260,52 +260,19 @@ function App() {
   const [isTyping, setIsTyping] = useState(false);
   const [typingSender, setTypingSender] = useState(null); 
   const [isNarrating, setIsNarrating] = useState(false);
-  
-  // [상태 관리]
-  const [choices, setChoices] = useState([]);
   const [isChoiceFading, setIsChoiceFading] = useState(false); 
-  const [wrongChoiceIndex, setWrongChoiceIndex] = useState(null);
-  const [helperText, setHelperText] = useState("뭐라고 말하는 게 좋을까?");
   const [typingNarrativeText, setTypingNarrativeText] = useState("");
   const [isTypingNarrative, setIsTypingNarrative] = useState(false);
-  
-  // [핵심] 하단 여백 높이 관리 (선택지 높이만큼 공간 확보용)
-  const [spacerHeight, setSpacerHeight] = useState(0); 
-
+  const [choices, setChoices] = useState([]);
+  const [wrongChoiceIndex, setWrongChoiceIndex] = useState(null);
+  const [helperText, setHelperText] = useState("뭐라고 말하는 게 좋을까?");
   const [timeStr, setTimeStr] = useState("12:00");
   const [dateStr, setDateStr] = useState("");
-  
   const scrollRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  // [수정] 스크롤을 무조건 바닥으로 내리는 함수
-  const scrollToBottom = (instant = false) => {
-    if (scrollRef.current) {
-      // scrollHeight는 전체 높이이므로, top을 scrollHeight로 설정하면 무조건 끝으로 갑니다.
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: instant ? 'auto' : 'smooth'
-      });
-    }
-  };
-
-  // [수정] 선택지가 나타날 때: 여백 확보 후 '즉시' 바닥으로 스크롤
-  useEffect(() => {
-    if (choices.length > 0) {
-      // 1. 선택지 영역만큼 여백을 넉넉히 확보 (기존 260 -> 320으로 증가)
-      setSpacerHeight(320); 
-      
-      // 2. 렌더링 직후 스크롤을 강제로 바닥에 고정
-      // setTimeout을 두 번 사용하여 확실하게 처리
-      setTimeout(() => scrollToBottom(true), 10); // 1차 시도 (즉시)
-      setTimeout(() => scrollToBottom(true), 100); // 2차 시도 (레이아웃 안정화 후)
-    }
-  }, [choices]);
-
-  // [수정] 메시지 추가나 여백 변화 시 스크롤 하단 고정
-  React.useLayoutEffect(() => {
-    scrollToBottom(messages.length > 0); 
-  }, [messages, isTyping, isTypingNarrative, isNarrating, spacerHeight]); // spacerHeight 추가됨
+  const scrollToBottom = () => { if (scrollRef.current) { scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); } };
+  useEffect(() => { scrollToBottom(); }, [messages, isTyping, isTypingNarrative, choices, isNarrating]);
   useEffect(() => {
     const now = new Date(); setDateStr(`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`);
     const interval = setInterval(() => { const t = new Date(); setTimeStr(`${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`); }, 1000);
@@ -317,6 +284,15 @@ function App() {
   const handleStartChat = (startSceneId) => { playSound('narrative'); setCurrentView('chat'); setMessages([]); setCurrentSequence([]); setStepIndex(0); setTimeout(() => { loadScene(startSceneId); }, 500); };
   const handleBackToFriends = () => { setCurrentView('friendList'); setMessages([]); setCurrentSequence([]); setStepIndex(0); };
 
+  useEffect(() => { 
+      if (currentView !== 'chat') return; 
+      if (choices.length > 0) {
+          scrollToBottom();
+          // 레이아웃이 그려진 직후 한 번 더 내림
+          setTimeout(() => scrollToBottom(), 50);
+      }
+  }, [choices, currentView]);
+
   useEffect(() => {
     if (currentView !== 'chat') return;
     if (isTypingNarrative) return;
@@ -325,7 +301,7 @@ function App() {
     const processStep = async () => {
       if (step.type === 'narrative') {
         setTimeout(() => {
-            setIsNarrating(true); playSound('narrative'); setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: step.content }]);
+            setIsNarrating(true); playSound('narrative'); setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: step.content }]); scrollToBottom();
             const readingTime = (step.content.length * 30) + 1000;
             setTimeout(() => { setIsNarrating(false); setStepIndex(prev => prev + 1); }, readingTime);
         }, 1000);
@@ -334,7 +310,7 @@ function App() {
             setTimeout(() => { playSound('message'); setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() }]); setStepIndex(prev => prev + 1); }, 1500);
         } else {
             setTimeout(() => {
-                setTypingSender(step.sender); setIsTyping(true);
+                setTypingSender(step.sender); setIsTyping(true); scrollToBottom();
                 setTimeout(() => { setIsTyping(false); setTypingSender(null); playSound('message'); setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() }]); setStepIndex(prev => prev + 1); }, 2000); 
             }, 800);
         }
@@ -343,11 +319,11 @@ function App() {
       } else if (step.type === 'poem') {
         setTimeout(() => { playSound('narrative'); setMessages(prev => [...prev, { id: Date.now(), type: 'poem', text: step.text, subText: step.subText }]); setStepIndex(prev => prev + 1); }, 1500);
       } else if (step.type === 'choice') {
-        setChoices(shuffleArray(step.options)); setHelperText("뭐라고 말하는 게 좋을까?");
+        setChoices(shuffleArray(step.options)); setHelperText("뭐라고 말하는 게 좋을까?"); scrollToBottom();
       } else if (step.type === 'next') {
         loadScene(step.nextId);
       } else if (step.type === 'typing_narrative') {
-        setIsTypingNarrative(true); setTypingNarrativeText("");
+        setIsTypingNarrative(true); setTypingNarrativeText(""); setTimeout(() => scrollToBottom(), 0);
         let i = 0; const text = step.content;
         const interval = setInterval(() => {
           setTypingNarrativeText(text.slice(0, i + 1));
@@ -362,8 +338,6 @@ function App() {
   }, [stepIndex, currentSequence, currentView, isTypingNarrative]);
 
   const loadScene = (sceneId) => { if (!SCENARIO_SEQUENCE[sceneId]) return; setCurrentSequence(SCENARIO_SEQUENCE[sceneId]); setStepIndex(0); setChoices([]); setWrongChoiceIndex(null); };
-  
-  // [수정] 선택지 클릭 시: 자연스러운 전환 처리
   const handleChoice = (option, index) => {
     if (!option.nextId) { 
         playSound('error'); 
@@ -373,34 +347,24 @@ function App() {
         return; 
     }
     
-    // 1. 페이드 아웃 시작
+    // 1. 애니메이션 시작
     setIsChoiceFading(true); 
     playSound('message'); 
     
-    // 2. 내 메시지 추가
+    // 2. 메시지 추가
     setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: 'Mark', text: option.text, time: getTime() }]);
     
-    // 3. [중요] 메시지가 추가되었으니 스크롤을 바닥으로 유지 (여백은 아직 있음)
-    scrollToBottom(true);
-
-    // 4. 약간의 딜레이 후 여백 제거 및 다음 씬 로드
-    setTimeout(() => {
-        // 여백을 0으로 줄임 (CSS transition으로 부드럽게)
-        setSpacerHeight(0);
-        
-        // 여백이 줄어드는 동안 스크롤이 튀지 않게 바닥으로 계속 고정
-        const lockScroll = setInterval(() => scrollToBottom(true), 10);
-        setTimeout(() => clearInterval(lockScroll), 350);
-
-        // 데이터 정리 및 다음 장면 이동
-        setTimeout(() => { 
-            setChoices([]); 
-            setIsChoiceFading(false); 
-            loadScene(option.nextId); 
-        }, 350); 
-    }, 50);
+    // 3. [핵심] 여백이 줄어드는 0.5초 동안 스크롤을 계속 바닥으로 내림 (덜컥거림 방지)
+    const scrollLock = setInterval(() => scrollToBottom(), 10);
+    
+    // 4. 애니메이션 종료 후 정리
+    setTimeout(() => { 
+        clearInterval(scrollLock); // 스크롤 고정 해제
+        setChoices([]); 
+        setIsChoiceFading(false); 
+        loadScene(option.nextId); 
+    }, 500); // 여백 줄어드는 시간과 맞춤
   };
-
   const getSenderInfo = (sender) => {
     if (sender === '재현') return { color: COLORS.jaehyun, isImage: true };
     if (sender === '은재') return { color: COLORS.eunjae, avatarBg: 'bg-orange-200' };
@@ -411,20 +375,20 @@ function App() {
     if (sender === '재경') return { color: COLORS.jaekyung, avatarBg: 'bg-blue-200' };
     return { color: COLORS.other, avatarBg: 'bg-gray-300' };
   };
-
 return (
     <div className="fixed inset-0 w-full h-full bg-gray-100 flex justify-center items-center overflow-hidden font-sans">
+      {/* 모바일에서는 꽉 차게, PC에서는 스마트폰 모양 유지 */}
       <div className={`w-full h-full sm:h-[90dvh] sm:max-w-[420px] sm:rounded-[2.5rem] flex flex-col shadow-2xl overflow-hidden relative ${COLORS.bg}`}>
         
         {/* 상단바 */}
-        <div className="bg-transparent z-20 pt-3 pb-2 sticky top-0 shrink-0 select-none pointer-events-none">
-          <div className="flex justify-between px-6 mb-0 text-sm font-bold text-gray-700 items-center pointer-events-auto">
+        <div className="bg-transparent z-20 pt-3 pb-2 sticky top-0 shrink-0 select-none">
+          <div className="flex justify-between px-6 mb-0 text-sm font-bold text-gray-700 items-center">
             <span>{timeStr}</span>
             <div className="flex space-x-1.5"><Signal size={16} fill="currentColor" /><Wifi size={16} /><Battery size={16} fill="currentColor" /></div>
           </div>
         </div>
 
-        {/* 친구 목록 화면 (변동 없음) */}
+        {/* 친구 목록 화면 */}
         {currentView === 'friendList' && (
             <div className="flex flex-col h-full overflow-hidden">
               <div className="px-5 py-4 flex justify-between items-end pb-2 bg-white/50 backdrop-blur-md sticky top-0 z-10 shrink-0">
@@ -523,18 +487,13 @@ return (
         {/* 채팅 화면 */}
         {currentView === 'chat' && (
           <>
-            {/* 채팅 상단바 */}
             <div className="flex items-center justify-between px-4 py-2 bg-white/30 backdrop-blur-sm z-10 shrink-0">
               <button onClick={handleBackToFriends} className="p-2 rounded-full hover:bg-white/20 transition"><ChevronLeft size={24} className="text-gray-800" /></button>
               <div className="flex flex-col items-center"><div className="flex items-center space-x-1"><span className="font-black text-lg tracking-tight text-gray-800">재현</span><div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div></div><span className="text-[11px] text-gray-500 font-medium -mt-0.5">당신 집에서 잘 수 있나요?</span></div>
               <button className="p-2 rounded-full hover:bg-white/20 transition"><MoreHorizontal size={24} className="text-gray-800" /></button>
             </div>
-
             {/* 채팅 스크롤 영역 */}
-            <div 
-                ref={scrollRef} 
-                className="flex-1 overflow-y-auto px-4 pt-4 pb-24 custom-scrollbar overscroll-contain touch-auto relative"
-            >
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar overscroll-contain touch-auto pb-5">
               <div className="flex justify-center my-4"><span className="bg-white/30 backdrop-blur-sm text-gray-600 text-xs px-3 py-1 rounded-full border border-white/40 shadow-sm">{dateStr}</span></div>
               {messages.map((msg) => {
                 if (msg.type === 'narrative') {
@@ -547,64 +506,28 @@ return (
                 const isMe = msg.sender === 'Mark';
                 const senderInfo = !isMe ? getSenderInfo(msg.sender) : {};
                 return (
-                  <div key={msg.id} className={`flex w-full mb-4 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                  <div key={msg.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
                     {!isMe && (<div className="flex flex-col items-start max-w-[85%]"><span className="text-[11px] text-gray-500 ml-14 mb-1">{msg.sender}</span><div className="flex items-start">{senderInfo.isImage ? (<img src={IMAGES.jaehyun} className="w-11 h-11 rounded-full object-cover mr-2 shadow-sm flex-shrink-0" alt="Jaehyun" onError={(e) => {e.target.src='https://via.placeholder.com/44?text=Jaehyun'}} />) : (<div className={`w-11 h-11 rounded-[18px] flex items-center justify-center text-white shadow-sm mr-2 ${senderInfo.avatarBg} flex-shrink-0`}><User size={20} fill="rgba(255,255,255,0.5)" strokeWidth={2} /></div>)}<div className="flex items-end gap-1.5"><div className={`relative px-4 py-2.5 text-sm shadow-sm rounded-2xl rounded-tl-none ${senderInfo.color} text-gray-900 leading-relaxed`}>{msg.text}</div><span className="text-[10px] text-gray-500 min-w-fit mb-0.5">{msg.time}</span></div></div></div>)}
                     {isMe && (<div className="flex flex-col items-end max-w-[85%]"><div className="flex items-start flex-row-reverse"><img src={IMAGES.mark} className="w-11 h-11 rounded-full object-cover ml-2 shadow-sm flex-shrink-0" alt="Mark" onError={(e) => {e.target.src='https://via.placeholder.com/44?text=Mark'}} /><div className="flex items-end gap-1.5"><span className="text-[10px] text-gray-500 min-w-fit mb-0.5">{msg.time}</span><div className={`relative px-4 py-2.5 text-sm shadow-sm rounded-2xl rounded-tr-none ${COLORS.mark} ${COLORS.markText} leading-relaxed`}>{msg.text}</div></div></div></div>)}
                   </div>
                 );
               })}
-              {isTyping && (<div className="flex w-full justify-start mb-4"><div className="flex flex-col items-start max-w-[85%]"><span className="text-[11px] text-gray-500 ml-14 mb-1">{typingSender}</span><div className="flex items-start">{(() => { const info = getSenderInfo(typingSender); return info.isImage ? (<img src={IMAGES.jaehyun} className="w-11 h-11 rounded-full object-cover mr-2 shadow-sm flex-shrink-0" alt="Jaehyun" onError={(e) => {e.target.src='https://via.placeholder.com/44?text=Jaehyun'}} />) : (<div className={`w-11 h-11 rounded-[18px] flex items-center justify-center text-white shadow-sm mr-2 ${info.avatarBg} flex-shrink-0`}><User size={20} fill="rgba(255,255,255,0.5)" strokeWidth={2} /></div>); })()}<div className={`px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex space-x-1 items-center h-10 mt-0.5 ${getSenderInfo(typingSender).color}`}><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div></div></div></div></div>)}
+              {isTyping && (<div className="flex w-full justify-start"><div className="flex flex-col items-start max-w-[85%]"><span className="text-[11px] text-gray-500 ml-14 mb-1">{typingSender}</span><div className="flex items-start">{(() => { const info = getSenderInfo(typingSender); return info.isImage ? (<img src={IMAGES.jaehyun} className="w-11 h-11 rounded-full object-cover mr-2 shadow-sm flex-shrink-0" alt="Jaehyun" onError={(e) => {e.target.src='https://via.placeholder.com/44?text=Jaehyun'}} />) : (<div className={`w-11 h-11 rounded-[18px] flex items-center justify-center text-white shadow-sm mr-2 ${info.avatarBg} flex-shrink-0`}><User size={20} fill="rgba(255,255,255,0.5)" strokeWidth={2} /></div>); })()}<div className={`px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex space-x-1 items-center h-10 mt-0.5 ${getSenderInfo(typingSender).color}`}><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div></div></div></div></div>)}
               
-              {/* [핵심] 가변 스페이서: 선택지가 있을 때 이 div가 높이를 차지해서 채팅을 위로 밀어올림 */}
-              <div 
-                 style={{ 
-                    height: `${spacerHeight}px`,
-                    transition: 'height 0.3s ease-out',
-                    flexShrink: 0
-                 }} 
-              />
+              {/* [수정됨] ease-out 적용으로 붕 뜨는 느낌 억제 & h-[5rem]으로 평소 여백 최소화 (딱 입력창 높이만큼만) */}
+              <div className={`shrink-0 ease-in-out ${(choices.length > 0 && !isChoiceFading) ? 'h-[20rem] transition-none' : 'h-[5rem] transition-[height] duration-500'}`}></div>
+              
               <div ref={messagesEndRef} />
             </div>
-
-            {/* 하단 고정 영역 */}
-            <div className="absolute bottom-0 w-full z-20">
-              {/* 선택지 영역 */}
-              <div 
-                className={`absolute bottom-[60px] w-full px-4 pb-2 transition-all duration-300 ease-out origin-bottom ${
-                  (choices.length > 0 || isChoiceFading) 
-                    ? (isChoiceFading ? 'opacity-0 translate-y-0 pointer-events-none' : 'opacity-100 translate-y-0') 
-                    : 'opacity-0 pointer-events-none translate-y-4'
-                }`}
-              >
-                  <div className="bg-white/90 backdrop-blur-xl rounded-[20px] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] p-4 border border-white/60">
-                    <div className={`text-xs text-center mb-3 font-medium transition-colors duration-300 ${helperText === "다시 선택해 보자." ? "text-red-500 font-bold" : "text-gray-500"}`}>{helperText}</div>
-                    <div className="flex flex-col space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar">
-                      {choices.map((choice, index) => (
-                        <button key={index} onClick={() => handleChoice(choice, index)} className={`w-full p-3.5 text-sm font-medium rounded-xl text-left pl-5 transition-all active:scale-[0.98] ${COLORS.button} ${wrongChoiceIndex === index ? 'animate-shake bg-red-50 border-red-200' : ''}`}>
-                          {choice.text}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-              </div>
-
-              {/* 입력창 */}
-              <div className="bg-white/80 backdrop-blur-lg border-t border-white/50 p-3 pb-8 shadow-[0_-5px_20px_rgba(0,0,0,0.02)] relative z-30">
-                <div className="flex items-center gap-2 opacity-80">
-                  <div className="p-2 rounded-full bg-white/50 text-gray-500 hover:bg-white transition"><Plus size={20} /></div>
-                  <div className="flex-1 bg-white/80 rounded-full h-10 px-4 flex items-center text-gray-400 text-xs shadow-inner border border-white/50">
-                     {isNarrating ? "이야기가 진행 중입니다..." : "메시지를 기다리는 중..."}
-                  </div>
-                  <div className={`p-2 rounded-full text-white shadow-sm transition-all duration-300 ${choices.length > 0 ? 'bg-sky-400' : 'bg-[#4FD985] opacity-50'}`}>
-                    <Send size={18} />
-                  </div>
-                </div>
-              </div>
+            <div className="absolute bottom-0 w-full z-20 bg-white/60 backdrop-blur-lg border-t border-white/50 p-4 pb-8 transition-all duration-500 ease-in-out">
+              {(choices.length > 0 || isChoiceFading) ? (
+                <div className={`flex flex-col space-y-2 ${isChoiceFading ? 'animate-collapse' : 'animate-fade-in-up'}`}><div className={`text-xs text-center mb-1 font-medium transition-colors duration-300 ${helperText === "다시 선택해 보자." ? "text-red-500 font-bold" : "text-gray-500"}`}>{helperText}</div>{choices.map((choice, index) => (<button key={index} onClick={() => handleChoice(choice, index)} className={`w-full p-3.5 text-sm font-medium rounded-xl ${COLORS.button} ${wrongChoiceIndex === index ? 'animate-shake bg-red-50 border-red-200' : ''}`}>{choice.text}</button>))}</div>
+              ) : (<div className={`flex items-center gap-2 opacity-80 ${isChoiceFading ? 'hidden' : 'animate-fade-in'}`}><div className="p-2 rounded-full bg-white/50 text-gray-500 hover:bg-white transition"><Plus size={20} /></div><div className="flex-1 bg-white/80 rounded-full h-10 px-4 flex items-center text-gray-400 text-xs shadow-inner border border-white/50">{isNarrating ? "이야기가 진행 중입니다..." : "상대방의 메시지를 기다리는 중..."}</div><div className="p-2 rounded-full bg-[#4FD985] text-white shadow-sm opacity-50"><Send size={18} /></div></div>)}
             </div>
           </>
         )}
-        {/* 하단 홈바 Indicator */}
-        <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1/3 h-1 bg-gray-800/20 rounded-full z-40 pointer-events-none"></div>
+        {/* 하단 홈바 (장식용) */}
+        <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1/3 h-1 bg-gray-800/20 rounded-full z-30 pointer-events-none"></div>
       </div>
     </div>
   );
