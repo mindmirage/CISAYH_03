@@ -35,6 +35,13 @@ html, body {
 @keyframes collapse { 0% { opacity: 1; transform: translateY(0); max-height: 500px; margin-bottom: 0; } 100% { opacity: 0; transform: translateY(20px); max-height: 0; margin-bottom: 0; padding: 0; margin-top: 0; } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* 편지지가 둥둥 떠다니는 효과 */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(0.5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+.animate-float { animation: float 6s ease-in-out infinite; }
 </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden">
@@ -254,7 +261,64 @@ mission_hug_1: [{ type: 'narrative', content: "마크가 더는 볼 것도 없�
   mission_end_2: [{ type: 'text', sender: '재현', content: "믿음직스러운 사람한테 할 말이야, 그게?" }, { type: 'narrative', content: "반쯤 열린 창으로 길쭉한 햇빛이 방 안쪽으로 더 깊숙하게 들어온다. 재현의 얼굴이 전보다 더 선명하게 보인다. 마크는 조금 맥없이 헤실헤실 웃으며 재현의 팔을 쿡쿡 찌른다. 너 이거 되게 조심성 없는 행동이야. 알아? 쉽사리 오도 가도 못하는 좁은 방에서 괜스레 하릴없이 옷소매를 잡고 시간을 떼운다." }, { type: 'text', sender: 'Mark', content: "하고 싶은 말은 해야 되는 걸 어떡해요." }, { type: 'text', sender: '재현', content: "그래? 그럼 지금 하고 싶은 말은 뭔데." }, { type: 'narrative', content: "마크가 입을 조금 달싹거리고는 공연히 시계를 바라본다. 어젯밤 저녁처럼, 시계 소리가 유난히도 둔탁하게 째깍댄다. 마크가 눈을 꾹 감았다 뜨고는 용기 있게 말한다. 그러니까, 지금 18분 정도가 남았잖아요. 재현이 말없이 웃으며 언제나처럼 마크의 말을 끈기 있게 기다린다. 그러니까······ 어, 그러니까." }, { type: 'choice', options: [{ text: "10분만 좀 더 있다가 내려가면 안 돼요?", nextId: 'mission_end_final' }, { text: "조금만 더 있다 가요.", nextId: null }, { text: "나가기 싫어요.", nextId: null }] }],
   mission_end_final: [{ type: 'end' }]
 };
+const NIGHT_MESSAGES = [
+  {
+    id: 1,
+    type: 'received', // 받은 메시지
+    sender: '익명',
+    preview: '오늘 내가 느낀 감정을 뭐라고 해야 할지...',
+    date: '어제',
+    content: `오늘 내가 느낀 감정을 뭐라고 해야 할지 잘 모르겠어
+그런데도 꼭 너를 보고 있으면 다 알 것 같다는 생각이 들기도 했어
+앞으로도 뭔가가 계속 이어지고 지속될 것 같다는 예감까지
+이상하지?
 
+나는 그렇다 치더라도 넌 종일 무슨 생각을 했는지 궁금해
+안 그런 척했지만 긴 비행 시간 내내 초조한 마음이 들었는데
+그럴 때마다 옆을 바라보면 잠든 네가 있었어
+덩달아 잠이 오고 편안해지더라
+
+알게 모르게 탓을 하고 싶은 얼굴이기도 했어
+기본적으로 타고난 너의 다정함 때문일까?
+나는 앞으로 그런 것들을 잘 지켜 보려고 해
+
+어쨌든 지금 확실하게 말할 수 있는 건 이 정도뿐이야
+겪어 보지 못한 감정도 이 낯선 곳에선
+나름의 당위를 갖추게 될 거라 믿어
+
+넌 좋은 시간을 보낸 것 같아? 그렇다면 다행이야
+대체 앞으로 어떤 것들을 감당하려고 이렇게 길게 적고 있는 걸까
+한 달이라는 시간을 통과하는 동안 어떤 일이 일어날까?
+
+그런 것들을 궁금해하며... 익명 씀`
+  },
+  {
+    id: 2,
+    type: 'sent', // 보낸 메시지
+    sender: '나',
+    preview: '형이랑 앞으로 하고 싶은 게 많아질 것...',
+    date: '어제',
+    content: `형이랑 앞으로 하고 싶은 게 많아질 것 같아요
+오늘 너무 고마웠어요
+형도 저랑 같은 마음일까요?
+
+형의 마음을 알 도리는 없지만 쓰는 걸 멈추지는 못하겠어요
+보내지 않으면 결국 저만 간직하게 될 테니까요
+
+고작 하루 사이에 참 많은 생각이 뒤섞였는데
+그 탓에 자꾸만 말을 고르게 됐던 것 같아요
+어떻게 말해야 덜 부끄러울지 계속 고민했거든요
+형은 이런 제 마음을 모르겠죠?
+
+어쨌든 저는 형이 말하는 방식이 좋아요
+곁에서 자꾸만 지켜보고 싶어요
+
+지금도 생각이 나요
+그냥 생각이 나요
+어린 애처럼 형을 따라 하고 그럴지도 몰라요
+그래도 형은 이해해 주겠지만요`
+  }
+];
 function App() {
   const [currentView, setCurrentView] = useState('friendList');
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -273,6 +337,7 @@ function App() {
   const [isChoiceMinimized, setIsChoiceMinimized] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false); // 검색창 열림 여부
   const [searchQuery, setSearchQuery] = useState("");      // 검색어 저장
+  const [selectedMessage, setSelectedMessage] = useState(null);
 
   // ▼▼▼ [추가] 새로운 선택지가 생기면 자동으로 펼치기 ▼▼▼
   useEffect(() => {
@@ -444,11 +509,14 @@ return (
                     <div className="flex space-x-4 text-gray-600 mb-1 animate-fade-in">
                       <button onClick={() => setIsSearchOpen(true)} className="hover:text-gray-900 transition"><Search size={20} /></button>
                       <button className="hover:text-gray-900 transition"><User size={20} strokeWidth={2.5} /></button>
-                      <button className="hover:text-gray-900 transition"><Bell size={20} /></button>
+                      {/* [수정] 알림 버튼 클릭 시 'notifications' 뷰로 이동 */}
+                      <button onClick={() => setCurrentView('notifications')} className="hover:text-gray-900 transition relative">
+                        <Bell size={20} />
+                        <div className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
+                      </button>
                     </div>
                   </>
                 )}
-              </div>
 
               {/* 리스트 영역 */}
               <div className="flex-1 overflow-y-auto p-5 custom-scrollbar space-y-2 overscroll-contain touch-auto">
@@ -523,6 +591,106 @@ return (
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+        )}
+        {currentView === 'notifications' && (
+            <div className="flex flex-col h-full bg-gray-50 animate-fade-in overflow-hidden relative">
+              
+              {/* 편지 상세 보기 (모달처럼 위에 뜸) */}
+              {selectedMessage ? (
+                <div className="absolute inset-0 z-20 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in">
+                  {/* 배경 클릭 시 닫기 */}
+                  <div className="absolute inset-0" onClick={() => setSelectedMessage(null)}></div>
+                  
+                  {/* 둥둥 떠다니는 편지지 */}
+                  <div className="w-full max-w-sm bg-[#FDFBF7] rounded-xl shadow-2xl overflow-hidden relative animate-float transform transition-transform duration-500">
+                    {/* 편지지 질감/헤더 */}
+                    <div className="h-2 bg-red-400/80 w-full"></div>
+                    <div className="h-1 bg-blue-400/80 w-full mt-0.5"></div>
+                    
+                    <div className="p-8 relative">
+                      {/* 닫기 버튼 */}
+                      <button onClick={() => setSelectedMessage(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+                        <X size={24} />
+                      </button>
+
+                      {/* 편지 내용 */}
+                      <div className="flex flex-col items-center mb-6">
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mb-3 text-gray-500">
+                          <Feather size={20} />
+                        </div>
+                        <span className="text-xs text-gray-400 tracking-widest uppercase mb-1">Night Message</span>
+                        <h3 className="font-serif font-bold text-xl text-gray-800">
+                          {selectedMessage.type === 'received' ? 'From. 익명' : 'To. 형'}
+                        </h3>
+                        <span className="text-xs text-gray-400 mt-1">{selectedMessage.date}</span>
+                      </div>
+
+                      <div className="font-serif text-sm text-gray-700 leading-loose whitespace-pre-line text-justify">
+                        {selectedMessage.content}
+                      </div>
+
+                      {/* 하단 장식 */}
+                      <div className="mt-8 flex justify-center opacity-30">
+                        <img src="https://cdn-icons-png.flaticon.com/512/44/44649.png" alt="stamp" className="w-12 h-12 grayscale" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* 메일함 리스트 헤더 */}
+              <div className="px-5 py-4 bg-white sticky top-0 z-10 shadow-sm flex items-center shrink-0">
+                <button onClick={handleBackToFriends} className="p-2 -ml-2 rounded-full hover:bg-gray-100 text-gray-600 transition"><ChevronLeft size={24} /></button>
+                <h1 className="text-xl font-bold text-gray-900 ml-2">나이트 메시지</h1>
+              </div>
+
+              {/* 메일함 리스트 */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
+                
+                {/* 받은 메시지함 */}
+                <div className="mt-4 mb-2 px-5">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">받은 메시지함</span>
+                </div>
+                <div className="bg-white border-y border-gray-200 divide-y divide-gray-100">
+                  {NIGHT_MESSAGES.filter(m => m.type === 'received').map((msg) => (
+                    <button key={msg.id} onClick={() => setSelectedMessage(msg)} className="w-full px-5 py-4 flex items-start text-left hover:bg-gray-50 transition active:bg-gray-100">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 shrink-0"></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-baseline mb-1">
+                          <span className="font-bold text-gray-900 text-[15px]">{msg.sender}</span>
+                          <span className="text-xs text-gray-400">{msg.date}</span>
+                        </div>
+                        <div className="text-sm text-gray-800 font-medium truncate mb-0.5">나이트 메시지가 도착했습니다.</div>
+                        <div className="text-xs text-gray-500 truncate">{msg.preview}</div>
+                      </div>
+                      <ChevronLeft size={16} className="text-gray-300 rotate-180 mt-1 ml-2" />
+                    </button>
+                  ))}
+                </div>
+
+                {/* 보낸 메시지함 */}
+                <div className="mt-8 mb-2 px-5">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">보낸 메시지함</span>
+                </div>
+                <div className="bg-white border-y border-gray-200 divide-y divide-gray-100 mb-10">
+                  {NIGHT_MESSAGES.filter(m => m.type === 'sent').map((msg) => (
+                    <button key={msg.id} onClick={() => setSelectedMessage(msg)} className="w-full px-5 py-4 flex items-start text-left hover:bg-gray-50 transition active:bg-gray-100">
+                      <div className="w-2 h-2 bg-gray-300 rounded-full mt-2 mr-3 shrink-0"></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-baseline mb-1">
+                          <span className="font-bold text-gray-900 text-[15px]">{msg.sender}</span>
+                          <span className="text-xs text-gray-400">{msg.date}</span>
+                        </div>
+                        <div className="text-sm text-gray-800 font-medium truncate mb-0.5">나이트 메시지를 보냈습니다.</div>
+                        <div className="text-xs text-gray-500 truncate">{msg.preview}</div>
+                      </div>
+                      <ChevronLeft size={16} className="text-gray-300 rotate-180 mt-1 ml-2" />
+                    </button>
+                  ))}
+                </div>
+
               </div>
             </div>
         )}
