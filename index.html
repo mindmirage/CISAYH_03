@@ -477,7 +477,6 @@ return (
               {/* 상단 헤더: 검색 모드일 때와 아닐 때 구분 */}
               <div className="px-5 py-4 flex justify-between items-end pb-2 bg-white/50 backdrop-blur-md sticky top-0 z-10 shrink-0 min-h-[60px]">
                 {isSearchOpen ? (
-                  /* 검색창 모드 */
                   <div className="flex items-center w-full gap-2 animate-fade-in">
                     <div className="flex-1 bg-gray-100 rounded-xl flex items-center px-3 py-2">
                       <Search size={18} className="text-gray-400 mr-2" />
@@ -503,13 +502,11 @@ return (
                     </button>
                   </div>
                 ) : (
-                  /* 기본 타이틀 모드 */
                   <>
                     <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight animate-fade-in">친구</h1>
                     <div className="flex space-x-4 text-gray-600 mb-1 animate-fade-in">
                       <button onClick={() => setIsSearchOpen(true)} className="hover:text-gray-900 transition"><Search size={20} /></button>
                       <button className="hover:text-gray-900 transition"><User size={20} strokeWidth={2.5} /></button>
-                      {/* [수정] 알림 버튼 클릭 시 'notifications' 뷰로 이동 */}
                       <button onClick={() => setCurrentView('notifications')} className="hover:text-gray-900 transition relative">
                         <Bell size={20} />
                         <div className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
@@ -517,18 +514,16 @@ return (
                     </div>
                   </>
                 )}
+              </div>
 
               {/* 리스트 영역 */}
               <div className="flex-1 overflow-y-auto p-5 custom-scrollbar space-y-2 overscroll-contain touch-auto">
-                
-                {/* 검색어가 있을 때: 필터링된 결과만 표시 */}
                 {searchQuery ? (
                   <div className="space-y-1 animate-fade-in">
                     <span className="text-xs font-bold text-gray-400 mb-2 block pl-1">검색 결과</span>
                     {(() => {
-                      // 검색 로직: 이름이나 상태 메시지에 검색어가 포함된 경우
                       const allFriends = [
-                        { id: 'jaehyun', name: '재현', status: '당신 집에서 잘 수 있나요?', isFav: true }, // 재현 수동 추가
+                        { id: 'jaehyun', name: '재현', status: '당신 집에서 잘 수 있나요?', isFav: true },
                         ...FRIENDS_DATA
                       ];
                       const filtered = allFriends.filter(f => 
@@ -560,7 +555,6 @@ return (
                     })()}
                   </div>
                 ) : (
-                  /* 검색어가 없을 때: 기존 목록 표시 */
                   <div className="animate-fade-in">
                     <div><span className="text-xs font-bold text-gray-400 mb-2 block pl-1">나의 프로필</span>
                         <div onClick={() => handleProfileClick({ id: 'mark', name: '마크', status: '🚲' })} className="flex items-center space-x-3.5 mb-6 cursor-pointer hover:bg-white/40 p-2 -mx-2 rounded-xl transition">
@@ -594,47 +588,27 @@ return (
               </div>
             </div>
         )}
+
+        {/* 나이트 메시지 (알림) 화면 */}
         {currentView === 'notifications' && (
             <div className="flex flex-col h-full bg-gray-50 animate-fade-in overflow-hidden relative">
-              
-              {/* 편지 상세 보기 (모달처럼 위에 뜸) */}
+              {/* 편지 상세 보기 */}
               {selectedMessage ? (
                 <div className="absolute inset-0 z-20 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in">
-                  {/* 배경 클릭 시 닫기 */}
                   <div className="absolute inset-0" onClick={() => setSelectedMessage(null)}></div>
-                  
-                  {/* 둥둥 떠다니는 편지지 */}
                   <div className="w-full max-w-sm bg-[#FDFBF7] rounded-xl shadow-2xl overflow-hidden relative animate-float transform transition-transform duration-500">
-                    {/* 편지지 질감/헤더 */}
                     <div className="h-2 bg-red-400/80 w-full"></div>
                     <div className="h-1 bg-blue-400/80 w-full mt-0.5"></div>
-                    
                     <div className="p-8 relative">
-                      {/* 닫기 버튼 */}
-                      <button onClick={() => setSelectedMessage(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
-                        <X size={24} />
-                      </button>
-
-                      {/* 편지 내용 */}
+                      <button onClick={() => setSelectedMessage(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"><X size={24} /></button>
                       <div className="flex flex-col items-center mb-6">
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mb-3 text-gray-500">
-                          <Feather size={20} />
-                        </div>
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mb-3 text-gray-500"><Feather size={20} /></div>
                         <span className="text-xs text-gray-400 tracking-widest uppercase mb-1">Night Message</span>
-                        <h3 className="font-serif font-bold text-xl text-gray-800">
-                          {selectedMessage.type === 'received' ? 'From. 익명' : 'To. 형'}
-                        </h3>
+                        <h3 className="font-serif font-bold text-xl text-gray-800">{selectedMessage.type === 'received' ? 'From. 익명' : 'To. 형'}</h3>
                         <span className="text-xs text-gray-400 mt-1">{selectedMessage.date}</span>
                       </div>
-
-                      <div className="font-serif text-sm text-gray-700 leading-loose whitespace-pre-line text-justify">
-                        {selectedMessage.content}
-                      </div>
-
-                      {/* 하단 장식 */}
-                      <div className="mt-8 flex justify-center opacity-30">
-                        <img src="https://cdn-icons-png.flaticon.com/512/44/44649.png" alt="stamp" className="w-12 h-12 grayscale" />
-                      </div>
+                      <div className="font-serif text-sm text-gray-700 leading-loose whitespace-pre-line text-justify">{selectedMessage.content}</div>
+                      <div className="mt-8 flex justify-center opacity-30"><img src="https://cdn-icons-png.flaticon.com/512/44/44649.png" alt="stamp" className="w-12 h-12 grayscale" /></div>
                     </div>
                   </div>
                 </div>
@@ -648,20 +622,13 @@ return (
 
               {/* 메일함 리스트 */}
               <div className="flex-1 overflow-y-auto custom-scrollbar">
-                
-                {/* 받은 메시지함 */}
-                <div className="mt-4 mb-2 px-5">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">받은 메시지함</span>
-                </div>
+                <div className="mt-4 mb-2 px-5"><span className="text-xs font-bold text-gray-400 uppercase tracking-wider">받은 메시지함</span></div>
                 <div className="bg-white border-y border-gray-200 divide-y divide-gray-100">
                   {NIGHT_MESSAGES.filter(m => m.type === 'received').map((msg) => (
                     <button key={msg.id} onClick={() => setSelectedMessage(msg)} className="w-full px-5 py-4 flex items-start text-left hover:bg-gray-50 transition active:bg-gray-100">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 shrink-0"></div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-baseline mb-1">
-                          <span className="font-bold text-gray-900 text-[15px]">{msg.sender}</span>
-                          <span className="text-xs text-gray-400">{msg.date}</span>
-                        </div>
+                        <div className="flex justify-between items-baseline mb-1"><span className="font-bold text-gray-900 text-[15px]">{msg.sender}</span><span className="text-xs text-gray-400">{msg.date}</span></div>
                         <div className="text-sm text-gray-800 font-medium truncate mb-0.5">나이트 메시지가 도착했습니다.</div>
                         <div className="text-xs text-gray-500 truncate">{msg.preview}</div>
                       </div>
@@ -669,20 +636,13 @@ return (
                     </button>
                   ))}
                 </div>
-
-                {/* 보낸 메시지함 */}
-                <div className="mt-8 mb-2 px-5">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">보낸 메시지함</span>
-                </div>
+                <div className="mt-8 mb-2 px-5"><span className="text-xs font-bold text-gray-400 uppercase tracking-wider">보낸 메시지함</span></div>
                 <div className="bg-white border-y border-gray-200 divide-y divide-gray-100 mb-10">
                   {NIGHT_MESSAGES.filter(m => m.type === 'sent').map((msg) => (
                     <button key={msg.id} onClick={() => setSelectedMessage(msg)} className="w-full px-5 py-4 flex items-start text-left hover:bg-gray-50 transition active:bg-gray-100">
                       <div className="w-2 h-2 bg-gray-300 rounded-full mt-2 mr-3 shrink-0"></div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-baseline mb-1">
-                          <span className="font-bold text-gray-900 text-[15px]">{msg.sender}</span>
-                          <span className="text-xs text-gray-400">{msg.date}</span>
-                        </div>
+                        <div className="flex justify-between items-baseline mb-1"><span className="font-bold text-gray-900 text-[15px]">{msg.sender}</span><span className="text-xs text-gray-400">{msg.date}</span></div>
                         <div className="text-sm text-gray-800 font-medium truncate mb-0.5">나이트 메시지를 보냈습니다.</div>
                         <div className="text-xs text-gray-500 truncate">{msg.preview}</div>
                       </div>
@@ -690,7 +650,6 @@ return (
                     </button>
                   ))}
                 </div>
-
               </div>
             </div>
         )}
@@ -708,14 +667,12 @@ return (
         {/* 챕터 선택 화면 */}
         {currentView === 'chapterSelect' && (
             <div className="flex flex-col h-full bg-gray-50 animate-fade-in overflow-hidden">
-              {/* [수정] py-6 -> py-4로 변경하여 상단바 높이 축소 */}
               <div className="px-6 py-4 bg-white sticky top-0 z-10 shadow-sm flex items-center shrink-0">
                 <button onClick={() => setCurrentView('intro')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 text-gray-600 transition"><ChevronLeft size={24} /></button>
                 <h1 className="text-xl font-bold text-gray-900 ml-2">챕터 선택</h1>
               </div>
               <div className="flex-1 p-6 space-y-4 overflow-y-auto custom-scrollbar overscroll-contain touch-auto">
                 {CHAPTERS.map((chapter, index) => {
-                  // 흰색(white)에서 파스텔톤으로 이어지는 그라데이션 적용
                   const colors = [
                     "bg-gradient-to-br from-white to-rose-100 border-rose-100 hover:to-rose-200",
                     "bg-gradient-to-br from-white to-sky-100 border-sky-100 hover:to-sky-200",
@@ -725,19 +682,12 @@ return (
                     "bg-gradient-to-br from-white to-orange-100 border-orange-100 hover:to-orange-200"
                   ];
                   const colorClass = colors[index % colors.length];
-                  
-                  // 아이콘 텍스트 색상
-                  const textColors = [
-                    "text-rose-400", "text-sky-400", "text-amber-400", 
-                    "text-violet-400", "text-emerald-400", "text-orange-400"
-                  ];
+                  const textColors = ["text-rose-400", "text-sky-400", "text-amber-400", "text-violet-400", "text-emerald-400", "text-orange-400"];
                   const textColorClass = textColors[index % textColors.length];
 
                   return (
                     <button key={chapter.id} onClick={() => handleStartChat(chapter.sceneId)} className={`w-full p-5 rounded-3xl shadow-sm border flex items-center text-left transition-all duration-300 group ${colorClass}`}>
-                      <div className={`w-12 h-12 rounded-2xl bg-white/80 backdrop-blur-sm flex items-center justify-center font-black text-lg mr-5 shadow-sm group-hover:scale-110 transition-transform shrink-0 ${textColorClass}`}>
-                        {chapter.id}
-                      </div>
+                      <div className={`w-12 h-12 rounded-2xl bg-white/80 backdrop-blur-sm flex items-center justify-center font-black text-lg mr-5 shadow-sm group-hover:scale-110 transition-transform shrink-0 ${textColorClass}`}>{chapter.id}</div>
                       <div>
                         <div className="font-bold text-gray-800 text-[15px] leading-tight">{chapter.title}</div>
                         <div className="text-xs text-gray-500 mt-1.5 font-medium opacity-80">{chapter.desc}</div>
@@ -754,23 +704,14 @@ return (
             <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center animate-fade-in px-4">
                  <div className="bg-white w-full max-w-[320px] rounded-[32px] overflow-hidden shadow-2xl flex flex-col items-center p-6 relative">
                     <button onClick={() => setSelectedProfile(null)} className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 text-gray-400 transition"><X size={24} /></button>
-                    
-                    {/* 프로필 이미지 영역 */}
                     <div className="mt-4 mb-4 relative">
                        {selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun' ? (
-                         <>
-                           <img src={selectedProfile.id === 'mark' ? IMAGES.mark : IMAGES.jaehyun} alt="profile" className="w-28 h-28 rounded-[40px] object-cover shadow-md" onError={(e) => {e.target.src='https://via.placeholder.com/112?text=User'}} />
-                           <div className="absolute bottom-1 right-1 w-5 h-5 bg-green-400 border-[3px] border-white rounded-full"></div>
-                         </>
+                         <><img src={selectedProfile.id === 'mark' ? IMAGES.mark : IMAGES.jaehyun} alt="profile" className="w-28 h-28 rounded-[40px] object-cover shadow-md" onError={(e) => {e.target.src='https://via.placeholder.com/112?text=User'}} /><div className="absolute bottom-1 right-1 w-5 h-5 bg-green-400 border-[3px] border-white rounded-full"></div></>
                        ) : (
                          <div className={`w-28 h-28 rounded-[40px] flex items-center justify-center text-white shadow-md ${selectedProfile.color}`}><User size={48} fill="rgba(255,255,255,0.5)" strokeWidth={1.5} /></div>
                        )}
                     </div>
-
-                    {/* 이름 */}
                     <h2 className="text-xl font-bold text-gray-900 mb-2">{selectedProfile.name}</h2>
-                    
-                    {/* [수정] 상태 메시지 영역: 링크가 있으면 버튼형, 없으면 텍스트형 */}
                     <div className="text-sm text-gray-600 text-center mb-8 px-2 min-h-[24px] flex items-center justify-center">
                       {selectedProfile.link ? (
                         <a href={selectedProfile.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-gray-100 transition border border-gray-100 group">
@@ -778,14 +719,9 @@ return (
                           <span className="text-gray-400 font-light">{selectedProfile.statusSuffix}</span>
                           <Music size={12} className="text-gray-400 ml-1" />
                         </a>
-                      ) : (
-                        <span className="text-gray-500 font-medium">{selectedProfile.status}</span>
-                      )}
+                      ) : (<span className="text-gray-500 font-medium">{selectedProfile.status}</span>)}
                     </div>
-
                     <hr className="w-full border-gray-100 mb-6" />
-                    
-                    {/* 하단 버튼들 */}
                     <div className="flex w-full gap-4 justify-center">
                        {selectedProfile.id === 'mark' ? (
                          <button className="flex flex-col items-center gap-2 group cursor-pointer"><div className="w-12 h-12 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center shadow-sm group-hover:bg-gray-200 transition-colors duration-200"><Pencil size={20} /></div><span className="text-xs font-medium text-gray-600">프로필 편집</span></button>
@@ -806,7 +742,7 @@ return (
               <div className="flex flex-col items-center"><div className="flex items-center space-x-1"><span className="font-black text-lg tracking-tight text-gray-800">재현</span><div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div></div><span className="text-[11px] text-gray-500 font-medium -mt-0.5">당신 집에서 잘 수 있나요?</span></div>
               <button className="p-2 rounded-full hover:bg-white/20 transition"><MoreHorizontal size={24} className="text-gray-800" /></button>
             </div>
-            {/* 채팅 스크롤 영역 */}
+            
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar overscroll-contain touch-auto pb-5">
               <div className="flex justify-center my-4"><span className="bg-white/30 backdrop-blur-sm text-gray-600 text-xs px-3 py-1 rounded-full border border-white/40 shadow-sm">{dateStr}</span></div>
               {messages.map((msg) => {
@@ -833,51 +769,28 @@ return (
               <div ref={messagesEndRef} />
             </div>
 
-            {/* 하단바 영역 (수정됨: 깜빡임 방지 및 잔상 해결) */}
             <div className="absolute bottom-0 w-full z-20 p-4 pb-8 ease-in-out sm:rounded-b-[2.5rem] transition-all duration-500 bg-white/80 backdrop-blur-md border-t border-white/50">
-              
-              {/* 1. 입력창 영역 */}
               {(!choices.length || isChoiceMinimized || isChoiceFading) && (
                 <div 
                   onClick={() => { if(choices.length > 0 && !isChoiceFading) setIsChoiceMinimized(false); }}
                   className={`flex items-center gap-2 opacity-80 ${choices.length > 0 && !isChoiceFading ? 'cursor-pointer' : ''}`}
                 >
-                  <div className="p-2 rounded-full bg-white/50 text-gray-500 hover:bg-white transition">
-                    <Plus size={20} />
+                  <div className="p-2 rounded-full bg-white/50 text-gray-500 hover:bg-white transition"><Plus size={20} /></div>
+                  <div className={`flex-1 bg-white/80 rounded-full h-10 px-4 flex items-center text-xs shadow-inner border border-white/50 ${(choices.length > 0 && !isChoiceFading) ? 'text-gray-800 font-bold bg-blue-50/80 border-blue-200' : 'text-gray-400'}`}>
+                    {(choices.length > 0 && !isChoiceFading) ? "답장 선택하기 (터치)" : (isNarrating ? "이야기가 진행 중입니다..." : "상대방의 메시지를 기다리는 중...")}
                   </div>
-                  
-                  {/* [수정] 디자인을 기본 상태(회색 텍스트, 흰색 배경)로 통일 */}
-                  <div className="flex-1 bg-white/80 rounded-full h-10 px-4 flex items-center text-xs shadow-inner border border-white/50 text-gray-400">
-                    {(choices.length > 0 && !isChoiceFading)
-                      ? "답장 선택하기 (터치)" 
-                      : (isNarrating ? "이야기가 진행 중입니다..." : "상대방의 메시지를 기다리는 중...")}
-                  </div>
-                  
-                  {/* [수정] 전송 버튼도 기본 상태(초록색, 반투명)로 통일 */}
-                  <div className="p-2 rounded-full text-white shadow-sm transition-all bg-[#4FD985] opacity-50">
-                    <Send size={18} />
-                  </div>
+                  <div className={`p-2 rounded-full text-white shadow-sm transition-all ${(choices.length > 0 && !isChoiceFading) ? 'bg-blue-500 animate-pulse' : 'bg-[#4FD985] opacity-50'}`}><Send size={18} /></div>
                 </div>
               )}
 
-              {/* 2. 선택지 영역 */}
               {(choices.length > 0 && (!isChoiceMinimized || isChoiceFading)) && (
                 <div className={`flex flex-col space-y-2 ${isChoiceFading ? 'absolute bottom-0 left-0 w-full px-4 pb-8 z-10 animate-collapse' : 'animate-fade-in-up'}`}>
-                  
-                  {/* 안내 문구와 접기 버튼 */}
                   <div className="relative flex items-center justify-center mb-1">
-                    <span className={`text-xs font-medium transition-colors duration-300 ${helperText === "다시 선택해 보자." ? "text-red-500 font-bold" : "text-gray-500"}`}>
-                      {helperText}
-                    </span>
-                    <button onClick={() => setIsChoiceMinimized(true)} className="absolute right-0 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition">
-                      <ChevronDown size={16} />
-                    </button>
+                    <span className={`text-xs font-medium transition-colors duration-300 ${helperText === "다시 선택해 보자." ? "text-red-500 font-bold" : "text-gray-500"}`}>{helperText}</span>
+                    <button onClick={() => setIsChoiceMinimized(true)} className="absolute right-0 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition"><ChevronDown size={16} /></button>
                   </div>
-                  
                   {choices.map((choice, index) => (
-                    <button key={index} onClick={() => handleChoice(choice, index)} className={`w-full p-3.5 text-sm font-medium rounded-xl ${COLORS.button} ${wrongChoiceIndex === index ? 'animate-shake bg-red-50 border-red-200' : ''}`}>
-                      {choice.text}
-                    </button>
+                    <button key={index} onClick={() => handleChoice(choice, index)} className={`w-full p-3.5 text-sm font-medium rounded-xl ${COLORS.button} ${wrongChoiceIndex === index ? 'animate-shake bg-red-50 border-red-200' : ''}`}>{choice.text}</button>
                   ))}
                 </div>
               )}
