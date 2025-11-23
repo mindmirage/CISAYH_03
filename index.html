@@ -536,9 +536,33 @@ return (
             {/* 배경을 투명하게 만드는 로직을 제거하고, 항상 불투명한 흰색 배경(bg-white/80)을 유지하여 잔상 해결 */}
             <div className="absolute bottom-0 w-full z-20 p-4 pb-8 ease-in-out sm:rounded-b-[2.5rem] transition-all duration-500 bg-white/80 backdrop-blur-md border-t border-white/50">
               
-              {/* 접기/펼치기 기능 */}
-              {(choices.length > 0 && !isChoiceMinimized) || isChoiceFading ? (
-                <div className={`flex flex-col space-y-2 ${isChoiceFading ? 'animate-collapse' : 'animate-fade-in-up'}`}>
+              {/* 1. 입력창 영역 (선택지가 사라지는 동안 미리 렌더링하여 깜빡임 방지) */}
+              {/* 조건: 선택지가 없거나, 접혀있거나, '사라지는 중'일 때 보임 */}
+              {(!choices.length || isChoiceMinimized || isChoiceFading) && (
+                <div 
+                  onClick={() => { if(choices.length > 0) setIsChoiceMinimized(false); }}
+                  className={`flex items-center gap-2 opacity-80 ${choices.length > 0 ? 'cursor-pointer' : ''}`}
+                >
+                  <div className="p-2 rounded-full bg-white/50 text-gray-500 hover:bg-white transition">
+                    <Plus size={20} />
+                  </div>
+                  
+                  <div className={`flex-1 bg-white/80 rounded-full h-10 px-4 flex items-center text-xs shadow-inner border border-white/50 ${choices.length > 0 ? 'text-gray-800 font-bold bg-blue-50/80 border-blue-200' : 'text-gray-400'}`}>
+                    {choices.length > 0 
+                      ? "답장 선택하기 (터치)" 
+                      : (isNarrating ? "이야기가 진행 중입니다..." : "상대방의 메시지를 기다리는 중...")}
+                  </div>
+                  
+                  <div className={`p-2 rounded-full text-white shadow-sm transition-all ${choices.length > 0 ? 'bg-blue-500 animate-pulse' : 'bg-[#4FD985] opacity-50'}`}>
+                    <Send size={18} />
+                  </div>
+                </div>
+              )}
+
+              {/* 2. 선택지/접기 버튼 영역 */}
+              {/* 조건: 선택지가 있고 + (펼쳐져 있거나 OR 사라지는 중일 때) */}
+              {(choices.length > 0 && (!isChoiceMinimized || isChoiceFading)) && (
+                <div className={`flex flex-col space-y-2 ${isChoiceFading ? 'absolute bottom-0 left-0 w-full px-4 pb-8 z-10 animate-collapse' : 'animate-fade-in-up'}`}>
                   
                   {/* 접기 버튼 */}
                   <button onClick={() => setIsChoiceMinimized(true)} className="mx-auto p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100/50 rounded-full transition mb-1">
@@ -555,6 +579,9 @@ return (
                     </button>
                   ))}
                 </div>
+              )}
+
+            </div>
               ) : (
                 /* 입력창 영역: animate-fade-in 제거하여 하얀 배경이 깜빡이는 현상 해결 */
                 <div 
