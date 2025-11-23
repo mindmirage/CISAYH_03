@@ -347,23 +347,21 @@ function App() {
         return; 
     }
     
-    // 1. 애니메이션 시작
     setIsChoiceFading(true); 
     playSound('message'); 
     
-    // 2. 메시지 추가
+    // 메시지 추가
     setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: 'Mark', text: option.text, time: getTime() }]);
     
-    // 3. [핵심] 여백이 줄어드는 0.5초 동안 스크롤을 계속 바닥으로 내림 (덜컥거림 방지)
+    // [핵심] 여백이 줄어드는 0.5초 동안 스크롤을 바닥에 계속 고정 (덜컥거림 방지)
     const scrollLock = setInterval(() => scrollToBottom(), 10);
     
-    // 4. 애니메이션 종료 후 정리
     setTimeout(() => { 
-        clearInterval(scrollLock); // 스크롤 고정 해제
+        clearInterval(scrollLock); 
         setChoices([]); 
         setIsChoiceFading(false); 
         loadScene(option.nextId); 
-    }, 500); // 여백 줄어드는 시간과 맞춤
+    }, 500); // duration-500과 시간 일치
   };
   const getSenderInfo = (sender) => {
     if (sender === '재현') return { color: COLORS.jaehyun, isImage: true };
@@ -514,8 +512,8 @@ return (
               })}
               {isTyping && (<div className="flex w-full justify-start"><div className="flex flex-col items-start max-w-[85%]"><span className="text-[11px] text-gray-500 ml-14 mb-1">{typingSender}</span><div className="flex items-start">{(() => { const info = getSenderInfo(typingSender); return info.isImage ? (<img src={IMAGES.jaehyun} className="w-11 h-11 rounded-full object-cover mr-2 shadow-sm flex-shrink-0" alt="Jaehyun" onError={(e) => {e.target.src='https://via.placeholder.com/44?text=Jaehyun'}} />) : (<div className={`w-11 h-11 rounded-[18px] flex items-center justify-center text-white shadow-sm mr-2 ${info.avatarBg} flex-shrink-0`}><User size={20} fill="rgba(255,255,255,0.5)" strokeWidth={2} /></div>); })()}<div className={`px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex space-x-1 items-center h-10 mt-0.5 ${getSenderInfo(typingSender).color}`}><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div><div className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div></div></div></div></div>)}
               
-              {/* [수정됨] ease-out 적용으로 붕 뜨는 느낌 억제 & h-[5rem]으로 평소 여백 최소화 (딱 입력창 높이만큼만) */}
-              <div className={`shrink-0 ease-in-out ${(choices.length > 0 && !isChoiceFading) ? 'h-[20rem] transition-none' : 'h-[5rem] transition-[height] duration-500'}`}></div>
+              {/* [수정] 높이를 14rem으로 줄여서 채팅과 선택지 사이의 빈 공간을 없앰 */}
+              <div className={`shrink-0 ease-in-out ${(choices.length > 0 && !isChoiceFading) ? 'h-[14rem] transition-none' : 'h-[5rem] transition-[height] duration-500'}`}></div>
               
               <div ref={messagesEndRef} />
             </div>
