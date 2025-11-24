@@ -287,28 +287,44 @@ mission_hug_1: [{ type: 'narrative', content: "마크가 더는 볼 것도 없�
     { type: 'text', sender: '은재', content: "아, 반응 보니까 괜히 알려 주면 안 될 것 같은데?" },
     { type: 'text', sender: '은재', content: "비밀로 해야겠다." },
     { type: 'end' }
-  ], // <--- [중요] 콤마 추가
+  ], // <--- [수정] 여기에 콤마를 꼭 찍고, 닫는 기호 }; 를 지우세요!
   
-  // [추가] 니코 데이터
   niko_start: [
     { type: 'text', sender: '니코', content: "선배님...!" },
-    { type: 'text', sender: '니코', content: "저 지금 일기장에 멤버들 캐릭터 그리고 있거든요?" },
-    { type: 'text', sender: '니코', content: "근데 재현 선배님 눈을 어떻게 그려야 할지 모르겠어요..." },
-    { type: 'text', sender: '니코', content: "자꾸 선배님 볼 때만... 눈이 이렇게 ◠_◠ 되시던데..." },
-    { type: 'text', sender: '니코', content: "이건... 졸리신 걸까요? 아니면 웃으시는 걸까요?" },
-    { type: 'choice', options: [
-        { text: "어? 원래 잘 웃는 거 아닐까?", nextId: 'niko_drawing' },
-        { text: "음... 졸린 거 아닐까? 어제 비행기에서도 잘 잤거든.", nextId: 'niko_drawing' },
-        { text: "네가 보기엔 어떤 것 같아? 느낌대로 그려 봐.", nextId: 'niko_drawing' }
-    ]}
+    // ... (니코 대화 내용) ...
+    { type: 'choice', options: [ ... ]}
   ],
   niko_drawing: [
     { type: 'text', sender: '니코', content: "음, 알겠어요!" },
     { type: 'text', sender: '니코', content: "그럼 눈에서 하트가 나오는 걸로 그려야겠어요." },
     { type: 'text', sender: '니코', content: "완성되면 제일 먼저 보여 드릴게요!" },
     { type: 'end' }
-  ]
-}; // <--- 여기서 닫아야 합니다.
+  ], // <--- 지원이 데이터를 추가할 것을 대비해 콤마 찍기
+    jiwon_start: [
+    // 1. 마크가 먼저 말을 건다 (선택지 없이 자동 진행)
+    { type: 'text', sender: 'Mark', content: "누나는 비행기에서 어떤 영화 봤어요?" },
+    
+    // 2. 지원의 답변
+    { type: 'text', sender: '지원', content: "나는 여행을 떠올리면 <사랑도 통역이 되나요?> 이 영화가 생각 나더라고." },
+    { type: 'text', sender: '지원', content: "너랑 재현이가 <비포 선라이즈>를 떠올린 것처럼." },
+
+    // 3. 마크의 질문 (여기서는 선택지로 플레이어 참여 유도)
+    { type: 'choice', options: [
+        { text: "무슨 내용이에요? 뭔가 누나랑 잘 어울리는 영화 같아요.", nextId: 'jiwon_deep' },
+        { text: "제목이 되게 특이하네요. 어떤 내용이에요?", nextId: 'jiwon_deep' },
+        { text: "궁금해요. 줄거리가 어떻게 되는데요?", nextId: 'jiwon_deep' }
+    ]}
+  ],
+
+  // 4. 지원의 감상 및 마무리
+  jiwon_deep: [
+    { type: 'text', sender: '지원', content: "음, 여행하는 동안에는 필연적으로 외로움을 겪을 수밖에 없잖아." },
+    { type: 'text', sender: '지원', content: "화려한 로맨스는 아닌데, 그냥 곁에 있는 것만으로도 서로에게 위로가 되는... 그런 영화야." },
+    { type: 'text', sender: '지원', content: "낯선 곳에서 서로의 공통점을 발견하고 급속도로 가까워지는." },
+    { type: 'text', sender: '지원', content: "마크, 넌 그런 사람을 만날 수 있을 것 같아?" },
+    { type: 'end' }
+  ],
+
 const NIGHT_MESSAGES = [
   {
     id: 1,
@@ -974,10 +990,10 @@ return (
                          {selectedProfile.id !== 'mark' && (
                            <button 
                              onClick={() => {
-                                if (selectedProfile.id === 'jaehyun') {
-                                    handleStartIntro();
+                                if (selectedProfile.id === 'jaehyun') { 
+                                    handleStartIntro(); 
                                 } else if (selectedProfile.id === 'eunjae') {
-                                    setSelectedProfile(null);
+                                    setSelectedProfile(null); // 모달 닫기 필수!
                                     playSound('narrative');
                                     setCurrentView('chat');
                                     setMessages([]);
@@ -985,19 +1001,33 @@ return (
                                     setStepIndex(0);
                                     setTimeout(() => { loadScene('eunjae_start'); }, 500);
                                 } else if (selectedProfile.id === 'niko') {
-                                    setSelectedProfile(null);
+                                    setSelectedProfile(null); // 모달 닫기 필수!
                                     playSound('narrative');
                                     setCurrentView('chat');
                                     setMessages([]);
                                     setCurrentSequence([]);
                                     setStepIndex(0);
                                     setTimeout(() => { loadScene('niko_start'); }, 500);
+                                } else if (selectedProfile.id === 'jiwon') {
+                                    setSelectedProfile(null); // 모달 닫기 필수!
+                                    playSound('narrative');
+                                    setCurrentView('chat');
+                                    setMessages([]);
+                                    setCurrentSequence([]);
+                                    setStepIndex(0);
+                                    setTimeout(() => { loadScene('jiwon_start'); }, 500);
                                 }
                              }}
-                             className={`flex flex-col items-center gap-2 group ${(selectedProfile.id === 'jaehyun' || selectedProfile.id === 'eunjae' || selectedProfile.id === 'niko') ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}
+                             className={`flex flex-col items-center gap-2 group 
+                               ${['jaehyun', 'eunjae', 'niko', 'jiwon'].includes(selectedProfile.id) 
+                                 ? 'cursor-pointer' 
+                                 : 'cursor-not-allowed opacity-40'}`}
                            >
                              <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
-                               <MessageCircle size={26} fill={(selectedProfile.id === 'jaehyun' || selectedProfile.id === 'eunjae' || selectedProfile.id === 'niko') ? "currentColor" : "none"} strokeWidth={1.5} />
+                               <MessageCircle size={26} 
+                                 fill={['jaehyun', 'eunjae', 'niko', 'jiwon'].includes(selectedProfile.id) ? "currentColor" : "none"} 
+                                 strokeWidth={1.5} 
+                               />
                              </div>
                              <span className="text-[11px] font-medium text-white/90">1:1 채팅</span>
                            </button>
