@@ -760,10 +760,20 @@ return (
                  <div className={`absolute inset-0 transition-colors duration-700 
                    ${selectedProfile.id === 'mark' ? 'bg-gradient-to-b from-[#85C1E9] to-[#5DADE2]' : 
                      selectedProfile.id === 'jaehyun' ? 'bg-gradient-to-b from-[#D7BDE2] to-[#AF7AC5]' : 
+                     selectedProfile.id === 'jiwon' ? 'bg-gray-800' : // 지원이는 이미지 로딩 전 배경색
                      'bg-gradient-to-b from-gray-300 to-gray-400' 
                    }`}>
-                   <div className="absolute inset-0 bg-black/10"></div>
-                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/5"></div>
+                   
+                   {/* [수정] 지원이일 경우 배경 이미지 적용 */}
+                   {selectedProfile.id === 'jiwon' && (
+                     <div className="absolute inset-0 bg-cover bg-center animate-fade-in" 
+                          style={{ backgroundImage: 'url(https://i.pinimg.com/736x/ed/32/65/ed3265d84e80efa9f55b20c7ec9a8167.jpg)' }}>
+                     </div>
+                   )}
+
+                   {/* 텍스트 가독성을 위한 어두운 필터 */}
+                   <div className="absolute inset-0 bg-black/20"></div>
+                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10"></div>
                  </div>
 
                  {/* [추가] 모달 내부 상단바 (흰색 텍스트) */}
@@ -776,7 +786,7 @@ return (
                     </div>
                  </div>
 
-                 {/* 닫기 버튼 (상단바 아래로 위치 조정: top-6 -> top-12) */}
+                 {/* 닫기 버튼 */}
                  <button 
                     onClick={() => { setSelectedProfile(null); setIsEditingProfile(false); }} 
                     className="absolute top-12 right-6 p-2 text-white/80 hover:text-white transition z-50"
@@ -855,7 +865,7 @@ return (
                     ) : (
                       // 기본 버튼들
                       <div className="flex w-full gap-10 justify-center pb-4">
-                         {/* [수정] 1:1 채팅 버튼: 마크가 아닐 때만 표시 */}
+                         {/* 1:1 채팅 버튼 */}
                          {selectedProfile.id !== 'mark' && (
                            <button 
                              onClick={selectedProfile.id === 'jaehyun' ? handleStartIntro : undefined} 
