@@ -426,6 +426,7 @@ function App() {
   const [myProfileImage, setMyProfileImage] = useState(MARK_IMAGES[0]); // 내 프로필 이미지 상태
   const [jaehyunProfileImage, setJaehyunProfileImage] = useState(JAEHYUN_IMAGES[0]);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [chatInfo, setChatInfo] = useState({ name: '재현', status: '당신 집에서 잘 수 있나요?' }); 
   // ▼▼▼ [추가] 새로운 선택지가 생기면 자동으로 펼치기 ▼▼▼
   useEffect(() => {
       if (choices.length > 0) {
@@ -447,7 +448,16 @@ function App() {
 
   const handleProfileClick = (profile) => setSelectedProfile(profile);
   const handleStartIntro = () => { setSelectedProfile(null); setCurrentView('intro'); };
-  const handleStartChat = (startSceneId) => { playSound('narrative'); setCurrentView('chat'); setMessages([]); setCurrentSequence([]); setStepIndex(0); setTimeout(() => { loadScene(startSceneId); }, 500); };
+  const handleStartChat = (startSceneId) => { 
+      playSound('narrative'); 
+      setChatInfo({ name: '재현', status: '당신 집에서 잘 수 있나요?' }); // <--- 이 줄 추가
+      setCurrentView('chat'); 
+      setMessages([]); 
+      setCurrentSequence([]); 
+      setStepIndex(0); 
+      setTimeout(() => { loadScene(startSceneId); }, 500); 
+  };
+  
   const handleBackToFriends = () => { setCurrentView('friendList'); setMessages([]); setCurrentSequence([]); setStepIndex(0); };
 
   useEffect(() => { 
@@ -497,7 +507,9 @@ function App() {
           i++; if (i === text.length) { clearInterval(interval); setTimeout(() => { setIsTypingNarrative(false); setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: step.content }]); loadScene(step.nextId); }, 1000); }
         }, 100);
       } else if (step.type === 'end') {
-         setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: "(대화가 종료되었습니다.)" }]);
+         setTimeout(() => {
+             setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: "(대화가 종료되었습니다.)" }]);
+         }, 2000); // 2000ms = 2초
       }
     };
     processStep();
@@ -1002,7 +1014,8 @@ return (
                                     if (selectedProfile.id === 'eunjae') sceneId = 'eunjae_start';
                                     if (selectedProfile.id === 'niko') sceneId = 'niko_start';
                                     if (selectedProfile.id === 'jiwon') sceneId = 'jiwon_start';
-                                    
+                                    setChatInfo({ name: selectedProfile.name, status: selectedProfile.status });
+
                                     setSelectedProfile(null); // 모달 닫기
                                     playSound('narrative');
                                     setCurrentView('chat');
@@ -1011,7 +1024,6 @@ return (
                                     setStepIndex(0);
                                     setTimeout(() => { loadScene(sceneId); }, 500);
                                 }
-                             }}
                              className={`flex flex-col items-center gap-2 group 
                                ${['jaehyun', 'eunjae', 'niko', 'jiwon'].includes(selectedProfile.id) 
                                  ? 'cursor-pointer' 
@@ -1052,15 +1064,13 @@ return (
               {/* [수정] 대화 상대에 따라 이름과 상태 메시지 변경 */}
               <div className="flex flex-col items-center">
                 <div className="flex items-center space-x-1">
-                  {/* messages[0]가 있으면 그 사람 이름을, 없으면 기본값(재현)을 띄움 */}
                   <span className="font-black text-lg tracking-tight text-gray-800">
-                    {messages.length > 0 && messages[0].sender !== 'Mark' ? messages[0].sender : (selectedProfile ? selectedProfile.name : '재현')}
+                    {chatInfo.name}
                   </span>
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 </div>
                 <span className="text-[11px] text-gray-500 font-medium -mt-0.5">
-                   {/* 상대가 은재라면 '난 재현마크', 아니면 기본 상태 */}
-                   {messages.length > 0 && messages[0].sender === '은재' ? '난 재현마크' : (selectedProfile?.status || '당신 집에서 잘 수 있나요?')}
+                   {chatInfo.status}
                 </span>
               </div>
               
