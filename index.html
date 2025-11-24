@@ -324,7 +324,7 @@ mission_hug_1: [{ type: 'narrative', content: "마크가 더는 볼 것도 없�
     { type: 'text', sender: '지원', content: "마크, 넌 그런 사람을 만날 수 있을 것 같아?" },
     { type: 'end' }
   ]
-}; // <--- 여기에 }; 를 반드시 추가하세요!
+}; // <--- ★ 반드시 이 줄(중괄호와 세미콜론)을 추가해주세요! ★
 
 const NIGHT_MESSAGES = [
   {
@@ -987,36 +987,28 @@ return (
                     ) : (
                       // 기본 버튼들
                       <div className="flex w-full gap-10 justify-center pb-4">
-                         {/* 1:1 채팅 버튼 */}
+                         {/* 1:1 채팅 버튼 (수정됨: 재현, 은재, 니코, 지원 통합) */}
                          {selectedProfile.id !== 'mark' && (
                            <button 
                              onClick={() => {
-                                if (selectedProfile.id === 'jaehyun') { 
-                                    handleStartIntro(); 
-                                } else if (selectedProfile.id === 'eunjae') {
-                                    setSelectedProfile(null);
+                                // [1] 재현
+                                if (selectedProfile.id === 'jaehyun') {
+                                    handleStartIntro();
+                                } 
+                                // [2] 은재, 니코, 지원 (공통 로직)
+                                else if (['eunjae', 'niko', 'jiwon'].includes(selectedProfile.id)) {
+                                    let sceneId = '';
+                                    if (selectedProfile.id === 'eunjae') sceneId = 'eunjae_start';
+                                    if (selectedProfile.id === 'niko') sceneId = 'niko_start';
+                                    if (selectedProfile.id === 'jiwon') sceneId = 'jiwon_start';
+                                    
+                                    setSelectedProfile(null); // 모달 닫기
                                     playSound('narrative');
                                     setCurrentView('chat');
                                     setMessages([]);
                                     setCurrentSequence([]);
                                     setStepIndex(0);
-                                    setTimeout(() => { loadScene('eunjae_start'); }, 500);
-                                } else if (selectedProfile.id === 'niko') {
-                                    setSelectedProfile(null);
-                                    playSound('narrative');
-                                    setCurrentView('chat');
-                                    setMessages([]);
-                                    setCurrentSequence([]);
-                                    setStepIndex(0);
-                                    setTimeout(() => { loadScene('niko_start'); }, 500);
-                                } else if (selectedProfile.id === 'jiwon') {
-                                    setSelectedProfile(null);
-                                    playSound('narrative');
-                                    setCurrentView('chat');
-                                    setMessages([]);
-                                    setCurrentSequence([]);
-                                    setStepIndex(0);
-                                    setTimeout(() => { loadScene('jiwon_start'); }, 500);
+                                    setTimeout(() => { loadScene(sceneId); }, 500);
                                 }
                              }}
                              className={`flex flex-col items-center gap-2 group 
@@ -1033,24 +1025,6 @@ return (
                              <span className="text-[11px] font-medium text-white/90">1:1 채팅</span>
                            </button>
                          )}
-    // 커서 및 활성화 스타일 조건에도 'niko' 추가
-    className={`flex flex-col items-center gap-2 group ${(selectedProfile.id === 'jaehyun' || selectedProfile.id === 'eunjae' || selectedProfile.id === 'niko') ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}
-  >
-    {/* 버튼 아이콘 및 텍스트는 그대로 */}
-    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
-      <MessageCircle size={26} fill={(selectedProfile.id === 'jaehyun' || selectedProfile.id === 'eunjae' || selectedProfile.id === 'niko') ? "currentColor" : "none"} strokeWidth={1.5} />
-    </div>
-    <span className="text-[11px] font-medium text-white/90">1:1 채팅</span>
-  </button>
-)}
-    className={`flex flex-col items-center gap-2 group ${(selectedProfile.id === 'jaehyun' || selectedProfile.id === 'eunjae') ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}
-  >
-    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
-      <MessageCircle size={26} fill={(selectedProfile.id === 'jaehyun' || selectedProfile.id === 'eunjae') ? "currentColor" : "none"} strokeWidth={1.5} />
-    </div>
-    <span className="text-[11px] font-medium text-white/90">1:1 채팅</span>
-  </button>
-)}
                          {/* 프로필 편집/선택 버튼 */}
                          {(selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun') && (
                            <button onClick={() => setIsEditingProfile(true)} className="flex flex-col items-center gap-2 group cursor-pointer">
