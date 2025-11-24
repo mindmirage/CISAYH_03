@@ -84,27 +84,14 @@ const getTime = () => { const now = new Date(); let h = now.getHours(), m = Stri
 
 // [수정됨] 오디오 컨텍스트 변수
 let audioCtx = null;
-
-// [수정됨] 소리 재생 함수 (타이밍 보정 추가)
 const playSound = (type) => {
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
-
-    // 1. 오디오가 죽었거나(closed), 끊겼으면(interrupted) 아예 초기화
-    if (audioCtx && (audioCtx.state === 'closed' || audioCtx.state === 'interrupted')) {
-        audioCtx = null;
-    }
-
-    // 2. 오디오가 없으면 새로 생성
-    if (!audioCtx) {
-        audioCtx = new AC();
-    }
-
-    // 3. 일시정지 상태면 강제로 깨움 (사용자 클릭 직후에 반응하도록)
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-    }
+    
+    // 오디오 엔진이 없으면 만들고, 멈춰있으면 켭니다. (단순하고 강력함)
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
 
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -112,22 +99,18 @@ const playSound = (type) => {
     osc.connect(gain); 
     gain.connect(audioCtx.destination);
     
-    // ★ 핵심: 현재 시간보다 0.05초 뒤에 소리를 예약 (렉 걸려도 소리 남)
-    const now = audioCtx.currentTime + 0.05;
+    // ★ 핵심: 지연 없이 '지금 당장(currentTime)' 소리를 냅니다.
+    const now = audioCtx.currentTime;
 
     if (type === 'message') {
-      // 말풍선 (뿅!)
       osc.type = 'sine'; 
       osc.frequency.setValueAtTime(400, now); 
       osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
-      gain.gain.setValueAtTime(0, now); 
-      gain.gain.linearRampToValueAtTime(0.2, now + 0.01);
+      gain.gain.setValueAtTime(0.2, now); 
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
       osc.start(now); 
       osc.stop(now + 0.1);
-
     } else if (type === 'narrative') {
-      // 서술부 (웅~)
       osc.type = 'sine'; 
       osc.frequency.setValueAtTime(220, now); 
       osc.frequency.exponentialRampToValueAtTime(440, now + 0.8);
@@ -136,30 +119,24 @@ const playSound = (type) => {
       gain.gain.linearRampToValueAtTime(0, now + 0.8);
       osc.start(now); 
       osc.stop(now + 0.8);
-
     } else if (type === 'typing') {
-      // 타이핑 (타닥타닥)
       osc.type = 'triangle'; 
       osc.frequency.setValueAtTime(600, now); 
       osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.05, now + 0.01); 
+      gain.gain.setValueAtTime(0.05, now); 
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
       osc.start(now); 
       osc.stop(now + 0.03);
-
     } else if (type === 'error') {
-      // 오답 (삑!)
       osc.type = 'sawtooth'; 
       osc.frequency.setValueAtTime(150, now); 
       osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.1, now + 0.01); 
+      gain.gain.setValueAtTime(0.1, now); 
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
       osc.start(now); 
       osc.stop(now + 0.2);
     }
-  } catch (e) { console.error('Audio Error', e); }
+  } catch (e) { console.error('Audio', e); }
 };
 const shuffleArray = (arr) => { const n = [...arr]; for(let i=n.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [n[i],n[j]]=[n[j],n[i]]; } return n; };
 
@@ -1180,6 +1157,7 @@ return (
            else if (id === 'yeondeok') sceneId = 'yeondeok_talk';
            
            if (sceneId) {
+               playSound('narrative'); 
                setChatInfo({ name: selectedProfile.name, status: selectedProfile.status });
                setSelectedProfile(null); 
                playSound('narrative');
