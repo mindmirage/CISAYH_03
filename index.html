@@ -324,9 +324,77 @@ mission_hug_1: [{ type: 'narrative', content: "마크가 더는 볼 것도 없�
     { type: 'text', sender: '지원', content: "낯선 곳에서 서로의 공통점을 발견하고 급속도로 가까워지는." },
     { type: 'text', sender: '지원', content: "마크, 넌 그런 사람을 만날 수 있을 것 같아?" },
     { type: 'end' }
+  ],
+    seonwoo_talk: [
+    { type: 'text', sender: '선우', content: "마크 씨는 숨길 줄 모르는 것 같아요. 좋은 의미로요." },
+    { type: 'choice', options: [
+        { text: "제가 어떤 걸요?", nextId: 'seonwoo_depth' }, 
+        { text: "저 포커페이스예요.", nextId: null }, 
+        { text: "저 비밀 되게 많은 사람이에요.", nextId: null } 
+    ]}
+  ],
+  seonwoo_depth: [
+    { type: 'text', sender: '선우', content: "누군가를 궁금해하는 눈빛이나, 좋아하는 마음 같은 거요." },
+    { type: 'text', sender: '선우', content: "계속 그렇게 투명하게 있어 줘요." },
+    { type: 'text', sender: '선우', content: "두 사람을 지켜보는 게 재미있거든요." },
+    { type: 'text', sender: '선우', content: "아닌가? 네 사람일지도 모르겠네요." },
+    { type: 'choice', options: [
+        { text: "네 사람이라니요?", nextId: 'seonwoo_final' }, 
+        { text: "저희는 총 여덟 명 아니에요?", nextId: null }, 
+        { text: "아, 다른 팀 말하는 거예요?", nextId: null } 
+    ]}
+  ],
+  seonwoo_final: [
+    { type: 'text', sender: '선우', content: "그건 마크 씨도 차차 알게 되지 않을까요?" },
+    { type: 'end' }
+  ],
+
+  // --- 재경 시나리오 ---
+  jaekyung_talk: [
+    { type: 'text', sender: '재경', content: "마크야, 어제 보니까..." },
+    { type: 'text', sender: '재경', content: "너는 재현이가 참 편하고 좋은가 봐. 계속 눈이 그쪽으로만 가더라." },
+    { type: 'choice', options: [
+        { text: "형이 잘 챙겨 줘서요.", nextId: 'jaekyung_gaze' }, 
+        { text: "아, 제가 너무 형한테만 붙어 있었나 봐요. 죄송해요.", nextId: null },
+        { text: "전 재경 형이랑도 가까워지고 싶어요.", nextId: null }
+    ]}
+  ],
+  jaekyung_gaze: [
+    { type: 'text', sender: '재경', content: "사과할 건 아니고. 그냥 신기해서." },
+    { type: 'text', sender: '재경', content: "고작 하루 지켜보는 내내 참 묘하더라." },
+    { type: 'text', sender: '재경', content: "야속하게도 시선이 자꾸 엇갈려서." },
+    { type: 'text', sender: '재경', content: "누구는 계속 한 사람만 보는데, 그 사람은 자꾸 다른 곳을 보더라고." },
+    { type: 'choice', options: [
+        { text: "누가요? 누가 누구를 보는데요?", nextId: 'jaekyung_final' }, 
+        { text: "아, 연덕 감독님이랑 선우 작가님요? 둘이 싸우느라...", nextId: null },
+        { text: "혹시 형, 누구 좋아하세요?", nextId: null } 
+    ]}
+  ],
+  jaekyung_final: [
+    { type: 'text', sender: '재경', content: "글쎄다?" },
+    { type: 'text', sender: '재경', content: "시야를 넓게 가져 보는 것도 나쁘지 않아." },
+    { type: 'text', sender: '재경', content: "차라리 모르는 게 더 좋을 수도 있겠다. 가서 쉬어." },
+    { type: 'end' }
+  ],
+
+  // --- 연덕 시나리오 ---
+  yeondeok_talk: [
+    { type: 'narrative', content: "모두가 분주한 거실 한구석, 연덕이 흔들의자에 앉아 고요히 책 한 권을 읽고 있다. 마크가 호기심 어린 눈으로 그 곁을 기웃거린다." },
+    { type: 'text', sender: 'Mark', content: "감독님, 표지가 예쁜데 무슨 책이에요?" },
+    { type: 'text', sender: '연덕', content: "그냥 옛날 생각 나는 책 좀 보고 있었어." },
+    { 
+      type: 'book', 
+      img: "https://image.aladin.co.kr/product/16869/51/cover200/8937463571_1.jpg",
+      title: "다시 찾은 브라이즈헤드",
+      author: "에벌린 워",
+      desc: "20세기 영국 문단의 대표 작가 에벌린 워 소설. 벤 휘쇼, 매슈 구드 출연 영화 [브라이즈헤드 리비지티드]의 원작 소설이기도 한 이 작품은, 1945년 첫 출간 이후 드라마와 영화로 수차례 재해석되며 청춘의 로맨티시즘과 고뇌를 상징하는 하나의 아이콘이 되었다.\n\n옥스퍼드라는 금녀의 구역에서 시작된 '나'와 서배스천의 낭만적인 우정 그리고 그의 여동생 줄리아와의 관계는, 종교와 관습의 정의를 거부하면서도 동시에 구원을 기다리는 인간의 내면을 위태롭게 드러낸다."
+    },
+    { type: 'text', sender: '연덕', content: "이 소설의 작가는 전쟁 중에 '지금이 아니면 영영 쓸 수 없는 소설'을 떠올리고 이걸 썼다는데." },
+    { type: 'text', sender: '연덕', content: "지금, 여기 아니면 안 되는 거 말이야. 많이 남겨 두도록 해." },
+    { type: 'narrative', content: "연덕이 무심한 말투로 툭 던지더니 다시 활자 속으로 시선을 옮긴다. 책장 넘어가는 소리가 고요하게 울린다." },
+    { type: 'end' }
   ]
 };
-
 const NIGHT_MESSAGES = [
   {
     id: 1,
@@ -483,11 +551,30 @@ function App() {
         }, 1000);
       } else if (step.type === 'text') {
         if (step.sender === 'Mark') {
-            setTimeout(() => { playSound('message'); setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() }]); setStepIndex(prev => prev + 1); }, 1500);
+            // 마크(나)는 바로 출력 + 효과음
+            setTimeout(() => { 
+                playSound('message'); 
+                setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() }]); 
+                setStepIndex(prev => prev + 1); 
+            }, 1500);
         } else {
+            // 마크가 아닌 모든 사람(재현, 선우, 재경, 연덕, 지원, 은재 등)
             setTimeout(() => {
-                setTypingSender(step.sender); setIsTyping(true); scrollToBottom();
-                setTimeout(() => { setIsTyping(false); setTypingSender(null); playSound('message'); setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() }]); setStepIndex(prev => prev + 1); }, 2000); 
+                setTypingSender(step.sender); 
+                setIsTyping(true); 
+                scrollToBottom();
+                
+                // 타이핑 시간 2초 후 -> 타이핑 끄기 -> 효과음 재생 -> 메시지 추가
+                setTimeout(() => { 
+                    setIsTyping(false); 
+                    setTypingSender(null); 
+                    
+                    // ▼▼▼ 여기서 소리가 납니다 (중요) ▼▼▼
+                    playSound('message'); 
+                    
+                    setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() }]); 
+                    setStepIndex(prev => prev + 1); 
+                }, 2000); 
             }, 800);
         }
       } else if (step.type === 'youtube') {
@@ -1002,43 +1089,50 @@ return (
                       <div className="flex w-full gap-10 justify-center pb-4">
                          {/* 1:1 채팅 버튼 (수정됨: 재현, 은재, 니코, 지원 통합) */}
                          {selectedProfile.id !== 'mark' && (
-                           <button 
-                             onClick={() => {
-                                // [1] 재현
-                                if (selectedProfile.id === 'jaehyun') {
-                                    handleStartIntro();
-                                } 
-                                // [2] 은재, 니코, 지원 (공통 로직)
-                                else if (['eunjae', 'niko', 'jiwon'].includes(selectedProfile.id)) {
-                                    let sceneId = '';
-                                    if (selectedProfile.id === 'eunjae') sceneId = 'eunjae_start';
-                                    if (selectedProfile.id === 'niko') sceneId = 'niko_start';
-                                    if (selectedProfile.id === 'jiwon') sceneId = 'jiwon_start';
-                                    setChatInfo({ name: selectedProfile.name, status: selectedProfile.status });
-
-                                    setSelectedProfile(null); // 모달 닫기
-                                    playSound('narrative');
-                                    setCurrentView('chat');
-                                    setMessages([]);
-                                    setCurrentSequence([]);
-                                    setStepIndex(0);
-                                    setTimeout(() => { loadScene(sceneId); }, 500);
-                                }
-                             }}
-                             className={`flex flex-col items-center gap-2 group 
-                               ${['jaehyun', 'eunjae', 'niko', 'jiwon'].includes(selectedProfile.id) 
-                                 ? 'cursor-pointer' 
-                                 : 'cursor-not-allowed opacity-40'}`}
-                           >
-                             <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
-                               <MessageCircle size={26} 
-                                 fill={['jaehyun', 'eunjae', 'niko', 'jiwon'].includes(selectedProfile.id) ? "currentColor" : "none"} 
-                                 strokeWidth={1.5} 
-                               />
-                             </div>
-                             <span className="text-[11px] font-medium text-white/90">1:1 채팅</span>
-                           </button>
-                         )}
+  <button 
+    onClick={() => {
+       // [1] 재현
+       if (selectedProfile.id === 'jaehyun') {
+           handleStartIntro();
+       } 
+       // [2] 은재, 니코, 지원, 선우, 재경, 연덕
+       else {
+           const id = selectedProfile.id;
+           let sceneId = '';
+           
+           if (id === 'eunjae') sceneId = 'eunjae_start';
+           else if (id === 'niko') sceneId = 'niko_start';
+           else if (id === 'jiwon') sceneId = 'jiwon_start';
+           else if (id === 'seonwoo') sceneId = 'seonwoo_talk';
+           else if (id === 'jaekyung') sceneId = 'jaekyung_talk';
+           else if (id === 'yeondeok') sceneId = 'yeondeok_talk';
+           
+           if (sceneId) {
+               setChatInfo({ name: selectedProfile.name, status: selectedProfile.status });
+               setSelectedProfile(null); 
+               playSound('narrative');
+               setCurrentView('chat');
+               setMessages([]);
+               setCurrentSequence([]);
+               setStepIndex(0);
+               setTimeout(() => { loadScene(sceneId); }, 500);
+           }
+       }
+    }}
+    className={`flex flex-col items-center gap-2 group 
+      ${['jaehyun', 'eunjae', 'niko', 'jiwon', 'seonwoo', 'jaekyung', 'yeondeok'].includes(selectedProfile.id) 
+        ? 'cursor-pointer' 
+        : 'cursor-not-allowed opacity-40'}`}
+  >
+    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
+      <MessageCircle size={26} 
+        fill={['jaehyun', 'eunjae', 'niko', 'jiwon', 'seonwoo', 'jaekyung', 'yeondeok'].includes(selectedProfile.id) ? "currentColor" : "none"} 
+        strokeWidth={1.5} 
+      />
+    </div>
+    <span className="text-[11px] font-medium text-white/90">1:1 채팅</span>
+  </button>
+)}
                          {/* 프로필 편집/선택 버튼 */}
                          {(selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun') && (
                            <button onClick={() => setIsEditingProfile(true)} className="flex flex-col items-center gap-2 group cursor-pointer">
@@ -1090,6 +1184,33 @@ return (
                 } else if (msg.type === 'poem') {
                   return (<div key={msg.id} className="flex justify-center my-6 w-full px-4 animate-fade-in"><div className="bg-[#FDFBF7] p-6 rounded-sm shadow-md border border-[#E8E4D9] text-center relative"><div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#FDFBF7] px-2 text-gray-400"><Feather size={16} /></div><div className="text-gray-800 font-serif text-sm leading-loose whitespace-pre-line">{msg.text}</div><div className="mt-4 pt-4 border-t border-gray-200 text-[10px] font-bold tracking-widest text-gray-400 uppercase">{msg.subText}</div></div></div>);
                 }
+                } else if (msg.type === 'book') {
+  return (
+    <div key={msg.id} className="flex justify-center my-6 w-full px-4 animate-fade-in">
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden max-w-xs w-full">
+        <div className="flex p-4 pb-0 gap-4">
+          {/* 책 표지 */}
+          <div className="flex-shrink-0 w-24 h-36 shadow-md rounded-md overflow-hidden relative">
+             <img src={msg.img} alt="book cover" className="w-full h-full object-cover" />
+             <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-transparent pointer-events-none"></div>
+          </div>
+          {/* 책 정보 */}
+          <div className="flex flex-col justify-end pb-2 min-w-0">
+            <div className="text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-1">BOOK INFO</div>
+            <h3 className="font-serif font-bold text-lg text-gray-800 leading-tight break-keep mb-1">{msg.title}</h3>
+            <span className="text-xs text-gray-500 font-medium">{msg.author}</span>
+          </div>
+        </div>
+        {/* 책 설명 */}
+        <div className="p-5 bg-gray-50/50">
+          <div className="text-[11px] text-gray-600 leading-loose text-justify whitespace-pre-wrap break-keep font-medium opacity-90">
+            {msg.desc}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+} 
                 const isMe = msg.sender === 'Mark';
                 const senderInfo = !isMe ? getSenderInfo(msg.sender) : {};
                 return (
