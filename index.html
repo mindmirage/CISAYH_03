@@ -972,33 +972,36 @@ return (
                       <div className="flex w-full gap-10 justify-center pb-4">
                          {/* 1:1 채팅 버튼 */}
                          {selectedProfile.id !== 'mark' && (
-  <button 
-    onClick={() => {
-        // 재현
-        if (selectedProfile.id === 'jaehyun') {
-            handleStartIntro();
-        } 
-        // 은재
-        else if (selectedProfile.id === 'eunjae') {
-            setSelectedProfile(null);
-            playSound('narrative');
-            setCurrentView('chat');
-            setMessages([]);
-            setCurrentSequence([]);
-            setStepIndex(0);
-            setTimeout(() => { loadScene('eunjae_start'); }, 500);
-        } 
-        // [추가] 니코 채팅 시작 로직
-        else if (selectedProfile.id === 'niko') {
-            setSelectedProfile(null);
-            playSound('narrative');
-            setCurrentView('chat');
-            setMessages([]);
-            setCurrentSequence([]);
-            setStepIndex(0);
-            setTimeout(() => { loadScene('niko_start'); }, 500);
-        }
-    }}
+                           <button 
+                             onClick={() => {
+                                if (selectedProfile.id === 'jaehyun') {
+                                    handleStartIntro();
+                                } else if (selectedProfile.id === 'eunjae') {
+                                    setSelectedProfile(null);
+                                    playSound('narrative');
+                                    setCurrentView('chat');
+                                    setMessages([]);
+                                    setCurrentSequence([]);
+                                    setStepIndex(0);
+                                    setTimeout(() => { loadScene('eunjae_start'); }, 500);
+                                } else if (selectedProfile.id === 'niko') {
+                                    setSelectedProfile(null);
+                                    playSound('narrative');
+                                    setCurrentView('chat');
+                                    setMessages([]);
+                                    setCurrentSequence([]);
+                                    setStepIndex(0);
+                                    setTimeout(() => { loadScene('niko_start'); }, 500);
+                                }
+                             }}
+                             className={`flex flex-col items-center gap-2 group ${(selectedProfile.id === 'jaehyun' || selectedProfile.id === 'eunjae' || selectedProfile.id === 'niko') ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}
+                           >
+                             <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
+                               <MessageCircle size={26} fill={(selectedProfile.id === 'jaehyun' || selectedProfile.id === 'eunjae' || selectedProfile.id === 'niko') ? "currentColor" : "none"} strokeWidth={1.5} />
+                             </div>
+                             <span className="text-[11px] font-medium text-white/90">1:1 채팅</span>
+                           </button>
+                         )}
     // 커서 및 활성화 스타일 조건에도 'niko' 추가
     className={`flex flex-col items-center gap-2 group ${(selectedProfile.id === 'jaehyun' || selectedProfile.id === 'eunjae' || selectedProfile.id === 'niko') ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}
   >
