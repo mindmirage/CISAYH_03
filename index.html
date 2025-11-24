@@ -1336,7 +1336,7 @@ return (
               )}
 
               {(choices.length > 0 && (!isChoiceMinimized || isChoiceFading)) && (
-                <div className={`flex flex-col space-y-2 ${isChoiceFading ? 'absolute bottom-0 left-0 w-full px-4 pb-8 z-10 animate-collapse' : 'animate-fade-in-up'}`}>
+                <div className={`flex flex-col space-y-3 ${isChoiceFading ? 'absolute bottom-0 left-0 w-full px-4 pb-8 z-10 animate-collapse' : 'animate-fade-in-up'}`}>
                   <div className="relative flex items-center justify-center mb-1">
                     <span className={`text-xs font-medium transition-colors duration-300 ${helperText === "다시 선택해 보자." ? "text-red-500 font-bold" : "text-gray-500"}`}>{helperText}</span>
                     <button onClick={() => setIsChoiceMinimized(true)} className="absolute right-0 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition"><ChevronDown size={16} /></button>
@@ -1345,8 +1345,15 @@ return (
                     <button 
                       key={index} 
                       onClick={() => handleChoice(choice, index)} 
-                      /* ▼▼▼ 여기가 수정됨: rounded-2xl -> rounded-full (완전 둥글게) ▼▼▼ */
-                      className={`w-full p-3.5 text-sm font-medium rounded-full ${COLORS.button} ${wrongChoiceIndex === index ? 'animate-shake bg-red-50 border-red-200' : ''}`}
+                      /* ▼▼▼ 여기가 핵심 수정 사항입니다 ▼▼▼ */
+                      /* 안내사항 버튼과 동일한 구조(rounded-2xl, shadow, hover 효과)에 초록색(emerald/green) 테마 적용 */
+                      className={`
+                        w-full py-4 rounded-2xl font-bold text-sm tracking-widest transition-all duration-300 active:scale-95
+                        ${wrongChoiceIndex === index 
+                          ? 'animate-shake bg-red-50 border border-red-200 text-red-500' 
+                          : 'bg-white text-gray-700 border border-emerald-50 shadow-[0_10px_30px_-10px_rgba(79,217,133,0.4)] hover:shadow-[0_10px_30px_-5px_rgba(79,217,133,0.6)] hover:border-emerald-100 hover:-translate-y-0.5 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50'
+                        }
+                      `}
                     >
                       {choice.text}
                     </button>
