@@ -1091,7 +1091,7 @@ return (
         {selectedProfile && (
             <div className="absolute inset-0 z-50 flex items-center justify-center animate-fade-in">
                  
-                 {/* [1] 배경 레이어 */}
+                 {/* [1] 배경 레이어 (기본 배경색) */}
                  <div className={`absolute inset-0 transition-colors duration-700 
                    ${selectedProfile.id === 'mark' ? 'bg-[#85C1E9]' : 
                      selectedProfile.id === 'jaehyun' ? 'bg-[#D7BDE2]' : 
@@ -1108,8 +1108,11 @@ return (
                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10"></div>
                  </div>
 
+                 {/* 
+                    [수정됨 1] 상단바와 버튼을 스크롤 영역 밖(z-50)으로 빼서 고정시킴 
+                 */}
                  {/* 상단바 */}
-                 <div className="absolute top-0 w-full z-50 pt-3 pb-2 px-6 flex justify-between items-center text-white/90 text-sm font-bold select-none">
+                 <div className="absolute top-0 w-full z-50 pt-3 pb-2 px-6 flex justify-between items-center text-white/90 text-sm font-bold select-none pointer-events-none">
                     <span>{timeStr}</span>
                     <div className="flex space-x-1.5">
                         <Signal size={16} fill="currentColor" />
@@ -1118,8 +1121,8 @@ return (
                     </div>
                  </div>
 
-                 {/* 상단 버튼 그룹 (위치 수정됨: right-2, gap-1) */}
-                 <div className="absolute top-12 right-2 flex gap-1 z-50">
+                 {/* 상단 버튼 그룹 */}
+                 <div className="absolute top-12 right-4 flex gap-1.5 z-50">
                     {/* 상세 정보 버튼 */}
                     {CHARACTER_DETAILS[selectedProfile.id] && (
                         <button 
@@ -1147,58 +1150,80 @@ return (
                     </button>
                  </div>
 
-                 {/* [2] 상세 정보 뷰 (화면 꽉 차게, 반투명 배경) */}
+                 {/* [2] 상세 정보 뷰 */}
                  {isDetailView && CHARACTER_DETAILS[selectedProfile.id] && (
-                    <div className="absolute inset-0 z-40 bg-white/85 backdrop-blur-xl animate-fade-in flex flex-col overflow-y-auto custom-scrollbar">
+                    <div className="absolute inset-0 z-40 animate-fade-in flex flex-col overflow-y-auto custom-scrollbar bg-transparent">
                         
-                        {/* 헤더 이미지 영역 (높이 제한 제거: h-auto) */}
+                        {/* 헤더 이미지 (스크롤 시 배경처럼 보이게 처리) */}
                         {CHARACTER_DETAILS[selectedProfile.id].headerImage ? (
                             <div className="relative w-full shrink-0">
                                 <img 
                                     src={CHARACTER_DETAILS[selectedProfile.id].headerImage} 
                                     alt="header" 
-                                    className="w-full h-auto" 
+                                    className="w-full h-auto object-cover" 
                                 />
-                                {/* 하단 블러 처리 (자연스럽게 이어지도록) */}
-                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/90"></div>
+                                {/* [수정됨 3] 이미지 하단 그라데이션을 길게 빼서 경계선 제거 */}
+                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent via-black/10 to-white/90"></div>
+                                <div className="absolute bottom-0 w-full h-32 bg-gradient-to-t from-white via-white/80 to-transparent"></div>
                             </div>
                         ) : (
-                            <div className="h-24 shrink-0"></div> // 이미지가 없을 때 여백
+                            <div className="h-32 shrink-0 bg-transparent"></div>
                         )}
 
-                        {/* 컨텐츠 영역 (이미지가 있으면 위로 당겨서 겹치게 함) */}
-                        <div className={`px-6 pb-10 flex-1 ${CHARACTER_DETAILS[selectedProfile.id].headerImage ? '-mt-16 relative z-10' : ''}`}>
+                        {/* 컨텐츠 영역 */}
+                        {/* [수정됨 2] -mt-32로 텍스트를 이미지 위로 더 많이 끌어올림 */}
+                        <div className={`px-6 pb-10 flex-1 bg-white min-h-screen ${CHARACTER_DETAILS[selectedProfile.id].headerImage ? '-mt-32 relative z-10 bg-gradient-to-b from-transparent via-white to-white' : 'bg-white/90 backdrop-blur-xl pt-10'}`}>
                             
-                            {/* 직업 & 이름 (왼쪽 정렬) */}
-                            <div className="text-left mb-6">
-                                <span className={`text-xs font-bold tracking-widest uppercase mb-1 block ${CHARACTER_DETAILS[selectedProfile.id].roleColor}`}>
+                            {/* 직업 & 이름 */}
+                            <div className="text-left mb-8 pl-1">
+                                <span className={`text-xs font-bold tracking-widest uppercase mb-1 block drop-shadow-sm ${CHARACTER_DETAILS[selectedProfile.id].headerImage ? 'text-white/90' : CHARACTER_DETAILS[selectedProfile.id].roleColor}`}>
                                     {CHARACTER_DETAILS[selectedProfile.id].role}
                                 </span>
-                                <h2 className="text-4xl font-black text-gray-800 tracking-tight">
+                                <h2 className={`text-5xl font-black tracking-tighter drop-shadow-md ${CHARACTER_DETAILS[selectedProfile.id].headerImage ? 'text-white' : 'text-gray-800'}`}>
                                     {CHARACTER_DETAILS[selectedProfile.id].fullName}
                                 </h2>
                             </div>
 
                             {/* 소개글 */}
-                            <p className="text-[15px] text-gray-700 leading-loose text-justify mb-10 break-keep font-medium">
+                            <p className="text-[15px] text-gray-700 leading-loose text-justify mb-12 break-keep font-medium pt-4">
                                 {CHARACTER_DETAILS[selectedProfile.id].desc}
                             </p>
 
-                            {/* 마크: 앨범 정보 */}
+                            {/* [수정됨 4] 마크: 아이팟 클래식 스타일 앨범 정보 */}
                             {selectedProfile.id === 'mark' && CHARACTER_DETAILS.mark.album && (
-                                <div className="mb-8 animate-fade-in-up">
-                                    <div className="text-xs font-bold text-gray-400 mb-3 tracking-wider">LATEST ALBUM</div>
-                                    <div className="flex gap-5 items-start bg-white/60 p-4 rounded-3xl border border-white shadow-sm">
-                                        <img src={CHARACTER_DETAILS.mark.album.cover} alt="Album" className="w-24 h-24 rounded-2xl object-cover shadow-md" />
-                                        <div className="flex-1 min-w-0 pt-1">
-                                            <div className="font-bold text-gray-800 text-base mb-2">{CHARACTER_DETAILS.mark.album.title}</div>
-                                            <div className="space-y-1">
-                                                {CHARACTER_DETAILS.mark.album.tracks.map((track, i) => (
-                                                    <div key={i} className={`text-xs truncate ${track.includes('Title') ? 'text-green-600 font-bold' : 'text-gray-500'}`}>
-                                                        {track}
-                                                    </div>
-                                                ))}
+                                <div className="mb-12 animate-fade-in-up flex justify-center">
+                                    {/* 아이팟 바디 */}
+                                    <div className="w-64 bg-gray-200 rounded-[2rem] p-4 shadow-2xl border-4 border-gray-300 relative">
+                                        {/* 화면 */}
+                                        <div className="bg-white h-40 rounded-lg mb-6 border-2 border-gray-400 overflow-hidden flex flex-col shadow-inner">
+                                            {/* 상단 바 */}
+                                            <div className="h-5 bg-gradient-to-b from-gray-100 to-gray-300 border-b border-gray-400 flex items-center justify-between px-2">
+                                                <span className="text-[8px] font-bold text-gray-600">Now Playing</span>
+                                                <div className="flex gap-0.5">
+                                                    <div className="w-2 h-1 bg-gray-600"></div>
+                                                    <div className="w-0.5 h-1 bg-gray-400"></div>
+                                                </div>
                                             </div>
+                                            {/* 앨범 내용 */}
+                                            <div className="flex-1 flex items-center p-3 gap-3">
+                                                <img src={CHARACTER_DETAILS.mark.album.cover} alt="Album" className="w-20 h-20 shadow-md object-cover" />
+                                                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                    <div className="text-[10px] font-bold text-gray-800 truncate">{CHARACTER_DETAILS.mark.album.tracks[0]}</div>
+                                                    <div className="text-[9px] text-gray-500 truncate">{CHARACTER_DETAILS.mark.album.title}</div>
+                                                    <div className="text-[9px] text-gray-500 truncate">NCT MARK</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* 클릭 휠 */}
+                                        <div className="w-40 h-40 rounded-full bg-white border border-gray-300 mx-auto relative flex items-center justify-center shadow-sm">
+                                            <div className="absolute top-3 text-[10px] font-bold text-gray-400">MENU</div>
+                                            <div className="absolute bottom-3 text-[10px] font-bold text-gray-400"><Play size={10} fill="currentColor"/></div>
+                                            <div className="absolute left-3 text-[10px] font-bold text-gray-400"><ChevronLeft size={10} /></div>
+                                            <div className="absolute right-3 text-[10px] font-bold text-gray-400"><ChevronLeft size={10} className="rotate-180" /></div>
+                                            
+                                            {/* 센터 버튼 */}
+                                            <div className="w-14 h-14 rounded-full bg-gray-200 shadow-inner"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1206,53 +1231,63 @@ return (
 
                             {/* 재현: 필모그래피 & 라디오 */}
                             {selectedProfile.id === 'jaehyun' && (
-                                <div className="space-y-10 animate-fade-in-up">
+                                <div className="space-y-12 animate-fade-in-up pb-10">
                                     {/* 필모그래피 (직사각형 그리드) */}
                                     <div>
-                                        <div className="text-xs font-bold text-gray-400 mb-1 tracking-wider">FILMOGRAPHY</div>
-                                        <div className="text-lg font-bold text-gray-800 mb-4">익명의 편지가 이국에서</div>
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="w-1 h-4 bg-gray-800"></div>
+                                            <div className="text-xs font-bold text-gray-800 tracking-widest">FILMOGRAPHY</div>
+                                        </div>
+                                        <div className="text-xl font-black text-gray-900 mb-4 tracking-tight">익명의 편지가 이국에서</div>
                                         
                                         {/* 직사각형 그리드 (3열 2행) */}
-                                        <div className="grid grid-cols-3 gap-2 mb-4">
+                                        <div className="grid grid-cols-3 gap-1.5 mb-6">
                                             {CHARACTER_DETAILS.jaehyun.hexImages.map((img, i) => (
-                                                <div key={i} className="aspect-[3/4] relative rounded-lg overflow-hidden shadow-sm transition-transform hover:scale-105">
+                                                <div key={i} className="aspect-[3/4] relative overflow-hidden shadow-sm transition-transform hover:scale-105 bg-gray-100">
                                                     <img src={img} alt={`scene-${i}`} className="w-full h-full object-cover" />
                                                 </div>
                                             ))}
                                         </div>
                                         
-                                        <button className="w-full py-3 bg-gray-800 text-white text-xs font-bold rounded-xl shadow-md hover:bg-gray-900 transition flex items-center justify-center gap-2">
-                                            인터뷰 보러 가기 <ChevronLeft size={14} className="rotate-180" />
+                                        <button className="w-full py-3.5 bg-black text-white text-xs font-bold rounded-none shadow-lg hover:bg-gray-800 transition flex items-center justify-center gap-2 tracking-wider">
+                                            인터뷰 보러 가기 <ChevronLeft size={12} className="rotate-180" />
                                         </button>
                                     </div>
 
                                     {/* 라디오 */}
                                     <div>
-                                        <div className="text-xs font-bold text-gray-400 mb-3 tracking-wider">RADIO DJ</div>
-                                        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-5 rounded-3xl border border-indigo-100 shadow-sm">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <div className="font-bold text-indigo-900 text-lg">{CHARACTER_DETAILS.jaehyun.radio.title}</div>
-                                                    <div className="text-xs text-indigo-400 mt-0.5">{CHARACTER_DETAILS.jaehyun.radio.station}</div>
-                                                </div>
-                                                <div className="bg-white p-2 rounded-full text-indigo-500 shadow-sm">
-                                                    <Music size={20} />
-                                                </div>
-                                            </div>
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="w-1 h-4 bg-indigo-600"></div>
+                                            <div className="text-xs font-bold text-indigo-900 tracking-widest">RADIO DJ</div>
+                                        </div>
+                                        <div className="bg-white p-6 border border-gray-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-4 -mt-4 z-0"></div>
                                             
-                                            <button 
-                                                onClick={() => setShowRadioScript(!showRadioScript)}
-                                                className="w-full py-3 bg-white text-indigo-600 text-xs font-bold rounded-xl shadow-sm hover:bg-indigo-50 transition flex items-center justify-center gap-1"
-                                            >
-                                                {showRadioScript ? "대본 닫기" : "들으러 가기"}
-                                                <Play size={12} className={`ml-1 ${showRadioScript ? 'hidden' : ''}`} />
-                                            </button>
-
-                                            {showRadioScript && (
-                                                <div className="mt-4 p-4 bg-white/90 rounded-2xl text-xs text-gray-600 leading-loose whitespace-pre-wrap h-40 overflow-y-auto custom-scrollbar border border-indigo-100 shadow-inner">
-                                                    {CHARACTER_DETAILS.jaehyun.radio.script}
+                                            <div className="relative z-10">
+                                                <div className="flex justify-between items-start mb-6">
+                                                    <div>
+                                                        <div className="font-black text-2xl text-gray-900 mb-1">{CHARACTER_DETAILS.jaehyun.radio.title}</div>
+                                                        <div className="text-xs font-medium text-gray-400">{CHARACTER_DETAILS.jaehyun.radio.station}</div>
+                                                    </div>
+                                                    <div className="bg-indigo-600 p-2.5 rounded-full text-white shadow-md shadow-indigo-200">
+                                                        <Music size={20} />
+                                                    </div>
                                                 </div>
-                                            )}
+                                                
+                                                <button 
+                                                    onClick={() => setShowRadioScript(!showRadioScript)}
+                                                    className="w-full py-3 bg-gray-50 text-gray-600 text-xs font-bold border border-gray-200 hover:bg-gray-100 transition flex items-center justify-center gap-2"
+                                                >
+                                                    {showRadioScript ? "대본 닫기" : "들으러 가기"}
+                                                    <Play size={10} fill="currentColor" className={`ml-1 ${showRadioScript ? 'hidden' : ''}`} />
+                                                </button>
+
+                                                {showRadioScript && (
+                                                    <div className="mt-4 p-4 bg-gray-50 text-[11px] text-gray-600 leading-loose whitespace-pre-wrap h-48 overflow-y-auto custom-scrollbar border-t border-gray-200">
+                                                        {CHARACTER_DETAILS.jaehyun.radio.script}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
