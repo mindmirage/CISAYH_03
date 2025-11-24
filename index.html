@@ -89,7 +89,7 @@ const playSound = (type) => {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     
-    // [예전 파일 방식] 단순하게 체크하고 바로 켭니다.
+    // 오디오 엔진이 없으면 만들고, 멈춰있으면 켭니다.
     if (!audioCtx) audioCtx = new AC();
     if (audioCtx.state === 'suspended') audioCtx.resume();
 
@@ -98,8 +98,7 @@ const playSound = (type) => {
     osc.connect(gain); 
     gain.connect(audioCtx.destination);
     
-    // [예전 파일 방식] 지연 없이 즉시 재생 (currentTime)
-    const now = audioCtx.currentTime;
+    const now = audioCtx.currentTime; // 지연 없이 즉시 재생
 
     if (type === 'message') {
       osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
