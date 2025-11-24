@@ -1089,7 +1089,7 @@ return (
 
         {/* 프로필 모달 */}
         {selectedProfile && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in">
+            <div className="absolute inset-0 z-50 flex items-center justify-center animate-fade-in">
                  
                  {/* [1] 배경 레이어 (기본 프로필용) */}
                  {!isDetailView && (
@@ -1111,10 +1111,10 @@ return (
                  )}
 
                  {/* 
-                    [수정됨 1] 상단바와 버튼을 'fixed'로 변경하여 스크롤과 무관하게 화면에 고정 
+                    [수정됨] fixed -> absolute로 변경하여 폰 프레임 안에 가둠
                  */}
                  {/* 상단바 (고정) */}
-                 <div className="fixed top-0 w-full z-[70] pt-3 pb-2 px-6 flex justify-between items-center text-white/90 text-sm font-bold select-none pointer-events-none mix-blend-plus-lighter">
+                 <div className="absolute top-0 w-full z-[70] pt-3 pb-2 px-6 flex justify-between items-center text-white/90 text-sm font-bold select-none pointer-events-none mix-blend-plus-lighter">
                     <span>{timeStr}</span>
                     <div className="flex space-x-1.5">
                         <Signal size={16} fill="currentColor" />
@@ -1124,7 +1124,7 @@ return (
                  </div>
 
                  {/* 상단 버튼 그룹 (고정) */}
-                 <div className="fixed top-12 right-4 flex gap-1.5 z-[70]">
+                 <div className="absolute top-12 right-4 flex gap-1.5 z-[70]">
                     {/* 상세 정보 버튼 */}
                     {CHARACTER_DETAILS[selectedProfile.id] && (
                         <button 
@@ -1152,13 +1152,13 @@ return (
                     </button>
                  </div>
 
-                 {/* [2] 상세 정보 뷰 (전체 화면 스크롤) */}
+                 {/* [2] 상세 정보 뷰 (폰 화면 내 스크롤) */}
                  {isDetailView && CHARACTER_DETAILS[selectedProfile.id] ? (
-                    <div className="fixed inset-0 z-[60] bg-white overflow-y-auto custom-scrollbar animate-fade-in">
+                    <div className="absolute inset-0 z-[60] bg-white overflow-y-auto custom-scrollbar animate-fade-in">
                         
                         {/* 헤더 이미지 영역 */}
                         <div className="relative w-full">
-                            {/* [수정됨 2] 이미지 높이 제한 제거 (h-auto), 원본 비율 유지 */}
+                            {/* 이미지 높이 제한 제거 (h-auto), 원본 비율 유지 */}
                             {CHARACTER_DETAILS[selectedProfile.id].headerImage ? (
                                 <img 
                                     src={CHARACTER_DETAILS[selectedProfile.id].headerImage} 
@@ -1172,10 +1172,10 @@ return (
                             {/* 텍스트 가독성을 위한 하단 그라데이션 (어두움) */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90"></div>
                             
-                            {/* [수정됨 3] 자연스러운 트랜지션 (이미지 끝부분을 흰색으로 블렌딩) */}
+                            {/* 자연스러운 트랜지션 (이미지 끝부분을 흰색으로 블렌딩) */}
                             <div className="absolute bottom-0 w-full h-24 bg-gradient-to-t from-white via-white/60 to-transparent"></div>
 
-                            {/* [수정됨 2] 직업 & 이름 텍스트를 사진 위에 배치 */}
+                            {/* 직업 & 이름 텍스트를 사진 위에 배치 */}
                             <div className="absolute bottom-6 left-0 w-full px-6 pb-4 z-10">
                                 <span className={`text-sm font-bold tracking-widest uppercase mb-1 block drop-shadow-md ${CHARACTER_DETAILS[selectedProfile.id].headerImage ? 'text-white/90' : CHARACTER_DETAILS[selectedProfile.id].roleColor}`}>
                                     {CHARACTER_DETAILS[selectedProfile.id].role}
