@@ -1213,21 +1213,29 @@ return (
                  )}
 
                  {/* =================================================================================
-                    [2] 상세 정보 뷰 (유리 효과 + 사진 꽉 차게)
+                    [2] 상세 정보 뷰 (시네마틱 스타일: 배경 디밍 + 텍스트 오버레이)
                     ================================================================================= */}
                  {isDetailView && CHARACTER_DETAILS[selectedProfile.id] && (
                     <>
-                        {/* 1. 고정된 상단바 & 버튼 (스크롤 영향 X) */}
-                        <div className="absolute top-0 w-full z-[100] pt-3 pb-2 px-6 flex justify-between items-center text-white text-sm font-bold select-none pointer-events-none drop-shadow-md">
-                            <span>{timeStr}</span>
-                            <div className="flex space-x-1.5">
-                                <Signal size={16} fill="currentColor" />
-                                <Wifi size={16} />
-                                <Battery size={16} fill="currentColor" />
+                        {/* 1. 상단바 & 버튼 (스크롤 내리면 사라짐: opacity 조절) */}
+                        <div 
+                            className="absolute top-0 w-full z-[100] transition-opacity duration-500 pointer-events-none"
+                            style={{ opacity: scrollTop > 20 ? 0 : 1 }}
+                        >
+                            <div className="pt-3 pb-2 px-6 flex justify-between items-center text-white text-sm font-bold drop-shadow-md">
+                                <span>{timeStr}</span>
+                                <div className="flex space-x-1.5">
+                                    <Signal size={16} fill="currentColor" />
+                                    <Wifi size={16} />
+                                    <Battery size={16} fill="currentColor" />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="absolute top-12 right-4 flex gap-1 z-[100]">
+                        <div 
+                            className="absolute top-12 right-4 flex gap-1 z-[100] transition-opacity duration-500"
+                            style={{ opacity: scrollTop > 20 ? 0 : 1, pointerEvents: scrollTop > 20 ? 'none' : 'auto' }}
+                        >
                             <button 
                                 onClick={() => { playSound('click'); setIsDetailView(false); setShowRadioScript(false); }} 
                                 className="p-2 text-white hover:text-gray-200 transition bg-transparent"
@@ -1242,20 +1250,26 @@ return (
                             </button>
                         </div>
 
-                        {/* 2. 배경 이미지 (고정됨, 스크롤 시 어두워짐) */}
-                        <div className="absolute inset-0 z-0 bg-gray-900">
+                        {/* 2. 배경 이미지 (고정됨) */}
+                        <div className="absolute inset-0 z-0 bg-black">
                             {CHARACTER_DETAILS[selectedProfile.id].headerImage ? (
                                 <img 
                                     src={CHARACTER_DETAILS[selectedProfile.id].headerImage} 
                                     alt="header" 
-                                    className="w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-300"
-                                    style={{ opacity: Math.max(0.4, 1 - scrollTop / 500) }} // 스크롤 내리면 어두워짐
+                                    className="w-full h-full object-cover absolute top-0 left-0"
                                 />
                             ) : (
                                 <div className={`w-full h-full absolute top-0 left-0 ${selectedProfile.id === 'mark' ? 'bg-green-200' : 'bg-sky-200'}`}></div>
                             )}
-                            {/* 이미지 하단 그라데이션 (텍스트 가독성) */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30"></div>
+                            
+                            {/* [핵심] 배경 디밍 오버레이 (스크롤 내릴수록 어두워짐) */}
+                            <div 
+                                className="absolute inset-0 bg-black transition-opacity duration-0"
+                                style={{ opacity: Math.min(0.85, scrollTop / 400) }} 
+                            ></div>
+                            
+                            {/* 하단 그라데이션 (초기 텍스트 가독성용) */}
+                            <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                         </div>
 
                         {/* 3. 스크롤 가능한 컨텐츠 영역 */}
@@ -1263,78 +1277,78 @@ return (
                             className="absolute inset-0 z-10 overflow-y-auto custom-scrollbar"
                             onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
                         >
-                            {/* [수정됨] 투명한 공간을 65%로 늘려서 사진이 시원하게 보이게 함 */}
-                            <div className="h-[65vh] w-full bg-transparent relative pointer-events-none">
-                                {/* 이름 & 직업 (이미지 위에 고정된 것처럼 보이다가 스크롤 되면 올라감) */}
-                                <div className="absolute bottom-10 left-0 w-full px-6 z-20">
-                                    <span className={`text-sm font-bold tracking-widest uppercase mb-1 block drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] ${CHARACTER_DETAILS[selectedProfile.id].roleColor}`}>
+                            {/* 상단 여백 (이미지가 보이는 영역) */}
+                            <div className="h-[55vh] w-full bg-transparent relative pointer-events-none">
+                                {/* 이름 & 직업 (스크롤과 함께 올라감) */}
+                                <div className="absolute bottom-0 left-0 w-full px-6 pb-6 z-20">
+                                    <span className={`text-sm font-bold tracking-widest uppercase mb-2 block drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] ${CHARACTER_DETAILS[selectedProfile.id].roleColor}`}>
                                         {CHARACTER_DETAILS[selectedProfile.id].role}
                                     </span>
-                                    <h2 className="text-5xl font-black tracking-tighter text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
+                                    <h2 className="text-5xl font-black tracking-tighter text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] leading-tight">
                                         {CHARACTER_DETAILS[selectedProfile.id].fullName}
                                     </h2>
                                 </div>
                             </div>
 
-                            {/* [수정됨] 유리 효과 (Glassmorphism) 적용: bg-white/70 + backdrop-blur */}
-                            <div className="bg-white/75 backdrop-blur-2xl min-h-[50vh] rounded-t-[3rem] px-6 pt-10 pb-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] relative border-t border-white/20">
+                            {/* [수정됨] 테두리 없는 텍스트 영역 (배경 없음, 글씨만 떠 있음) */}
+                            <div className="px-6 pb-20 pt-4 relative">
                                 {/* 소개글 */}
-                                <p className="text-[15px] text-gray-800 leading-loose text-justify mb-12 break-keep font-medium">
+                                <p className="text-[16px] text-white/90 leading-loose text-justify mb-16 break-keep font-medium drop-shadow-md">
                                     {CHARACTER_DETAILS[selectedProfile.id].desc}
                                 </p>
 
-                                {/* 마크: 아이팟 클래식 스타일 앨범 정보 */}
+                                {/* 마크: 아이팟 클래식 스타일 앨범 정보 (다크 모드 스타일) */}
                                 {selectedProfile.id === 'mark' && CHARACTER_DETAILS.mark.album && (
-                                    <div className="mb-12 animate-fade-in-up flex justify-center">
-                                        <div className="w-64 bg-gray-200 rounded-[2rem] p-4 shadow-2xl border-4 border-gray-300 relative">
-                                            <div className="bg-white h-40 rounded-lg mb-6 border-2 border-gray-400 overflow-hidden flex flex-col shadow-inner">
-                                                <div className="h-5 bg-gradient-to-b from-gray-100 to-gray-300 border-b border-gray-400 flex items-center justify-between px-2">
-                                                    <span className="text-[8px] font-bold text-gray-600">Now Playing</span>
+                                    <div className="mb-16 animate-fade-in-up flex justify-center">
+                                        <div className="w-64 bg-white/10 backdrop-blur-md rounded-[2rem] p-4 shadow-2xl border border-white/20 relative">
+                                            <div className="bg-black/40 h-40 rounded-lg mb-6 border border-white/10 overflow-hidden flex flex-col shadow-inner">
+                                                <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3">
+                                                    <span className="text-[9px] font-bold text-white/60">Now Playing</span>
                                                     <div className="flex gap-0.5">
-                                                        <div className="w-2 h-1 bg-gray-600"></div>
-                                                        <div className="w-0.5 h-1 bg-gray-400"></div>
+                                                        <div className="w-2 h-1 bg-green-400"></div>
+                                                        <div className="w-0.5 h-1 bg-white/40"></div>
                                                     </div>
                                                 </div>
-                                                <div className="flex-1 flex items-center p-3 gap-3">
-                                                    <img src={CHARACTER_DETAILS.mark.album.cover} alt="Album" className="w-20 h-20 shadow-md object-cover" />
+                                                <div className="flex-1 flex items-center p-4 gap-4">
+                                                    <img src={CHARACTER_DETAILS.mark.album.cover} alt="Album" className="w-20 h-20 shadow-lg object-cover rounded-md" />
                                                     <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                        <div className="text-[10px] font-bold text-gray-800 truncate">{CHARACTER_DETAILS.mark.album.tracks[0]}</div>
-                                                        <div className="text-[9px] text-gray-500 truncate">{CHARACTER_DETAILS.mark.album.title}</div>
-                                                        <div className="text-[9px] text-gray-500 truncate">NCT MARK</div>
+                                                        <div className="text-xs font-bold text-white truncate mb-1">{CHARACTER_DETAILS.mark.album.tracks[0]}</div>
+                                                        <div className="text-[10px] text-white/60 truncate">{CHARACTER_DETAILS.mark.album.title}</div>
+                                                        <div className="text-[10px] text-white/60 truncate">NCT MARK</div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="w-40 h-40 rounded-full bg-white border border-gray-300 mx-auto relative flex items-center justify-center shadow-sm">
-                                                <div className="absolute top-3 text-[10px] font-bold text-gray-400">MENU</div>
-                                                <div className="absolute bottom-3 text-[10px] font-bold text-gray-400"><Play size={10} fill="currentColor"/></div>
-                                                <div className="absolute left-3 text-[10px] font-bold text-gray-400"><ChevronLeft size={10} /></div>
-                                                <div className="absolute right-3 text-[10px] font-bold text-gray-400"><ChevronLeft size={10} className="rotate-180" /></div>
-                                                <div className="w-14 h-14 rounded-full bg-gray-200 shadow-inner"></div>
+                                            <div className="w-40 h-40 rounded-full bg-black/20 border border-white/10 mx-auto relative flex items-center justify-center shadow-lg backdrop-blur-sm">
+                                                <div className="absolute top-4 text-[10px] font-bold text-white/50">MENU</div>
+                                                <div className="absolute bottom-4 text-[10px] font-bold text-white/50"><Play size={10} fill="currentColor"/></div>
+                                                <div className="absolute left-4 text-[10px] font-bold text-white/50"><ChevronLeft size={10} /></div>
+                                                <div className="absolute right-4 text-[10px] font-bold text-white/50"><ChevronLeft size={10} className="rotate-180" /></div>
+                                                <div className="w-14 h-14 rounded-full bg-white/10 shadow-inner border border-white/5"></div>
                                             </div>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* 재현: 필모그래피 & 라디오 */}
+                                {/* 재현: 필모그래피 & 라디오 (다크 모드 스타일) */}
                                 {selectedProfile.id === 'jaehyun' && (
-                                    <div className="space-y-12 animate-fade-in-up pb-10">
+                                    <div className="space-y-16 animate-fade-in-up pb-10">
                                         {/* 필모그래피 */}
                                         <div>
                                             <div className="flex items-center gap-2 mb-4">
-                                                <div className="w-1 h-4 bg-gray-800"></div>
-                                                <div className="text-xs font-bold text-gray-800 tracking-widest">FILMOGRAPHY</div>
+                                                <div className="w-1 h-4 bg-sky-400"></div>
+                                                <div className="text-xs font-bold text-sky-200 tracking-widest">FILMOGRAPHY</div>
                                             </div>
-                                            <div className="text-xl font-black text-gray-900 mb-4 tracking-tight">익명의 편지가 이국에서</div>
+                                            <div className="text-2xl font-black text-white mb-6 tracking-tight drop-shadow-md">익명의 편지가 이국에서</div>
                                             
-                                            <div className="grid grid-cols-3 gap-1.5 mb-6">
+                                            <div className="grid grid-cols-3 gap-2 mb-6">
                                                 {CHARACTER_DETAILS.jaehyun.hexImages.map((img, i) => (
-                                                    <div key={i} className="aspect-[3/4] relative overflow-hidden shadow-sm transition-transform hover:scale-105 bg-gray-100">
-                                                        <img src={img} alt={`scene-${i}`} className="w-full h-full object-cover" />
+                                                    <div key={i} className="aspect-[3/4] relative overflow-hidden rounded-sm shadow-lg transition-transform hover:scale-105 bg-white/5">
+                                                        <img src={img} alt={`scene-${i}`} className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
                                                     </div>
                                                 ))}
                                             </div>
                                             
-                                            <button className="w-full py-3.5 bg-black text-white text-xs font-bold rounded-none shadow-lg hover:bg-gray-800 transition flex items-center justify-center gap-2 tracking-wider">
+                                            <button className="w-full py-4 bg-white/10 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:bg-white/20 transition flex items-center justify-center gap-2 tracking-wider rounded-lg">
                                                 인터뷰 보러 가기 <ChevronLeft size={12} className="rotate-180" />
                                             </button>
                                         </div>
@@ -1342,33 +1356,33 @@ return (
                                         {/* 라디오 */}
                                         <div>
                                             <div className="flex items-center gap-2 mb-4">
-                                                <div className="w-1 h-4 bg-indigo-600"></div>
-                                                <div className="text-xs font-bold text-indigo-900 tracking-widest">RADIO DJ</div>
+                                                <div className="w-1 h-4 bg-purple-400"></div>
+                                                <div className="text-xs font-bold text-purple-200 tracking-widest">RADIO DJ</div>
                                             </div>
-                                            <div className="bg-white/80 p-6 border border-gray-200 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden backdrop-blur-sm">
-                                                <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-4 -mt-4 z-0"></div>
+                                            <div className="bg-white/5 backdrop-blur-md p-6 border border-white/10 shadow-xl relative overflow-hidden rounded-2xl">
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 rounded-bl-full -mr-8 -mt-8 z-0 blur-2xl"></div>
                                                 
                                                 <div className="relative z-10">
-                                                    <div className="flex justify-between items-start mb-6">
+                                                    <div className="flex justify-between items-start mb-8">
                                                         <div>
-                                                            <div className="font-black text-2xl text-gray-900 mb-1">{CHARACTER_DETAILS.jaehyun.radio.title}</div>
-                                                            <div className="text-xs font-medium text-gray-500">{CHARACTER_DETAILS.jaehyun.radio.station}</div>
+                                                            <div className="font-black text-2xl text-white mb-1">{CHARACTER_DETAILS.jaehyun.radio.title}</div>
+                                                            <div className="text-xs font-medium text-white/50">{CHARACTER_DETAILS.jaehyun.radio.station}</div>
                                                         </div>
-                                                        <div className="bg-indigo-600 p-2.5 rounded-full text-white shadow-md shadow-indigo-200">
+                                                        <div className="bg-white/10 p-3 rounded-full text-white shadow-inner border border-white/10">
                                                             <Music size={20} />
                                                         </div>
                                                     </div>
                                                     
                                                     <button 
                                                         onClick={() => setShowRadioScript(!showRadioScript)}
-                                                        className="w-full py-3 bg-white text-gray-700 text-xs font-bold border border-gray-200 hover:bg-gray-50 transition flex items-center justify-center gap-2 shadow-sm"
+                                                        className="w-full py-3 bg-white text-black text-xs font-bold hover:bg-gray-200 transition flex items-center justify-center gap-2 rounded-lg shadow-lg"
                                                     >
                                                         {showRadioScript ? "대본 닫기" : "들으러 가기"}
                                                         <Play size={10} fill="currentColor" className={`ml-1 ${showRadioScript ? 'hidden' : ''}`} />
                                                     </button>
 
                                                     {showRadioScript && (
-                                                        <div className="mt-4 p-4 bg-gray-50/80 text-[11px] text-gray-700 leading-loose whitespace-pre-wrap h-48 overflow-y-auto custom-scrollbar border-t border-gray-200">
+                                                        <div className="mt-6 p-4 bg-black/30 rounded-xl text-[12px] text-gray-300 leading-loose whitespace-pre-wrap h-56 overflow-y-auto custom-scrollbar border border-white/5 shadow-inner">
                                                             {CHARACTER_DETAILS.jaehyun.radio.script}
                                                         </div>
                                                     )}
@@ -1383,7 +1397,6 @@ return (
                  )}
             </div>
         )}
-
         {/* 채팅 화면 */}
         {currentView === 'chat' && (
           <>
