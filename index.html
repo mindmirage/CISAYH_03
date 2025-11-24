@@ -1325,7 +1325,6 @@ return (
                 >
                   <div className="p-2 rounded-full bg-white/50 text-gray-500 hover:bg-white transition"><Plus size={20} /></div>
                   
-                  {/* [수정됨] 상태와 관계없이 항상 동일한 '대기 중' 스타일 유지 */}
                   <div className="flex-1 bg-white/80 rounded-full h-10 px-4 flex items-center text-xs shadow-inner border border-white/50 text-gray-400">
                     {(choices.length > 0 && !isChoiceFading) ? "답장 선택하기 (터치)" : (isNarrating ? "이야기가 진행 중입니다..." : "상대방의 메시지를 기다리는 중...")}
                   </div>
@@ -1343,7 +1342,14 @@ return (
                     <button onClick={() => setIsChoiceMinimized(true)} className="absolute right-0 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition"><ChevronDown size={16} /></button>
                   </div>
                   {choices.map((choice, index) => (
-                    <button key={index} onClick={() => handleChoice(choice, index)} className={`w-full p-3.5 text-sm font-medium rounded-xl ${COLORS.button} ${wrongChoiceIndex === index ? 'animate-shake bg-red-50 border-red-200' : ''}`}>{choice.text}</button>
+                    <button 
+                      key={index} 
+                      onClick={() => handleChoice(choice, index)} 
+                      /* ▼▼▼ 여기가 수정됨: rounded-xl -> rounded-2xl (더 둥글게) ▼▼▼ */
+                      className={`w-full p-3.5 text-sm font-medium rounded-2xl ${COLORS.button} ${wrongChoiceIndex === index ? 'animate-shake bg-red-50 border-red-200' : ''}`}
+                    >
+                      {choice.text}
+                    </button>
                   ))}
                 </div>
               )}
