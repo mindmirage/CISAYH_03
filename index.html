@@ -1118,8 +1118,8 @@ return (
                     </div>
                  </div>
 
-                 {/* 상단 버튼 그룹 (위치 수정됨: right-4, gap-1.5) */}
-                 <div className="absolute top-12 right-4 flex gap-1.5 z-50">
+                 {/* 상단 버튼 그룹 (위치 수정됨: right-2, gap-1) */}
+                 <div className="absolute top-12 right-2 flex gap-1 z-50">
                     {/* 상세 정보 버튼 */}
                     {CHARACTER_DETAILS[selectedProfile.id] && (
                         <button 
@@ -1151,13 +1151,13 @@ return (
                  {isDetailView && CHARACTER_DETAILS[selectedProfile.id] && (
                     <div className="absolute inset-0 z-40 bg-white/85 backdrop-blur-xl animate-fade-in flex flex-col overflow-y-auto custom-scrollbar">
                         
-                        {/* 헤더 이미지 영역 (마크, 재현 등 이미지가 있는 경우) */}
+                        {/* 헤더 이미지 영역 (높이 제한 제거: h-auto) */}
                         {CHARACTER_DETAILS[selectedProfile.id].headerImage ? (
-                            <div className="relative w-full h-72 shrink-0">
+                            <div className="relative w-full shrink-0">
                                 <img 
                                     src={CHARACTER_DETAILS[selectedProfile.id].headerImage} 
                                     alt="header" 
-                                    className="w-full h-full object-cover object-top"
+                                    className="w-full h-auto" 
                                 />
                                 {/* 하단 블러 처리 (자연스럽게 이어지도록) */}
                                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/90"></div>
