@@ -801,9 +801,9 @@ return (
                  </button>
 
                  {/* [2] 컨텐츠 레이어 */}
-                 <div className="absolute bottom-0 w-full flex flex-col items-center pb-8 z-10 px-6">
+                 <div className="absolute bottom-0 w-full flex flex-col items-center pb-4 z-10 px-6">
                     
-                    {/* 프로필 사진 (크기 축소: 110px -> 90px, 마진 축소: mb-5 -> mb-3) */}
+                    {/* 프로필 사진 */}
                     <div className="mb-3 relative group">
                        {selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun' ? (
                          <>
@@ -813,7 +813,6 @@ return (
                              className="w-[90px] h-[90px] rounded-[35px] object-cover shadow-2xl transition-transform duration-500 hover:scale-105" 
                              onError={(e) => {e.target.src='https://via.placeholder.com/112?text=User'}} 
                            />
-                           {/* 온라인 상태 표시 크기 조정 */}
                            <div className="absolute bottom-1 right-1 w-3.5 h-3.5 bg-green-400 border-2 border-white/50 rounded-full shadow-sm"></div>
                          </>
                        ) : (
@@ -823,7 +822,7 @@ return (
                        )}
                     </div>
 
-                    {/* 이름 (글씨 크기 축소: text-2xl -> text-xl) */}
+                    {/* 이름 */}
                     <h2 className="text-xl font-bold text-white mb-1 drop-shadow-md tracking-tight">{selectedProfile.name}</h2>
                     
                     {/* 상태 메시지 */}
