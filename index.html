@@ -354,8 +354,8 @@ mission_hug_1: [{ type: 'narrative', content: "마크가 더는 볼 것도 없�
     { type: 'text', sender: '재경', content: "마크야, 어제 보니까..." },
     { type: 'text', sender: '재경', content: "너는 재현이가 참 편하고 좋은가 봐. 계속 눈이 그쪽으로만 가더라." },
     { type: 'choice', options: [
-        { text: "형이 잘 챙겨 줘서요.", nextId: 'jaekyung_gaze' }, 
-        { text: "아, 제가 너무 형한테만 붙어 있었나 봐요. 죄송해요.", nextId: null },
+        { text: "티 났어요? 형이 잘 챙겨 줘서요.", nextId: null }, // 이제 여기가 오답
+        { text: "아, 제가 너무 형한테만 붙어 있었나 봐요. 죄송해요.", nextId: 'jaekyung_gaze' }, // 여기가 정답으로 변경됨
         { text: "전 재경 형이랑도 가까워지고 싶어요.", nextId: null }
     ]}
   ],
@@ -542,6 +542,7 @@ function App() {
     if (isTypingNarrative) return;
     if (stepIndex >= currentSequence.length) return;
     const step = currentSequence[stepIndex];
+    
     const processStep = async () => {
       if (step.type === 'narrative') {
         setTimeout(() => {
@@ -549,42 +550,49 @@ function App() {
             const readingTime = (step.content.length * 30) + 1000;
             setTimeout(() => { setIsNarrating(false); setStepIndex(prev => prev + 1); }, readingTime);
         }, 1000);
+      
       } else if (step.type === 'text') {
+        // 마크(나)일 때
         if (step.sender === 'Mark') {
-            // 마크(나)는 바로 출력 + 효과음
             setTimeout(() => { 
-                playSound('message'); 
+                playSound('message'); // 내 메시지 효과음
                 setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() }]); 
                 setStepIndex(prev => prev + 1); 
             }, 1500);
         } else {
-            // 마크가 아닌 모든 사람(재현, 선우, 재경, 연덕, 지원, 은재 등)
+            // 상대방일 때 (타이핑 효과 후 메시지+효과음)
             setTimeout(() => {
-                setTypingSender(step.sender); 
-                setIsTyping(true); 
-                scrollToBottom();
+                setTypingSender(step.sender); setIsTyping(true); scrollToBottom();
                 
-                // 타이핑 시간 2초 후 -> 타이핑 끄기 -> 효과음 재생 -> 메시지 추가
                 setTimeout(() => { 
                     setIsTyping(false); 
                     setTypingSender(null); 
-                    
-                    // ▼▼▼ 여기서 소리가 납니다 (중요) ▼▼▼
-                    playSound('message'); 
-                    
+                    playSound('message'); // [수정됨] 상대방 메시지 효과음 추가
                     setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() }]); 
                     setStepIndex(prev => prev + 1); 
                 }, 2000); 
             }, 800);
         }
+
+      } else if (step.type === 'book') { // [수정됨] 책 타입 로직 추가 (연덕 멈춤 해결)
+        setTimeout(() => {
+            playSound('narrative'); 
+            setMessages(prev => [...prev, { id: Date.now(), type: 'book', img: step.img, title: step.title, author: step.author, desc: step.desc }]);
+            setStepIndex(prev => prev + 1); // 다음으로 넘어감
+        }, 1500);
+
       } else if (step.type === 'youtube') {
         setTimeout(() => { playSound('message'); setMessages(prev => [...prev, { id: Date.now(), type: 'youtube', videoId: step.videoId, title: step.title, time: getTime() }]); setStepIndex(prev => prev + 1); }, 1000);
+      
       } else if (step.type === 'poem') {
         setTimeout(() => { playSound('narrative'); setMessages(prev => [...prev, { id: Date.now(), type: 'poem', text: step.text, subText: step.subText }]); setStepIndex(prev => prev + 1); }, 1500);
+      
       } else if (step.type === 'choice') {
         setChoices(shuffleArray(step.options)); setHelperText("뭐라고 말하는 게 좋을까?"); scrollToBottom();
+      
       } else if (step.type === 'next') {
         loadScene(step.nextId);
+      
       } else if (step.type === 'typing_narrative') {
         setIsTypingNarrative(true); setTypingNarrativeText(""); setTimeout(() => scrollToBottom(), 0);
         let i = 0; const text = step.content;
@@ -593,10 +601,11 @@ function App() {
           if (text[i] !== ' ') playSound('typing');
           i++; if (i === text.length) { clearInterval(interval); setTimeout(() => { setIsTypingNarrative(false); setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: step.content }]); loadScene(step.nextId); }, 1000); }
         }, 100);
+      
       } else if (step.type === 'end') {
          setTimeout(() => {
              setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: "(대화가 종료되었습니다.)" }]);
-         }, 2000); // 2000ms = 2초
+         }, 2000);
       }
     };
     processStep();
@@ -1164,10 +1173,10 @@ return (
                   </span>
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 </div>
-                <span className="text-[11px] text-gray-500 font-medium -mt-0.5">
-                   {chatInfo.status}
-                </span>
-              </div>
+                <span className="text-[11px] text-gray-500 font-medium -mt-0.5 truncate max-w-[200px] text-center block">
+     {chatInfo.status}
+  </span>
+</div>
               
               <button className="p-2 rounded-full hover:bg-white/20 transition"><MoreHorizontal size={24} className="text-gray-800" /></button>
             </div>
