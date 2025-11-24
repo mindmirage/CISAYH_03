@@ -755,128 +755,125 @@ return (
         {/* 프로필 모달 */}
         {selectedProfile && (
             <div className="absolute inset-0 z-50 flex items-center justify-center animate-fade-in">
-                 {/* 배경 클릭 시 닫기 (흐린 배경) */}
-                 <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => { setSelectedMessage(null); setIsEditingProfile(false); setSelectedProfile(null); }}></div>
                  
-                 {/* 프로필 카드 메인 */}
-                 <div className="w-full h-full sm:h-[90%] sm:w-[90%] bg-white sm:rounded-[2.5rem] overflow-hidden relative flex flex-col shadow-2xl">
-                    
-                    {/* [1] 상단 배경 영역 (나중에 이미지로 교체 가능) */}
-                    <div className={`h-[55%] w-full relative transition-colors duration-500
-                      ${selectedProfile.id === 'mark' ? 'bg-[#85C1E9]' : // 마크: 하늘색
-                        selectedProfile.id === 'jaehyun' ? 'bg-[#D7BDE2]' : // 재현: 연보라색
-                        'bg-gray-300' // 그 외: 회색
-                      }`}>
-                      
-                      {/* 닫기 버튼 (우측 상단) */}
-                      <button 
-                        onClick={() => { setSelectedProfile(null); setIsEditingProfile(false); }} 
-                        className="absolute top-6 right-6 p-2 rounded-full bg-black/10 hover:bg-black/20 text-white transition backdrop-blur-md z-10"
-                      >
-                        <X size={24} />
-                      </button>
+                 {/* [1] 배경 레이어 (꽉 찬 화면) */}
+                 <div className={`absolute inset-0 transition-colors duration-700 
+                   ${selectedProfile.id === 'mark' ? 'bg-gradient-to-b from-[#85C1E9] to-[#5DADE2]' : // 마크: 하늘색 그라데이션
+                     selectedProfile.id === 'jaehyun' ? 'bg-gradient-to-b from-[#D7BDE2] to-[#AF7AC5]' : // 재현: 연보라색 그라데이션
+                     'bg-gradient-to-b from-gray-300 to-gray-400' // 그 외
+                   }`}>
+                   {/* 배경 이미지 (나중에 url(...) 안에 링크 넣으면 됨) */}
+                   {/* <div className="absolute inset-0 bg-cover bg-center opacity-50" style={{ backgroundImage: 'url(...)' }}></div> */}
+                   
+                   {/* 텍스트 가독성을 위한 은은한 어두운 필터 */}
+                   <div className="absolute inset-0 bg-black/10"></div>
+                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/5"></div>
+                 </div>
 
-                      {/* 배경 꾸밈 요소 (그라데이션 오버레이) */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+                 {/* 닫기 버튼 (우측 상단, 투명) */}
+                 <button 
+                    onClick={() => { setSelectedProfile(null); setIsEditingProfile(false); }} 
+                    className="absolute top-6 right-6 p-2 text-white/80 hover:text-white transition z-50"
+                 >
+                    <X size={28} dropShadow="0 2px 4px rgba(0,0,0,0.3)" />
+                 </button>
+
+                 {/* [2] 컨텐츠 레이어 (하단 정렬) */}
+                 <div className="absolute bottom-0 w-full flex flex-col items-center pb-12 z-10 px-6">
+                    
+                    {/* 프로필 사진 (베젤 없이 사진만 둥둥) */}
+                    <div className="mb-5 relative group">
+                       {selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun' ? (
+                         <>
+                           <img 
+                             src={selectedProfile.id === 'mark' ? myProfileImage : jaehyunProfileImage} 
+                             alt="profile" 
+                             className="w-[110px] h-[110px] rounded-[42px] object-cover shadow-2xl transition-transform duration-500 hover:scale-105" 
+                             onError={(e) => {e.target.src='https://via.placeholder.com/112?text=User'}} 
+                           />
+                           {/* 온라인 상태 표시 (약간 안쪽으로 배치) */}
+                           <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-400 border-2 border-white/50 rounded-full shadow-sm"></div>
+                         </>
+                       ) : (
+                         <div className={`w-[110px] h-[110px] rounded-[42px] flex items-center justify-center text-white shadow-2xl ${selectedProfile.color} bg-opacity-90 backdrop-blur-sm`}>
+                           <User size={50} fill="rgba(255,255,255,0.6)" strokeWidth={1.5} />
+                         </div>
+                       )}
                     </div>
 
-                    {/* [2] 프로필 정보 영역 (흰색 배경) */}
-                    <div className="flex-1 bg-white relative flex flex-col items-center pt-16 px-6">
-                      
-                      {/* 프로필 사진 (배경과 흰색 영역 사이에 걸치게 배치) */}
-                      <div className="absolute -top-[60px] left-1/2 transform -translate-x-1/2">
-                         <div className="relative p-1.5 bg-white rounded-[45px] shadow-lg">
-                           {selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun' ? (
-                             <>
-                               <img 
-                                 src={selectedProfile.id === 'mark' ? myProfileImage : jaehyunProfileImage} 
-                                 alt="profile" 
-                                 className="w-28 h-28 rounded-[38px] object-cover" 
-                                 onError={(e) => {e.target.src='https://via.placeholder.com/112?text=User'}} 
-                               />
-                               {/* 온라인 상태 표시 */}
-                               <div className="absolute bottom-2 right-2 w-5 h-5 bg-green-400 border-[3px] border-white rounded-full"></div>
-                             </>
-                           ) : (
-                             <div className={`w-28 h-28 rounded-[38px] flex items-center justify-center text-white shadow-inner ${selectedProfile.color}`}>
-                               <User size={48} fill="rgba(255,255,255,0.5)" strokeWidth={1.5} />
-                             </div>
-                           )}
-                         </div>
-                      </div>
-
-                      {/* 이름 */}
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedProfile.name}</h2>
-                      
-                      {/* 상태 메시지 */}
-                      <div className="text-sm text-gray-600 text-center mb-8 min-h-[24px] flex items-center justify-center w-full">
-                        {selectedProfile.link ? (
-                          <a href={selectedProfile.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 hover:bg-gray-100 transition border border-gray-200 group max-w-full">
-                            <span className="font-medium text-gray-800 truncate max-w-[150px]">{selectedProfile.status}</span>
-                            <div className="w-px h-3 bg-gray-300"></div>
-                            <span className="text-gray-400 font-light text-xs">{selectedProfile.statusSuffix}</span>
-                            <Music size={12} className="text-gray-400" />
-                          </a>
-                        ) : (
-                          <span className="text-gray-500 font-medium px-4 py-1 rounded-lg bg-gray-50">{selectedProfile.status}</span>
-                        )}
-                      </div>
-
-                      {/* 구분선 */}
-                      <div className="w-full h-px bg-gray-100 mb-6"></div>
-                      
-                      {/* [3] 하단 액션 버튼들 (편집 모드일 땐 이미지 선택창 표시) */}
-                      {isEditingProfile && (selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun') ? (
-                        <div className="w-full animate-fade-in-up">
-                          <div className="text-xs text-center text-gray-400 mb-4 font-bold">
-                            {selectedProfile.id === 'mark' ? '나의 프로필 사진 변경' : '재현의 프로필 사진 변경'}
-                          </div>
-                          <div className="flex justify-center gap-3 mb-4">
-                            {(selectedProfile.id === 'mark' ? MARK_IMAGES : JAEHYUN_IMAGES)
-                              .filter(img => img !== (selectedProfile.id === 'mark' ? myProfileImage : jaehyunProfileImage))
-                              .map((img, idx) => (
-                                <button 
-                                  key={img} 
-                                  onClick={() => { 
-                                    if (selectedProfile.id === 'mark') setMyProfileImage(img);
-                                    else setJaehyunProfileImage(img);
-                                    setIsEditingProfile(false); 
-                                  }}
-                                  className="relative w-14 h-14 rounded-2xl overflow-hidden border-2 border-transparent transition-all hover:scale-110 hover:border-blue-400 shadow-sm"
-                                >
-                                  <img src={img} alt={`option-${idx}`} className="w-full h-full object-cover" />
-                                </button>
-                            ))}
-                          </div>
-                          <button onClick={() => setIsEditingProfile(false)} className="w-full py-3 text-sm font-medium text-gray-500 hover:bg-gray-100 rounded-xl transition">취소</button>
-                        </div>
+                    {/* 이름 */}
+                    <h2 className="text-2xl font-bold text-white mb-2 drop-shadow-md tracking-tight">{selectedProfile.name}</h2>
+                    
+                    {/* 상태 메시지 (투명한 알약 스타일) */}
+                    <div className="text-sm text-white/90 text-center mb-8 min-h-[24px] flex items-center justify-center w-full">
+                      {selectedProfile.link ? (
+                        <a href={selectedProfile.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 hover:bg-white/30 transition border border-white/30 backdrop-blur-md group">
+                          <span className="font-medium truncate max-w-[180px] drop-shadow-sm">{selectedProfile.status}</span>
+                          <div className="w-px h-3 bg-white/40"></div>
+                          <span className="font-light text-xs opacity-80">{selectedProfile.statusSuffix}</span>
+                          <Music size={12} />
+                        </a>
                       ) : (
-                        <div className="flex w-full gap-6 justify-center pb-6">
-                           {/* 1:1 채팅 버튼 (재현일 때만 활성) */}
-                           <button 
-                             onClick={selectedProfile.id === 'jaehyun' ? handleStartIntro : undefined} 
-                             className={`flex flex-col items-center gap-2 group ${selectedProfile.id === 'jaehyun' ? 'cursor-pointer' : 'cursor-not-allowed opacity-30'}`}
-                           >
-                             <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${selectedProfile.id === 'jaehyun' ? 'bg-gray-900 text-white group-hover:scale-110 group-hover:shadow-lg' : 'bg-gray-200 text-gray-400'}`}>
-                               <MessageCircle size={24} fill={selectedProfile.id === 'jaehyun' ? "currentColor" : "none"} />
-                             </div>
-                             <span className="text-xs font-medium text-gray-600">1:1 채팅</span>
-                           </button>
-
-                           {/* 프로필 편집/선택 버튼 */}
-                           {(selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun') && (
-                             <button onClick={() => setIsEditingProfile(true)} className="flex flex-col items-center gap-2 group cursor-pointer">
-                               <div className="w-14 h-14 bg-white border border-gray-200 text-gray-600 rounded-full flex items-center justify-center shadow-sm group-hover:bg-gray-50 group-hover:border-gray-300 transition-all duration-300">
-                                 {selectedProfile.id === 'mark' ? <Pencil size={22} /> : <User size={22} />}
-                               </div>
-                               <span className="text-xs font-medium text-gray-600">
-                                 {selectedProfile.id === 'mark' ? '프로필 편집' : '프로필 선택'}
-                               </span>
-                             </button>
-                           )}
-                        </div>
+                        <span className="font-medium drop-shadow-sm opacity-90">{selectedProfile.status}</span>
                       )}
                     </div>
+
+                    {/* 구분선 (투명) */}
+                    <div className="w-full h-px bg-white/20 mb-8"></div>
+                    
+                    {/* [3] 하단 액션 버튼들 */}
+                    {isEditingProfile && (selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun') ? (
+                      // 편집 모드 (유리창 효과 박스)
+                      <div className="w-full bg-white/20 backdrop-blur-xl rounded-3xl p-5 animate-fade-in-up border border-white/20 shadow-lg">
+                        <div className="text-xs text-center text-white/90 mb-4 font-bold drop-shadow-sm">
+                          {selectedProfile.id === 'mark' ? '나의 프로필 사진 변경' : '재현의 프로필 사진 변경'}
+                        </div>
+                        <div className="flex justify-center gap-3 mb-4">
+                          {(selectedProfile.id === 'mark' ? MARK_IMAGES : JAEHYUN_IMAGES)
+                            .filter(img => img !== (selectedProfile.id === 'mark' ? myProfileImage : jaehyunProfileImage))
+                            .map((img, idx) => (
+                              <button 
+                                key={img} 
+                                onClick={() => { 
+                                  if (selectedProfile.id === 'mark') setMyProfileImage(img);
+                                  else setJaehyunProfileImage(img);
+                                  setIsEditingProfile(false); 
+                                }}
+                                className="relative w-14 h-14 rounded-2xl overflow-hidden border-2 border-white/30 transition-all hover:scale-110 hover:border-white shadow-md"
+                              >
+                                <img src={img} alt={`option-${idx}`} className="w-full h-full object-cover" />
+                              </button>
+                          ))}
+                        </div>
+                        <button onClick={() => setIsEditingProfile(false)} className="w-full py-3 text-sm font-medium text-white hover:bg-white/20 rounded-xl transition">취소</button>
+                      </div>
+                    ) : (
+                      // 기본 버튼들 (아이콘 + 텍스트)
+                      <div className="flex w-full gap-10 justify-center pb-4">
+                         {/* 1:1 채팅 버튼 */}
+                         <button 
+                           onClick={selectedProfile.id === 'jaehyun' ? handleStartIntro : undefined} 
+                           className={`flex flex-col items-center gap-2 group ${selectedProfile.id === 'jaehyun' ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}
+                         >
+                           <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
+                             <MessageCircle size={26} fill={selectedProfile.id === 'jaehyun' ? "currentColor" : "none"} strokeWidth={1.5} />
+                           </div>
+                           <span className="text-[11px] font-medium text-white/90">1:1 채팅</span>
+                         </button>
+
+                         {/* 프로필 편집/선택 버튼 */}
+                         {(selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun') && (
+                           <button onClick={() => setIsEditingProfile(true)} className="flex flex-col items-center gap-2 group cursor-pointer">
+                             <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
+                               {selectedProfile.id === 'mark' ? <Pencil size={26} strokeWidth={1.5} /> : <User size={26} strokeWidth={1.5} />}
+                             </div>
+                             <span className="text-[11px] font-medium text-white/90">
+                               {selectedProfile.id === 'mark' ? '프로필 편집' : '프로필 선택'}
+                             </span>
+                           </button>
+                         )}
+                      </div>
+                    )}
                  </div>
             </div>
         )}
