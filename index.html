@@ -42,6 +42,15 @@ html, body {
   100% { transform: translateY(0px) rotate(0deg); }
 }
 .animate-float { animation: float 6s ease-in-out infinite; 
+@keyframes border-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.animate-border-flow {
+    background-size: 200% 200%;
+    animation: border-flow 3s ease infinite;
+}                
 </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden">
@@ -749,15 +758,18 @@ return (
                 </p>
               </div>
 
-              {/* 확인 버튼 (깔끔한 화이트 -> 호버 시 파스텔 로즈) */}
-              <button 
-                onClick={() => setCurrentView('chapterSelect')} 
-                className="px-12 py-3.5 rounded-full font-medium text-gray-500 bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 text-sm tracking-wider"
-              >
-                (｡◠‿◠｡) ෆ ( ͡•. •. ͡ )
-              </button>
+              {/* 확인 버튼 (재현 하늘 + 마크 연두 움직이는 테두리) */}
+              {/* 바깥 div: 그라데이션 테두리 역할 (p-[2px]가 테두리 두께) */}
+              <div className="p-[2px] rounded-full bg-gradient-to-r from-sky-200 via-green-200 to-sky-200 animate-border-flow shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95">
+                <button 
+                  onClick={() => setCurrentView('chapterSelect')} 
+                  className="px-12 py-3.5 rounded-full font-medium text-gray-500 bg-white hover:bg-gray-50 transition-colors duration-300 text-sm tracking-wider w-full h-full"
+                >
+                  (｡◠‿◠｡) ෆ ( ͡•. •. ͡ )
+                </button>
+              </div>
 
-              {/* 링크 영역 (버튼 아래로 이동) */}
+              {/* 링크 영역 */}
               <div className="mt-8 text-center">
                 <span className="text-[11px] text-gray-400 block mb-1">아직 읽지 못했다면?</span>
                 <a 
