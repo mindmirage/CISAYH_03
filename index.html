@@ -323,7 +323,8 @@ mission_hug_1: [{ type: 'narrative', content: "마크가 더는 볼 것도 없�
     { type: 'text', sender: '지원', content: "낯선 곳에서 서로의 공통점을 발견하고 급속도로 가까워지는." },
     { type: 'text', sender: '지원', content: "마크, 넌 그런 사람을 만날 수 있을 것 같아?" },
     { type: 'end' }
-  ],
+  ]
+}; // <--- 여기에 }; 를 반드시 추가하세요!
 
 const NIGHT_MESSAGES = [
   {
@@ -993,7 +994,7 @@ return (
                                 if (selectedProfile.id === 'jaehyun') { 
                                     handleStartIntro(); 
                                 } else if (selectedProfile.id === 'eunjae') {
-                                    setSelectedProfile(null); // 모달 닫기 필수!
+                                    setSelectedProfile(null);
                                     playSound('narrative');
                                     setCurrentView('chat');
                                     setMessages([]);
@@ -1001,7 +1002,7 @@ return (
                                     setStepIndex(0);
                                     setTimeout(() => { loadScene('eunjae_start'); }, 500);
                                 } else if (selectedProfile.id === 'niko') {
-                                    setSelectedProfile(null); // 모달 닫기 필수!
+                                    setSelectedProfile(null);
                                     playSound('narrative');
                                     setCurrentView('chat');
                                     setMessages([]);
@@ -1009,7 +1010,7 @@ return (
                                     setStepIndex(0);
                                     setTimeout(() => { loadScene('niko_start'); }, 500);
                                 } else if (selectedProfile.id === 'jiwon') {
-                                    setSelectedProfile(null); // 모달 닫기 필수!
+                                    setSelectedProfile(null);
                                     playSound('narrative');
                                     setCurrentView('chat');
                                     setMessages([]);
