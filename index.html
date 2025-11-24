@@ -1093,7 +1093,7 @@ return (
             <div className="absolute inset-0 z-50 flex items-center justify-center animate-fade-in bg-black">
                  
                  {/* =================================================================================
-                    [1] 기본 프로필 뷰 (상세 정보가 아닐 때)
+                    [1] 기본 프로필 뷰 (기존과 동일)
                     ================================================================================= */}
                  {!isDetailView && (
                      <>
@@ -1112,7 +1112,7 @@ return (
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10"></div>
                         </div>
 
-                        {/* 상단바 (기본 뷰용) */}
+                        {/* 상단바 */}
                         <div className="absolute top-0 w-full z-50 pt-3 pb-2 px-6 flex justify-between items-center text-white/90 text-sm font-bold select-none">
                             <span>{timeStr}</span>
                             <div className="flex space-x-1.5">
@@ -1122,14 +1122,14 @@ return (
                             </div>
                         </div>
 
-                        {/* 상단 버튼 그룹 (기본 뷰용) */}
+                        {/* 상단 버튼 그룹 */}
                         <div className="absolute top-12 right-4 flex gap-1 z-50">
                             {CHARACTER_DETAILS[selectedProfile.id] && (
                                 <button 
                                     onClick={() => { 
                                         playSound('click'); 
                                         setIsDetailView(true); 
-                                        setScrollTop(0); // 스크롤 초기화
+                                        setScrollTop(0); 
                                     }} 
                                     className="p-2 text-white/80 hover:text-white transition"
                                 >
@@ -1173,7 +1173,7 @@ return (
                             </div>
                             <div className="w-full h-px bg-white/20 mb-6"></div>
                             
-                            {/* 하단 액션 버튼들 (채팅/편집) */}
+                            {/* 하단 액션 버튼들 */}
                             {isEditingProfile && (selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun') ? (
                               <div className="w-full bg-white/20 backdrop-blur-xl rounded-3xl p-5 animate-fade-in-up border border-white/20 shadow-lg">
                                 <div className="text-xs text-center text-white/90 mb-4 font-bold drop-shadow-sm">프로필 사진 변경</div>
@@ -1213,7 +1213,7 @@ return (
                  )}
 
                  {/* =================================================================================
-                    [2] 상세 정보 뷰 (패럴랙스 스크롤 적용)
+                    [2] 상세 정보 뷰 (유리 효과 + 사진 꽉 차게)
                     ================================================================================= */}
                  {isDetailView && CHARACTER_DETAILS[selectedProfile.id] && (
                     <>
@@ -1248,14 +1248,14 @@ return (
                                 <img 
                                     src={CHARACTER_DETAILS[selectedProfile.id].headerImage} 
                                     alt="header" 
-                                    className="w-full h-[60%] object-cover absolute top-0 left-0 transition-opacity duration-300"
-                                    style={{ opacity: Math.max(0.3, 1 - scrollTop / 400) }} // 스크롤 내리면 어두워짐
+                                    className="w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-300"
+                                    style={{ opacity: Math.max(0.4, 1 - scrollTop / 500) }} // 스크롤 내리면 어두워짐
                                 />
                             ) : (
-                                <div className={`w-full h-[60%] absolute top-0 left-0 ${selectedProfile.id === 'mark' ? 'bg-green-200' : 'bg-sky-200'}`}></div>
+                                <div className={`w-full h-full absolute top-0 left-0 ${selectedProfile.id === 'mark' ? 'bg-green-200' : 'bg-sky-200'}`}></div>
                             )}
-                            {/* 이미지 하단 그라데이션 (자연스러운 연결) */}
-                            <div className="absolute top-0 w-full h-[60%] bg-gradient-to-b from-black/30 via-transparent to-black/60"></div>
+                            {/* 이미지 하단 그라데이션 (텍스트 가독성) */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30"></div>
                         </div>
 
                         {/* 3. 스크롤 가능한 컨텐츠 영역 */}
@@ -1263,11 +1263,10 @@ return (
                             className="absolute inset-0 z-10 overflow-y-auto custom-scrollbar"
                             onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
                         >
-                            {/* 투명한 공간 (이미지가 보이는 영역) */}
-                            <div className="h-[45%] w-full bg-transparent relative">
+                            {/* [수정됨] 투명한 공간을 65%로 늘려서 사진이 시원하게 보이게 함 */}
+                            <div className="h-[65vh] w-full bg-transparent relative pointer-events-none">
                                 {/* 이름 & 직업 (이미지 위에 고정된 것처럼 보이다가 스크롤 되면 올라감) */}
-                                <div className="absolute bottom-8 left-0 w-full px-6 z-20">
-                                    {/* [수정됨] 직업 색상: 고유 색상 적용 (text-shadow로 가독성 확보) */}
+                                <div className="absolute bottom-10 left-0 w-full px-6 z-20">
                                     <span className={`text-sm font-bold tracking-widest uppercase mb-1 block drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] ${CHARACTER_DETAILS[selectedProfile.id].roleColor}`}>
                                         {CHARACTER_DETAILS[selectedProfile.id].role}
                                     </span>
@@ -1277,10 +1276,10 @@ return (
                                 </div>
                             </div>
 
-                            {/* 흰색 본문 (위로 올라오면서 덮음) */}
-                            <div className="bg-white min-h-[60%] rounded-t-[2.5rem] px-6 pt-10 pb-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] relative">
+                            {/* [수정됨] 유리 효과 (Glassmorphism) 적용: bg-white/70 + backdrop-blur */}
+                            <div className="bg-white/75 backdrop-blur-2xl min-h-[50vh] rounded-t-[3rem] px-6 pt-10 pb-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] relative border-t border-white/20">
                                 {/* 소개글 */}
-                                <p className="text-[15px] text-gray-700 leading-loose text-justify mb-12 break-keep font-medium">
+                                <p className="text-[15px] text-gray-800 leading-loose text-justify mb-12 break-keep font-medium">
                                     {CHARACTER_DETAILS[selectedProfile.id].desc}
                                 </p>
 
@@ -1346,14 +1345,14 @@ return (
                                                 <div className="w-1 h-4 bg-indigo-600"></div>
                                                 <div className="text-xs font-bold text-indigo-900 tracking-widest">RADIO DJ</div>
                                             </div>
-                                            <div className="bg-white p-6 border border-gray-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden">
+                                            <div className="bg-white/80 p-6 border border-gray-200 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden backdrop-blur-sm">
                                                 <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-4 -mt-4 z-0"></div>
                                                 
                                                 <div className="relative z-10">
                                                     <div className="flex justify-between items-start mb-6">
                                                         <div>
                                                             <div className="font-black text-2xl text-gray-900 mb-1">{CHARACTER_DETAILS.jaehyun.radio.title}</div>
-                                                            <div className="text-xs font-medium text-gray-400">{CHARACTER_DETAILS.jaehyun.radio.station}</div>
+                                                            <div className="text-xs font-medium text-gray-500">{CHARACTER_DETAILS.jaehyun.radio.station}</div>
                                                         </div>
                                                         <div className="bg-indigo-600 p-2.5 rounded-full text-white shadow-md shadow-indigo-200">
                                                             <Music size={20} />
@@ -1362,14 +1361,14 @@ return (
                                                     
                                                     <button 
                                                         onClick={() => setShowRadioScript(!showRadioScript)}
-                                                        className="w-full py-3 bg-gray-50 text-gray-600 text-xs font-bold border border-gray-200 hover:bg-gray-100 transition flex items-center justify-center gap-2"
+                                                        className="w-full py-3 bg-white text-gray-700 text-xs font-bold border border-gray-200 hover:bg-gray-50 transition flex items-center justify-center gap-2 shadow-sm"
                                                     >
                                                         {showRadioScript ? "대본 닫기" : "들으러 가기"}
                                                         <Play size={10} fill="currentColor" className={`ml-1 ${showRadioScript ? 'hidden' : ''}`} />
                                                     </button>
 
                                                     {showRadioScript && (
-                                                        <div className="mt-4 p-4 bg-gray-50 text-[11px] text-gray-600 leading-loose whitespace-pre-wrap h-48 overflow-y-auto custom-scrollbar border-t border-gray-200">
+                                                        <div className="mt-4 p-4 bg-gray-50/80 text-[11px] text-gray-700 leading-loose whitespace-pre-wrap h-48 overflow-y-auto custom-scrollbar border-t border-gray-200">
                                                             {CHARACTER_DETAILS.jaehyun.radio.script}
                                                         </div>
                                                     )}
