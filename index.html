@@ -42,15 +42,6 @@ html, body {
   100% { transform: translateY(0px) rotate(0deg); }
 }
 .animate-float { animation: float 6s ease-in-out infinite; 
-@keyframes gradient-xy {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-.animate-gradient-xy {
-    background-size: 200% 200%;
-    animation: gradient-xy 3s ease infinite;
-}
 </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden">
@@ -742,7 +733,7 @@ return (
               <h2 className="text-xl font-bold text-gray-800 mb-8 tracking-tight">안내사항</h2>
               
               {/* 텍스트 영역 */}
-              <div className="text-[14px] text-gray-600 text-center space-y-6 leading-loose break-keep tracking-tight mb-10 w-full max-w-[280px]">
+              <div className="text-[14px] text-gray-600 text-center space-y-6 leading-loose break-keep tracking-tight mb-12 w-full max-w-[280px]">
                 <p>
                   본 시뮬레이션은 <span className="font-bold text-gray-800">&lt;당신 집에서 잘 수 있나요?&gt;</span><br/>
                   3화를 기준으로 만들어졌습니다.
@@ -752,33 +743,32 @@ return (
                   전체적인 맥락을 이해하는 데<br className="hidden sm:block"/> 
                   어려움이 있을 수 있습니다.
                 </p>
-                {/* 배경 제거 및 텍스트 강조 */}
                 <p className="text-rose-400 font-medium text-xs">
                   📢 모바일 환경에선 무음을 해제하셔야<br/>
                   효과음이 재생됩니다.
                 </p>
               </div>
 
-              {/* 링크 영역 (작은 글씨) */}
-              <div className="mb-10 text-center">
-                <span className="text-xs text-gray-400 block mb-1">아직 읽지 못했다면?</span>
+              {/* 확인 버튼 (깔끔한 화이트 -> 호버 시 파스텔 로즈) */}
+              <button 
+                onClick={() => setCurrentView('chapterSelect')} 
+                className="px-12 py-3.5 rounded-full font-medium text-gray-500 bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 text-sm tracking-wider"
+              >
+                (｡◠‿◠｡) ෆ ( ͡•. •. ͡ )
+              </button>
+
+              {/* 링크 영역 (버튼 아래로 이동) */}
+              <div className="mt-8 text-center">
+                <span className="text-[11px] text-gray-400 block mb-1">아직 읽지 못했다면?</span>
                 <a 
                   href="https://posty.pe/h8qb64" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-xs text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-gray-800 transition-colors"
+                  className="text-[11px] text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-gray-800 transition-colors"
                 >
                   최신 에피소드 확인하러 가기
                 </a>
               </div>
-
-              {/* 확인 버튼 (작게, 연한 움직이는 그라데이션) */}
-              <button 
-                onClick={() => setCurrentView('chapterSelect')} 
-                className="px-10 py-3.5 rounded-full font-medium text-gray-600 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 bg-gradient-to-r from-rose-100 via-sky-100 to-violet-100 animate-gradient-xy text-sm tracking-wider border border-white/50"
-              >
-                (｡◠‿◠｡) ෆ ( ͡•. •. ͡ )
-              </button>
             </div>
         )}
 
