@@ -1345,8 +1345,8 @@ return (
                     <button 
                       key={index} 
                       onClick={() => handleChoice(choice, index)} 
-                      /* ▼▼▼ 여기가 수정됨: rounded-xl -> rounded-2xl (더 둥글게) ▼▼▼ */
-                      className={`w-full p-3.5 text-sm font-medium rounded-2xl ${COLORS.button} ${wrongChoiceIndex === index ? 'animate-shake bg-red-50 border-red-200' : ''}`}
+                      /* ▼▼▼ 여기가 수정됨: rounded-2xl -> rounded-full (완전 둥글게) ▼▼▼ */
+                      className={`w-full p-3.5 text-sm font-medium rounded-full ${COLORS.button} ${wrongChoiceIndex === index ? 'animate-shake bg-red-50 border-red-200' : ''}`}
                     >
                       {choice.text}
                     </button>
