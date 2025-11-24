@@ -158,7 +158,9 @@ const CHARACTER_DETAILS = {
   mark: {
     fullName: "마크",
     role: "NCT",
-    roleColor: "text-green-500",
+    roleColor: "text-green-600",
+    // [추가] 상단 헤더 이미지
+    headerImage: "https://pbs.twimg.com/media/GnDgNOtbcAAHSdg?format=jpg&name=4096x4096",
     desc: "초연결 시대의 아이콘이자 무대 위에서 가장 빛나는 아티스트. 첫 솔로 앨범 활동을 성공적으로 마치고, 모든 연결을 끊어내는 낯선 여행길에 올랐다. 긍정적인 에너지로 아침을 밝히는 활력소.",
     album: {
       title: "The First Fruit",
@@ -169,16 +171,18 @@ const CHARACTER_DETAILS = {
   jaehyun: {
     fullName: "정재현",
     role: "배우",
-    roleColor: "text-sky-500",
+    roleColor: "text-sky-600",
+    // [추가] 상단 헤더 이미지
+    headerImage: "https://pbs.twimg.com/media/GUw49CQaYAA7-Tg?format=jpg&name=4096x4096",
     desc: "독립 영화계에서 내공을 쌓아온 충무로의 원석. 영화 <익명의 편지가 이국에서>를 통해 섬세한 감성 연기로 주목받았다. 차분하고 진솔한 성격으로, 타인에게 기대는 법을 배우며 성장 중이다.",
-    // [추가] 육각형 프레임에 들어갈 이미지들 (임시 이미지)
+    // [수정] 직사각형 그리드용 이미지 (임시)
     hexImages: [
-      "https://via.placeholder.com/150/87CEEB/FFFFFF?text=1",
-      "https://via.placeholder.com/150/87CEEB/FFFFFF?text=2",
-      "https://via.placeholder.com/150/87CEEB/FFFFFF?text=3",
-      "https://via.placeholder.com/150/87CEEB/FFFFFF?text=4",
-      "https://via.placeholder.com/150/87CEEB/FFFFFF?text=5",
-      "https://via.placeholder.com/150/87CEEB/FFFFFF?text=6"
+      "https://via.placeholder.com/300x400/87CEEB/FFFFFF?text=Scene+1",
+      "https://via.placeholder.com/300x400/87CEEB/FFFFFF?text=Scene+2",
+      "https://via.placeholder.com/300x400/87CEEB/FFFFFF?text=Scene+3",
+      "https://via.placeholder.com/300x400/87CEEB/FFFFFF?text=Scene+4",
+      "https://via.placeholder.com/300x400/87CEEB/FFFFFF?text=Scene+5",
+      "https://via.placeholder.com/300x400/87CEEB/FFFFFF?text=Scene+6"
     ],
     radio: {
       title: "오늘 같이 있어",
@@ -201,19 +205,19 @@ const CHARACTER_DETAILS = {
   jiwon: {
     fullName: "채지원",
     role: "배우",
-    roleColor: "text-yellow-500",
+    roleColor: "text-yellow-600",
     desc: "독보적인 매력을 가진 연기파 배우. 재현의 대학 선배이자 재경과 호흡을 맞춘 적이 있다. 겉으로는 차분해 보이지만 내면은 단단하며, 낯선 여행지에서도 중심을 잃지 않는다."
   },
   jaekyung: {
     fullName: "최재경",
     role: "배우",
-    roleColor: "text-blue-500",
+    roleColor: "text-blue-600",
     desc: "깊이 있는 연기로 신뢰받는 배우이자 든든한 맏형. 오랜 경력에서 나오는 여유와 배려심으로 동생들을 챙긴다. 지원과는 과거 작품을 함께한 인연이 있다."
   },
   seonwoo: {
     fullName: "류선우",
     role: "극작가",
-    roleColor: "text-purple-500",
+    roleColor: "text-purple-600",
     desc: "날카로운 대사로 정평이 난 극작가. 관찰자의 시선으로 여행의 이면을 포착한다. 한연덕 감독의 제자이자, 이성적이고 논리적인 화법으로 묘한 케미를 만들어낸다."
   },
   yeondeok: {
@@ -1114,9 +1118,9 @@ return (
                     </div>
                  </div>
 
-                 {/* 상단 버튼 그룹 */}
-                 <div className="absolute top-12 right-6 flex gap-3 z-50">
-                    {/* 상세 정보 버튼 (i 아이콘, 투명 배경, 아이콘 유지) */}
+                 {/* 상단 버튼 그룹 (위치 수정됨: right-4, gap-1.5) */}
+                 <div className="absolute top-12 right-4 flex gap-1.5 z-50">
+                    {/* 상세 정보 버튼 */}
                     {CHARACTER_DETAILS[selectedProfile.id] && (
                         <button 
                             onClick={() => { 
@@ -1145,98 +1149,115 @@ return (
 
                  {/* [2] 상세 정보 뷰 (화면 꽉 차게, 반투명 배경) */}
                  {isDetailView && CHARACTER_DETAILS[selectedProfile.id] && (
-                    <div className="absolute inset-0 z-40 bg-white/85 backdrop-blur-xl animate-fade-in flex flex-col pt-24 pb-10 px-6 overflow-y-auto custom-scrollbar">
+                    <div className="absolute inset-0 z-40 bg-white/85 backdrop-blur-xl animate-fade-in flex flex-col overflow-y-auto custom-scrollbar">
                         
-                        {/* 직업 & 이름 */}
-                        <div className="text-center mb-6">
-                            <span className={`text-xs font-bold tracking-widest uppercase mb-2 block ${CHARACTER_DETAILS[selectedProfile.id].roleColor}`}>
-                                {CHARACTER_DETAILS[selectedProfile.id].role}
-                            </span>
-                            <h2 className="text-3xl font-black text-gray-800 tracking-tight">
-                                {CHARACTER_DETAILS[selectedProfile.id].fullName}
-                            </h2>
-                        </div>
+                        {/* 헤더 이미지 영역 (마크, 재현 등 이미지가 있는 경우) */}
+                        {CHARACTER_DETAILS[selectedProfile.id].headerImage ? (
+                            <div className="relative w-full h-72 shrink-0">
+                                <img 
+                                    src={CHARACTER_DETAILS[selectedProfile.id].headerImage} 
+                                    alt="header" 
+                                    className="w-full h-full object-cover object-top"
+                                />
+                                {/* 하단 블러 처리 (자연스럽게 이어지도록) */}
+                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/90"></div>
+                            </div>
+                        ) : (
+                            <div className="h-24 shrink-0"></div> // 이미지가 없을 때 여백
+                        )}
 
-                        {/* 소개글 */}
-                        <p className="text-[15px] text-gray-600 leading-loose text-justify mb-8 break-keep font-medium">
-                            {CHARACTER_DETAILS[selectedProfile.id].desc}
-                        </p>
+                        {/* 컨텐츠 영역 (이미지가 있으면 위로 당겨서 겹치게 함) */}
+                        <div className={`px-6 pb-10 flex-1 ${CHARACTER_DETAILS[selectedProfile.id].headerImage ? '-mt-16 relative z-10' : ''}`}>
+                            
+                            {/* 직업 & 이름 (왼쪽 정렬) */}
+                            <div className="text-left mb-6">
+                                <span className={`text-xs font-bold tracking-widest uppercase mb-1 block ${CHARACTER_DETAILS[selectedProfile.id].roleColor}`}>
+                                    {CHARACTER_DETAILS[selectedProfile.id].role}
+                                </span>
+                                <h2 className="text-4xl font-black text-gray-800 tracking-tight">
+                                    {CHARACTER_DETAILS[selectedProfile.id].fullName}
+                                </h2>
+                            </div>
 
-                        {/* 마크: 앨범 정보 */}
-                        {selectedProfile.id === 'mark' && CHARACTER_DETAILS.mark.album && (
-                            <div className="mb-8 animate-fade-in-up">
-                                <div className="text-xs font-bold text-gray-400 mb-3 tracking-wider">LATEST ALBUM</div>
-                                <div className="flex gap-5 items-start bg-white/60 p-4 rounded-3xl border border-white shadow-sm">
-                                    <img src={CHARACTER_DETAILS.mark.album.cover} alt="Album" className="w-24 h-24 rounded-2xl object-cover shadow-md" />
-                                    <div className="flex-1 min-w-0 pt-1">
-                                        <div className="font-bold text-gray-800 text-base mb-2">{CHARACTER_DETAILS.mark.album.title}</div>
-                                        <div className="space-y-1">
-                                            {CHARACTER_DETAILS.mark.album.tracks.map((track, i) => (
-                                                <div key={i} className={`text-xs truncate ${track.includes('Title') ? 'text-green-600 font-bold' : 'text-gray-500'}`}>
-                                                    {track}
+                            {/* 소개글 */}
+                            <p className="text-[15px] text-gray-700 leading-loose text-justify mb-10 break-keep font-medium">
+                                {CHARACTER_DETAILS[selectedProfile.id].desc}
+                            </p>
+
+                            {/* 마크: 앨범 정보 */}
+                            {selectedProfile.id === 'mark' && CHARACTER_DETAILS.mark.album && (
+                                <div className="mb-8 animate-fade-in-up">
+                                    <div className="text-xs font-bold text-gray-400 mb-3 tracking-wider">LATEST ALBUM</div>
+                                    <div className="flex gap-5 items-start bg-white/60 p-4 rounded-3xl border border-white shadow-sm">
+                                        <img src={CHARACTER_DETAILS.mark.album.cover} alt="Album" className="w-24 h-24 rounded-2xl object-cover shadow-md" />
+                                        <div className="flex-1 min-w-0 pt-1">
+                                            <div className="font-bold text-gray-800 text-base mb-2">{CHARACTER_DETAILS.mark.album.title}</div>
+                                            <div className="space-y-1">
+                                                {CHARACTER_DETAILS.mark.album.tracks.map((track, i) => (
+                                                    <div key={i} className={`text-xs truncate ${track.includes('Title') ? 'text-green-600 font-bold' : 'text-gray-500'}`}>
+                                                        {track}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 재현: 필모그래피 & 라디오 */}
+                            {selectedProfile.id === 'jaehyun' && (
+                                <div className="space-y-10 animate-fade-in-up">
+                                    {/* 필모그래피 (직사각형 그리드) */}
+                                    <div>
+                                        <div className="text-xs font-bold text-gray-400 mb-1 tracking-wider">FILMOGRAPHY</div>
+                                        <div className="text-lg font-bold text-gray-800 mb-4">익명의 편지가 이국에서</div>
+                                        
+                                        {/* 직사각형 그리드 (3열 2행) */}
+                                        <div className="grid grid-cols-3 gap-2 mb-4">
+                                            {CHARACTER_DETAILS.jaehyun.hexImages.map((img, i) => (
+                                                <div key={i} className="aspect-[3/4] relative rounded-lg overflow-hidden shadow-sm transition-transform hover:scale-105">
+                                                    <img src={img} alt={`scene-${i}`} className="w-full h-full object-cover" />
                                                 </div>
                                             ))}
                                         </div>
+                                        
+                                        <button className="w-full py-3 bg-gray-800 text-white text-xs font-bold rounded-xl shadow-md hover:bg-gray-900 transition flex items-center justify-center gap-2">
+                                            인터뷰 보러 가기 <ChevronLeft size={14} className="rotate-180" />
+                                        </button>
                                     </div>
-                                </div>
-                            </div>
-                        )}
 
-                        {/* 재현: 필모그래피 & 라디오 */}
-                        {selectedProfile.id === 'jaehyun' && (
-                            <div className="space-y-8 animate-fade-in-up">
-                                {/* 필모그래피 (육각형 그리드) */}
-                                <div>
-                                    <div className="text-xs font-bold text-gray-400 mb-1 tracking-wider">FILMOGRAPHY</div>
-                                    <div className="text-lg font-bold text-gray-800 mb-4">익명의 편지가 이국에서</div>
-                                    
-                                    {/* 육각형 그리드 (인스타 느낌) */}
-                                    <div className="grid grid-cols-3 gap-2 mb-4">
-                                        {CHARACTER_DETAILS.jaehyun.hexImages.map((img, i) => (
-                                            <div key={i} className="aspect-square relative drop-shadow-sm transition-transform hover:scale-105">
-                                                <div className="w-full h-full bg-gray-200 overflow-hidden" style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }}>
-                                                    <img src={img} alt={`scene-${i}`} className="w-full h-full object-cover" />
+                                    {/* 라디오 */}
+                                    <div>
+                                        <div className="text-xs font-bold text-gray-400 mb-3 tracking-wider">RADIO DJ</div>
+                                        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-5 rounded-3xl border border-indigo-100 shadow-sm">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <div className="font-bold text-indigo-900 text-lg">{CHARACTER_DETAILS.jaehyun.radio.title}</div>
+                                                    <div className="text-xs text-indigo-400 mt-0.5">{CHARACTER_DETAILS.jaehyun.radio.station}</div>
+                                                </div>
+                                                <div className="bg-white p-2 rounded-full text-indigo-500 shadow-sm">
+                                                    <Music size={20} />
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                    
-                                    <button className="w-full py-3 bg-gray-800 text-white text-xs font-bold rounded-xl shadow-md hover:bg-gray-900 transition flex items-center justify-center gap-2">
-                                        인터뷰 보러 가기 <ChevronLeft size={14} className="rotate-180" />
-                                    </button>
-                                </div>
+                                            
+                                            <button 
+                                                onClick={() => setShowRadioScript(!showRadioScript)}
+                                                className="w-full py-3 bg-white text-indigo-600 text-xs font-bold rounded-xl shadow-sm hover:bg-indigo-50 transition flex items-center justify-center gap-1"
+                                            >
+                                                {showRadioScript ? "대본 닫기" : "들으러 가기"}
+                                                <Play size={12} className={`ml-1 ${showRadioScript ? 'hidden' : ''}`} />
+                                            </button>
 
-                                {/* 라디오 */}
-                                <div>
-                                    <div className="text-xs font-bold text-gray-400 mb-3 tracking-wider">RADIO DJ</div>
-                                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-5 rounded-3xl border border-indigo-100 shadow-sm">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <div className="font-bold text-indigo-900 text-lg">{CHARACTER_DETAILS.jaehyun.radio.title}</div>
-                                                <div className="text-xs text-indigo-400 mt-0.5">{CHARACTER_DETAILS.jaehyun.radio.station}</div>
-                                            </div>
-                                            <div className="bg-white p-2 rounded-full text-indigo-500 shadow-sm">
-                                                <Music size={20} />
-                                            </div>
+                                            {showRadioScript && (
+                                                <div className="mt-4 p-4 bg-white/90 rounded-2xl text-xs text-gray-600 leading-loose whitespace-pre-wrap h-40 overflow-y-auto custom-scrollbar border border-indigo-100 shadow-inner">
+                                                    {CHARACTER_DETAILS.jaehyun.radio.script}
+                                                </div>
+                                            )}
                                         </div>
-                                        
-                                        <button 
-                                            onClick={() => setShowRadioScript(!showRadioScript)}
-                                            className="w-full py-3 bg-white text-indigo-600 text-xs font-bold rounded-xl shadow-sm hover:bg-indigo-50 transition flex items-center justify-center gap-1"
-                                        >
-                                            {showRadioScript ? "대본 닫기" : "들으러 가기"}
-                                            <Play size={12} className={`ml-1 ${showRadioScript ? 'hidden' : ''}`} />
-                                        </button>
-
-                                        {showRadioScript && (
-                                            <div className="mt-4 p-4 bg-white/90 rounded-2xl text-xs text-gray-600 leading-loose whitespace-pre-wrap h-40 overflow-y-auto custom-scrollbar border border-indigo-100 shadow-inner">
-                                                {CHARACTER_DETAILS.jaehyun.radio.script}
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                  )}
 
