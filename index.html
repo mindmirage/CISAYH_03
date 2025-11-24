@@ -41,7 +41,7 @@ html, body {
   50% { transform: translateY(-10px) rotate(0.5deg); }
   100% { transform: translateY(0px) rotate(0deg); }
 }
-.animate-float { animation: float 6s ease-in-out infinite; 
+.animate-float { animation: float 6s ease-in-out infinite; }
 @keyframes gradient-xy {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -271,7 +271,7 @@ mission_hug_1: [{ type: 'narrative', content: "마크가 더는 볼 것도 없�
   mission_hug_3: [{ type: 'text', sender: '재현', content: "내려앉을 일도 참 많네?" }, { type: 'narrative', content: "재현이 의젓하고 여유있는 체하며 벽에 걸린 시계를 확인한다. 20분 정도 남았네. 슬슬 나가자." }, { type: 'text', sender: '재현', content: "이 정도면 환상의 콤비 근처 정도는 기웃거릴 수 있겠어. 그럼 아이스크림 하나 사서 나눠 먹자고 해도 화내지 않을 용의가 있겠지? 바가지는 안 당할게." }, { type: 'choice', options: [{ text: "형, 그 말 되게 믿음직스러웠어요. 환상의 콤비라는 말이요.", nextId: 'mission_end_1' }, { text: "아이스크림 사 주세요.", nextId: null }, { text: "환상의 콤비 좋네요.", nextId: null }] }],
   mission_end_1: [{ type: 'text', sender: '재현', content: "당연하지. 너 먹여 살릴 짬은 되니까." }, { type: 'narrative', content: "재현이 장난스럽게 불룩한 바지 주머니를 손가락으로 가리킨다. 주머니 위로 공동 경비의 봉투가 삐죽 솟아 있다. 재현이 씩 웃자 하얀 얼굴에 보조개가 푹 패인다. 가만히 있으면 냉철해 보이는 얼굴이 환하게 웃을 때면 다소 온순하게 바뀐다. 재현이 제법 날카로운 눈매를 휘어지게 빼고 웃으며 앞머리를 쓸어 올린다." }, { type: 'choice', options: [{ text: "그거 들고 어디로 토낄 건 아니죠?", nextId: 'mission_end_2' }, { text: "돈 관리 잘 해야 돼요.", nextId: null }, { text: "맛있는 거 사 줘요.", nextId: null }] }],
   mission_end_2: [{ type: 'text', sender: '재현', content: "믿음직스러운 사람한테 할 말이야, 그게?" }, { type: 'narrative', content: "반쯤 열린 창으로 길쭉한 햇빛이 방 안쪽으로 더 깊숙하게 들어온다. 재현의 얼굴이 전보다 더 선명하게 보인다. 마크는 조금 맥없이 헤실헤실 웃으며 재현의 팔을 쿡쿡 찌른다. 너 이거 되게 조심성 없는 행동이야. 알아? 쉽사리 오도 가도 못하는 좁은 방에서 괜스레 하릴없이 옷소매를 잡고 시간을 떼운다." }, { type: 'text', sender: 'Mark', content: "하고 싶은 말은 해야 되는 걸 어떡해요." }, { type: 'text', sender: '재현', content: "그래? 그럼 지금 하고 싶은 말은 뭔데." }, { type: 'narrative', content: "마크가 입을 조금 달싹거리고는 공연히 시계를 바라본다. 어젯밤 저녁처럼, 시계 소리가 유난히도 둔탁하게 째깍댄다. 마크가 눈을 꾹 감았다 뜨고는 용기 있게 말한다. 그러니까, 지금 18분 정도가 남았잖아요. 재현이 말없이 웃으며 언제나처럼 마크의 말을 끈기 있게 기다린다. 그러니까······ 어, 그러니까." }, { type: 'choice', options: [{ text: "10분만 좀 더 있다가 내려가면 안 돼요?", nextId: 'mission_end_final' }, { text: "조금만 더 있다 가요.", nextId: null }, { text: "나가기 싫어요.", nextId: null }] }],
-  mission_end_final: [{ type: 'end' }]
+  mission_end_final: [{ type: 'end' }],
   eunjae_start: [
     { type: 'text', sender: '은재', content: "마크야, 너 잠깐 일루 와 봐." },
     { type: 'text', sender: '은재', content: "내가 진짜 재미있는 거 봤거든?" },
