@@ -735,54 +735,54 @@ return (
             <div className="flex flex-col h-full bg-white p-8 items-center justify-center animate-fade-in relative overflow-hidden">
               <button onClick={handleBackToFriends} className="absolute top-6 left-6 p-2 rounded-full hover:bg-gray-100 text-gray-400 transition"><ChevronLeft size={24} /></button>
               
-              {/* 아이콘 */}
-              <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mb-8 text-gray-400 border border-gray-100">
-                <BookOpen size={24} />
+              {/* [수정] 아이콘: 버튼과 동일한 보라색 그림자/테두리 스타일 적용 */}
+              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-8 text-indigo-300 shadow-[0_8px_20px_-8px_rgba(167,139,250,0.4)] border border-indigo-50">
+                <BookOpen size={28} />
               </div>
               
               <h2 className="text-xl font-bold text-gray-800 mb-8 tracking-tight">안내사항</h2>
               
-              {/* 메인 텍스트 */}
-              <div className="text-[14px] text-gray-600 text-center space-y-6 leading-loose break-keep tracking-tight mb-12 w-full max-w-[280px]">
-                <p>
-                  본 시뮬레이션은 <span className="font-bold text-gray-800">&lt;당신 집에서 잘 수 있나요?&gt;</span><br/>
-                  3화를 기준으로 만들어졌습니다.
-                </p>
-                <p>
-                  1~3화를 읽지 않고 플레이하셔도 무방하지만<br className="hidden sm:block"/> 
-                  전체적인 맥락을 이해하는 데<br className="hidden sm:block"/> 
-                  어려움이 있을 수 있습니다.
-                </p>
-              </div>
-
-              {/* 하단 액션 영역 */}
-              <div className="w-full max-w-[260px] flex flex-col items-center">
+              {/* [수정] 컨텐츠 영역: flex-col과 gap-5를 사용하여 모든 요소 간격 통일 */}
+              <div className="w-full max-w-[280px] flex flex-col items-center gap-5">
                 
-                {/* 무음 해제 안내 (회색으로 변경) */}
-                <p className="text-gray-400 text-[11px] mb-3 text-center font-medium">
-                  📢 모바일 환경에선 무음을 해제하셔야 효과음이 재생됩니다.
+                {/* 1. 본문 텍스트 */}
+                <div className="text-[14px] text-gray-600 text-center leading-loose break-keep tracking-tight">
+                  <p className="mb-4">
+                    본 시뮬레이션은 <span className="font-bold text-gray-800">&lt;당신 집에서 잘 수 있나요?&gt;</span><br/>
+                    3화를 기준으로 만들어졌습니다.
+                  </p>
+                  <p>
+                    1~3화를 읽지 않고 플레이하셔도 무방하지만<br className="hidden sm:block"/> 
+                    전체적인 맥락을 이해하는 데<br className="hidden sm:block"/> 
+                    어려움이 있을 수 있습니다.
+                  </p>
+                </div>
+
+                {/* 2. 무음 해제 안내 (회색) */}
+                <p className="text-gray-400 text-[11px] text-center font-medium">
+                  📢 모바일 환경에선 무음을 해제하셔야<br/>효과음이 재생됩니다.
                 </p>
 
-                {/* 확인 버튼: 흰색 배경 + 은은한 파스텔 보라빛 그림자 */}
+                {/* 3. 확인 버튼 (보라색 그림자) */}
                 <button 
                   onClick={() => setCurrentView('chapterSelect')} 
-                  className="w-full py-4 rounded-2xl font-bold text-gray-600 bg-white border border-gray-100 shadow-[0_10px_30px_-10px_rgba(167,139,250,0.3)] hover:shadow-[0_10px_30px_-5px_rgba(167,139,250,0.5)] hover:border-indigo-100 hover:-translate-y-0.5 transition-all duration-300 active:scale-95 text-sm tracking-widest mb-6"
+                  className="w-full py-4 rounded-2xl font-bold text-gray-600 bg-white border border-indigo-50 shadow-[0_10px_30px_-10px_rgba(167,139,250,0.4)] hover:shadow-[0_10px_30px_-5px_rgba(167,139,250,0.6)] hover:border-indigo-100 hover:-translate-y-0.5 transition-all duration-300 active:scale-95 text-sm tracking-widest"
                 >
                   (｡◠‿◠｡) ෆ ( ͡•. •. ͡ )
                 </button>
+              </div>
 
-                {/* 링크 */}
-                <div className="text-center">
-                  <span className="text-[11px] text-gray-400 block mb-1">아직 읽지 못했다면?</span>
-                  <a 
-                    href="https://posty.pe/h8qb64" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-[11px] text-gray-500 border-b border-gray-300 pb-0.5 hover:text-gray-800 hover:border-gray-600 transition-all"
-                  >
-                    최신 에피소드 확인하러 가기
-                  </a>
-                </div>
+              {/* 링크 영역 (간격 그룹에서 분리하여 하단에 배치) */}
+              <div className="mt-8 text-center">
+                <span className="text-[11px] text-gray-400 block mb-1">아직 읽지 못했다면?</span>
+                <a 
+                  href="https://posty.pe/h8qb64" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-gray-500 border-b border-gray-300 pb-0.5 hover:text-gray-800 hover:border-gray-600 transition-all"
+                >
+                  최신 에피소드 확인하러 가기
+                </a>
               </div>
             </div>
         )}
