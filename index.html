@@ -544,41 +544,50 @@ function App() {
     const step = currentSequence[stepIndex];
     
     const processStep = async () => {
+      // [1] 서술 지문 (배경음 느낌)
       if (step.type === 'narrative') {
         setTimeout(() => {
-            setIsNarrating(true); playSound('narrative'); setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: step.content }]); scrollToBottom();
+            setIsNarrating(true); 
+            playSound('narrative'); // 소리 재생
+            setMessages(prev => [...prev, { id: Date.now(), type: 'narrative', text: step.content }]); 
+            scrollToBottom();
             const readingTime = (step.content.length * 30) + 1000;
             setTimeout(() => { setIsNarrating(false); setStepIndex(prev => prev + 1); }, readingTime);
         }, 1000);
       
       } else if (step.type === 'text') {
-        // 마크(나)일 때
+        // [2] 마크 (나)의 대화
         if (step.sender === 'Mark') {
             setTimeout(() => { 
-                playSound('message'); // 내 메시지 효과음
+                playSound('message'); 
                 setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() }]); 
                 setStepIndex(prev => prev + 1); 
-            }, 1500);
+            }, 1000); // 반응 속도 조금 더 빠르게 (1500->1000)
         } else {
-            // 상대방일 때 (타이핑 효과 후 메시지+효과음)
+            // [3] 상대방 (재현, 선우, 연덕 등) - 소리 문제 해결 파트
             setTimeout(() => {
-                setTypingSender(step.sender); setIsTyping(true); scrollToBottom();
+                setTypingSender(step.sender); 
+                setIsTyping(true); 
+                scrollToBottom();
                 
+                // 1.5초 타이핑 후 -> 소리 띵! -> 메시지 출력
                 setTimeout(() => { 
                     setIsTyping(false); 
                     setTypingSender(null); 
-                    playSound('message'); // [수정됨] 상대방 메시지 효과음 추가
+                    
+                    playSound('message'); // ★ 여기서 무조건 소리 남
+                    
                     setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: step.sender, text: step.content, time: getTime() }]); 
                     setStepIndex(prev => prev + 1); 
-                }, 2000); 
-            }, 800);
+                }, 1500); // 타이핑 시간 최적화
+            }, 500);
         }
 
-      } else if (step.type === 'book') { // [수정됨] 책 타입 로직 추가 (연덕 멈춤 해결)
+      } else if (step.type === 'book') { 
         setTimeout(() => {
             playSound('narrative'); 
             setMessages(prev => [...prev, { id: Date.now(), type: 'book', img: step.img, title: step.title, author: step.author, desc: step.desc }]);
-            setStepIndex(prev => prev + 1); // 다음으로 넘어감
+            setStepIndex(prev => prev + 1); 
         }, 1500);
 
       } else if (step.type === 'youtube') {
@@ -1196,21 +1205,26 @@ return (
                   return (
                     <div key={msg.id} className="flex justify-center my-6 w-full px-4 animate-fade-in">
                       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden max-w-xs w-full">
-                        <div className="flex p-4 pb-0 gap-4">
-                          {/* 책 표지 */}
-                          <div className="flex-shrink-0 w-24 h-36 shadow-md rounded-md overflow-hidden relative">
+                        <div className="flex p-4 pb-4 gap-4">
+                          {/* 1. 책 표지 (그림자 제거됨) */}
+                          <div className="flex-shrink-0 w-24 h-36 shadow-md rounded-md overflow-hidden relative bg-gray-100">
                              <img src={msg.img} alt="book cover" className="w-full h-full object-cover" />
-                             <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-transparent pointer-events-none"></div>
                           </div>
+                          
                           {/* 책 정보 */}
-                          <div className="flex flex-col justify-end pb-2 min-w-0">
+                          <div className="flex flex-col justify-end pb-1 min-w-0">
                             <div className="text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-1">BOOK INFO</div>
-                            <h3 className="font-serif font-bold text-lg text-gray-800 leading-tight break-keep mb-1">{msg.title}</h3>
+                            
+                            {/* 3. 폰트 변경 (sans-serif) & 색상 변경 (연덕 테마 진한색) */}
+                            <h3 className="font-bold text-lg text-[#5D4037] leading-tight break-keep mb-1">
+                                {msg.title}
+                            </h3>
                             <span className="text-xs text-gray-500 font-medium">{msg.author}</span>
                           </div>
                         </div>
-                        {/* 책 설명 */}
-                        <div className="p-5 bg-gray-50/50">
+
+                        {/* 2. 설명 (상단 구분선 border-t 추가됨) */}
+                        <div className="px-5 py-4 bg-gray-50/50 border-t border-gray-200">
                           <div className="text-[11px] text-gray-600 leading-loose text-justify whitespace-pre-wrap break-keep font-medium opacity-90">
                             {msg.desc}
                           </div>
@@ -1218,7 +1232,7 @@ return (
                       </div>
                     </div>
                   );
-                } 
+                }
                 const isMe = msg.sender === 'Mark';
                 const senderInfo = !isMe ? getSenderInfo(msg.sender) : {};
                 return (
