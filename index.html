@@ -123,9 +123,12 @@ const CHAPTERS = [
 const FRIENDS_DATA = [
   { id: 'niko', name: '니코', color: 'bg-pink-200', status: '싸이다...' },
   { id: 'seonwoo', name: '선우', color: 'bg-purple-200', status: '별이 빛나는 창공을 보고, 갈 수가 있고 또 가야만 하는 길의 지도를 읽을 수 있던 시대는 얼마나 행복했던가?', isOnline: false },
-  { id: 'yeondeok', name: '연덕', color: 'bg-[#D7CCC8]', status: '리스본 여행 중.' }, { id: 'eunjae', name: '은재', color: 'bg-orange-200', status: '난 재현마크' },
+  { id: 'yeondeok', name: '연덕', color: 'bg-[#D7CCC8]', status: '리스본 여행 중.' }, 
+  { id: 'eunjae', name: '은재', color: 'bg-orange-200', status: '난 재현마크' },
   { id: 'jaekyung', name: '재경', color: 'bg-blue-200', status: '아름다운 것', statusSuffix: ' 듣는 중', link: 'https://youtu.be/3iHBlNgjQQo?si=4cp1GqVu5gdcBXwt', isOnline: true },
   { id: 'jiwon', name: '지원', color: 'bg-yellow-200', status: 'Voice Mail', statusSuffix: ' 듣는 중', link: 'https://youtu.be/KriXKHJXEbc?si=TmkDdgF4yJXeffx0', isOnline: true },
+  // [수정됨] Maru Mori 상태 메시지 업데이트
+  { id: 'marumori', name: 'Maru Mori', color: 'bg-gray-300', status: '(｡◠‿◠｡) ෆ ( ͡σ̴̶̷̤. ͡σ̴̶̷̤.)' },
 ].sort((a, b) => a.name.localeCompare(b.name));
 
 // --- 시나리오 데이터 ---
@@ -273,6 +276,7 @@ const NIGHT_MESSAGES = [
     content: `오늘 내가 느낀 감정을 뭐라고 해야 할지 잘 모르겠어 그런데도 꼭 너를 보고 있으면 다 알 것 같다는 생각이 들기도 했어
 
 앞으로도 뭔가가 계속 이어지고 지속될 것 같다는 예감까지 
+
 이상하지?
 
 나는 그렇다 치더라도 넌 종일 무슨 생각을 했는지 궁금해 안 그런 척했지만 긴 비행 시간 내내 초조한 마음이 들었는데 그럴 때마다 옆을 바라보면 잠든 네가 있었어 덩달아 잠이 오고 편안해지더라
@@ -1000,12 +1004,8 @@ return (
                 >
                   <div className="p-2 rounded-full bg-white/50 text-gray-500 hover:bg-white transition"><Plus size={20} /></div>
                   
-                  {/* [수정됨] 답장 선택하기 버튼 스타일 변경 */}
-                  <div className={`flex-1 h-10 px-4 flex items-center shadow-sm transition-all duration-300
-                    ${(choices.length > 0 && !isChoiceFading) 
-                      ? 'bg-gradient-to-b from-green-50 to-green-200 text-gray-800 text-sm rounded-2xl' // 마크 메시지와 동일한 스타일
-                      : 'bg-white/80 text-gray-400 text-xs border border-white/50 shadow-inner rounded-full' // 대기 중일 때는 기존 스타일 유지
-                    }`}>
+                  {/* [수정됨] 상태와 관계없이 항상 동일한 '대기 중' 스타일 유지 */}
+                  <div className="flex-1 bg-white/80 rounded-full h-10 px-4 flex items-center text-xs shadow-inner border border-white/50 text-gray-400">
                     {(choices.length > 0 && !isChoiceFading) ? "답장 선택하기 (터치)" : (isNarrating ? "이야기가 진행 중입니다..." : "상대방의 메시지를 기다리는 중...")}
                   </div>
 
