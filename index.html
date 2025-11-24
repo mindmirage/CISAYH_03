@@ -999,9 +999,16 @@ return (
                   className={`flex items-center gap-2 opacity-80 ${choices.length > 0 && !isChoiceFading ? 'cursor-pointer' : ''}`}
                 >
                   <div className="p-2 rounded-full bg-white/50 text-gray-500 hover:bg-white transition"><Plus size={20} /></div>
-                  <div className={`flex-1 bg-white/80 rounded-full h-10 px-4 flex items-center text-xs shadow-inner border border-white/50 ${(choices.length > 0 && !isChoiceFading) ? 'text-gray-800 font-bold bg-blue-50/80 border-blue-200' : 'text-gray-400'}`}>
+                  
+                  {/* [수정됨] 답장 선택하기 버튼 스타일 변경 */}
+                  <div className={`flex-1 h-10 px-4 flex items-center shadow-sm transition-all duration-300
+                    ${(choices.length > 0 && !isChoiceFading) 
+                      ? 'bg-gradient-to-b from-green-50 to-green-200 text-gray-800 text-sm rounded-2xl' // 마크 메시지와 동일한 스타일
+                      : 'bg-white/80 text-gray-400 text-xs border border-white/50 shadow-inner rounded-full' // 대기 중일 때는 기존 스타일 유지
+                    }`}>
                     {(choices.length > 0 && !isChoiceFading) ? "답장 선택하기 (터치)" : (isNarrating ? "이야기가 진행 중입니다..." : "상대방의 메시지를 기다리는 중...")}
                   </div>
+
                   <div className={`p-2 rounded-full text-white shadow-sm transition-all ${(choices.length > 0 && !isChoiceFading) ? 'bg-blue-500 animate-pulse' : 'bg-[#4FD985] opacity-50'}`}><Send size={18} /></div>
                 </div>
               )}
