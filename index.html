@@ -328,6 +328,13 @@ const JAEHYUN_IMAGES = [
   "https://i.pinimg.com/736x/fe/af/62/feaf6254b73288f9840b761cdaec4550.jpg", // [3] 기존
   "https://i.pinimg.com/736x/58/5e/dd/585edd32bdbbc333403c446a522d3d9a.jpg"  // [4] 추가됨
 ];
+const PROFILE_BG_IMAGES = {
+  mark: "https://i.pinimg.com/1200x/25/c2/b5/25c2b51f31f4d3519191a446c3923925.jpg",
+  jaehyun: "https://i.pinimg.com/736x/83/2a/5e/832a5e398646704b3154081d604ba44f.jpg",
+  eunjae: "https://i.pinimg.com/1200x/ff/3d/7b/ff3d7ba15d1380278846e57b05ee1e3e.jpg",
+  yeondeok: "https://i.pinimg.com/1200x/49/ed/0b/49ed0b0bcbe3a17987f42d1f45b60d1e.jpg",
+  jiwon: "https://i.pinimg.com/736x/ed/32/65/ed3265d84e80efa9f55b20c7ec9a8167.jpg"
+};
 function App() {
   const [currentView, setCurrentView] = useState('friendList');
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -758,21 +765,20 @@ return (
                  
                  {/* [1] 배경 레이어 */}
                  <div className={`absolute inset-0 transition-colors duration-700 
-                   ${selectedProfile.id === 'mark' ? 'bg-gradient-to-b from-[#85C1E9] to-[#5DADE2]' : 
-                     selectedProfile.id === 'jaehyun' ? 'bg-gradient-to-b from-[#D7BDE2] to-[#AF7AC5]' : 
-                     selectedProfile.id === 'jiwon' ? 'bg-gray-800' : // 지원이는 이미지 로딩 전 배경색
-                     'bg-gradient-to-b from-gray-300 to-gray-400' 
+                   ${selectedProfile.id === 'mark' ? 'bg-[#85C1E9]' : 
+                     selectedProfile.id === 'jaehyun' ? 'bg-[#D7BDE2]' : 
+                     'bg-gray-300' 
                    }`}>
                    
-                   {/* [수정] 지원이일 경우 배경 이미지 적용 */}
-                   {selectedProfile.id === 'jiwon' && (
+                   {/* [수정] PROFILE_BG_IMAGES에 이미지가 있으면 적용 */}
+                   {PROFILE_BG_IMAGES[selectedProfile.id] && (
                      <div className="absolute inset-0 bg-cover bg-center animate-fade-in" 
-                          style={{ backgroundImage: 'url(https://i.pinimg.com/736x/ed/32/65/ed3265d84e80efa9f55b20c7ec9a8167.jpg)' }}>
+                          style={{ backgroundImage: `url(${PROFILE_BG_IMAGES[selectedProfile.id]})` }}>
                      </div>
                    )}
 
                    {/* 텍스트 가독성을 위한 어두운 필터 */}
-                   <div className="absolute inset-0 bg-black/20"></div>
+                   <div className="absolute inset-0 bg-black/10"></div>
                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10"></div>
                  </div>
 
