@@ -271,10 +271,10 @@ const NIGHT_MESSAGES = [
     // [수정] 시간 변경
     date: '12시간 전',
     content: `오늘 내가 느낀 감정을 뭐라고 해야 할지 잘 모르겠어 그런데도 꼭 너를 보고 있으면 다 알 것 같다는 생각이 들기도 했어
-앞으로도 뭔가가 계속 이어지고 지속될 것 같다는 예감까지 이상하지?
+앞으로도 뭔가가 계속 이어지고 지속될 것 같다는 예감까지 
+이상하지?
 
-나는 그렇다 치더라도 넌 종일 무슨 생각을 했는지 궁금해 안 그런 척했지만 긴 비행 시간 내내 초조한 마음이 들었는데
-그럴 때마다 옆을 바라보면 잠든 네가 있었어 덩달아 잠이 오고 편안해지더라
+나는 그렇다 치더라도 넌 종일 무슨 생각을 했는지 궁금해 안 그런 척했지만 긴 비행 시간 내내 초조한 마음이 들었는데 그럴 때마다 옆을 바라보면 잠든 네가 있었어 덩달아 잠이 오고 편안해지더라
 
 알게 모르게 탓을 하고 싶은 얼굴이기도 했어
 기본적으로 타고난 너의 다정함 때문일까?
@@ -282,10 +282,10 @@ const NIGHT_MESSAGES = [
 
 어쨌든 지금 확실하게 말할 수 있는 건 이 정도뿐이야 겪어 보지 못한 감정도 이 낯선 곳에선 나름의 당위를 갖추게 될 거라 믿어
 
-넌 좋은 시간을 보낸 것 같아? 그렇다면 다행이야
-대체 앞으로 어떤 것들을 감당하려고 이렇게 길게 적고 있는 걸까 한 달이라는 시간을 통과하는 동안 어떤 일이 일어날까?
+넌 좋은 시간을 보낸 것 같아? 그렇다면 다행이야 대체 앞으로 어떤 것들을 감당하려고 이렇게 길게 적고 있는 걸까 한 달이라는 시간을 통과하는 동안 어떤 일이 일어날까?
 
-그런 것들을 궁금해하며... 익명 씀`
+그런 것들을 궁금해하며... 
+익명 씀`
   },
   {
     id: 2,
@@ -326,7 +326,7 @@ const JAEHYUN_IMAGES = [
   "https://i.pinimg.com/1200x/35/57/23/3557236999ff04603164545a617fb6ee.jpg", // [1] 기존
   "https://i.pinimg.com/736x/f3/9e/44/f39e445f7cb0b9837bed2823955a0c87.jpg", // [2] 기존
   "https://i.pinimg.com/736x/fe/af/62/feaf6254b73288f9840b761cdaec4550.jpg", // [3] 기존
-  "https://i.pinimg.com/1200x/20/70/09/20700942bd079ad52d8bcac49f34f498.jpg"  // [4] 추가됨
+  "https://ibb.co/4ZFx5btn"  // [4] 추가됨
 ];
 function App() {
   const [currentView, setCurrentView] = useState('friendList');
@@ -796,20 +796,23 @@ return (
                           {selectedProfile.id === 'mark' ? '변경할 프로필 사진을 선택하세요' : '재현의 프로필 사진을 선택하세요'}
                         </div>
                         <div className="flex justify-center gap-3">
-                          {/* 대상에 따라 다른 이미지 배열(MARK_IMAGES / JAEHYUN_IMAGES) 매핑 */}
-                          {(selectedProfile.id === 'mark' ? MARK_IMAGES : JAEHYUN_IMAGES).map((img, idx) => (
-                            <button 
-                              key={idx} 
-                              onClick={() => { 
-                                if (selectedProfile.id === 'mark') setMyProfileImage(img);
-                                else setJaehyunProfileImage(img);
-                                setIsEditingProfile(false); 
-                              }}
-                              className={`relative w-16 h-16 rounded-2xl overflow-hidden border-2 transition-all hover:scale-105 
-                                ${(selectedProfile.id === 'mark' ? myProfileImage : jaehyunProfileImage) === img ? 'border-blue-500 ring-2 ring-blue-200' : 'border-transparent'}`}
-                            >
-                              <img src={img} alt={`option-${idx}`} className="w-full h-full object-cover" />
-                            </button>
+                          {/* 1. 대상에 맞는 이미지 배열 선택 (MARK_IMAGES or JAEHYUN_IMAGES) */}
+                          {(selectedProfile.id === 'mark' ? MARK_IMAGES : JAEHYUN_IMAGES)
+                            /* 2. 현재 설정된 이미지는 리스트에서 제외 (filter) */
+                            .filter(img => img !== (selectedProfile.id === 'mark' ? myProfileImage : jaehyunProfileImage))
+                            /* 3. 남은 4개만 보여줌 */
+                            .map((img, idx) => (
+                              <button 
+                                key={img} // URL을 키값으로 사용
+                                onClick={() => { 
+                                  if (selectedProfile.id === 'mark') setMyProfileImage(img);
+                                  else setJaehyunProfileImage(img);
+                                  setIsEditingProfile(false); 
+                                }}
+                                className="relative w-16 h-16 rounded-2xl overflow-hidden border-2 border-transparent transition-all hover:scale-105 hover:border-blue-200"
+                              >
+                                <img src={img} alt={`option-${idx}`} className="w-full h-full object-cover" />
+                              </button>
                           ))}
                         </div>
                         <button onClick={() => setIsEditingProfile(false)} className="w-full mt-4 py-2 text-sm text-gray-500 hover:bg-gray-100 rounded-xl transition">취소</button>
