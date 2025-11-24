@@ -585,6 +585,7 @@ function App() {
   const [chatInfo, setChatInfo] = useState({ name: '재현', status: '당신 집에서 잘 수 있나요?' }); 
   const [isDetailView, setIsDetailView] = useState(false); // 상세 정보 뷰 상태
   const [showRadioScript, setShowRadioScript] = useState(false); // 라디오 대본 보기 상태
+  const [scrollTop, setScrollTop] = useState(0); // [추가] 스크롤 위치 저장
   // ▼▼▼ [추가] 새로운 선택지가 생기면 자동으로 펼치기 ▼▼▼
   useEffect(() => {
       if (choices.length > 0) {
@@ -1089,330 +1090,297 @@ return (
 
         {/* 프로필 모달 */}
         {selectedProfile && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center animate-fade-in">
+            <div className="absolute inset-0 z-50 flex items-center justify-center animate-fade-in bg-black">
                  
-                 {/* [1] 배경 레이어 (기본 프로필용) */}
+                 {/* =================================================================================
+                    [1] 기본 프로필 뷰 (상세 정보가 아닐 때)
+                    ================================================================================= */}
                  {!isDetailView && (
-                     <div className={`absolute inset-0 transition-colors duration-700 
-                       ${selectedProfile.id === 'mark' ? 'bg-[#85C1E9]' : 
-                         selectedProfile.id === 'jaehyun' ? 'bg-[#D7BDE2]' : 
-                         'bg-gray-300' 
-                       }`}>
-                       
-                       {PROFILE_BG_IMAGES[selectedProfile.id] && (
-                         <div className="absolute inset-0 bg-cover bg-center animate-fade-in" 
-                              style={{ backgroundImage: `url(${PROFILE_BG_IMAGES[selectedProfile.id]})` }}>
-                         </div>
-                       )}
+                     <>
+                        {/* 배경 레이어 */}
+                        <div className={`absolute inset-0 transition-colors duration-700 
+                          ${selectedProfile.id === 'mark' ? 'bg-[#85C1E9]' : 
+                            selectedProfile.id === 'jaehyun' ? 'bg-[#D7BDE2]' : 
+                            'bg-gray-300' 
+                          }`}>
+                          {PROFILE_BG_IMAGES[selectedProfile.id] && (
+                            <div className="absolute inset-0 bg-cover bg-center animate-fade-in" 
+                                 style={{ backgroundImage: `url(${PROFILE_BG_IMAGES[selectedProfile.id]})` }}>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/10"></div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10"></div>
+                        </div>
 
-                       <div className="absolute inset-0 bg-black/10"></div>
-                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10"></div>
-                     </div>
+                        {/* 상단바 (기본 뷰용) */}
+                        <div className="absolute top-0 w-full z-50 pt-3 pb-2 px-6 flex justify-between items-center text-white/90 text-sm font-bold select-none">
+                            <span>{timeStr}</span>
+                            <div className="flex space-x-1.5">
+                                <Signal size={16} fill="currentColor" />
+                                <Wifi size={16} />
+                                <Battery size={16} fill="currentColor" />
+                            </div>
+                        </div>
+
+                        {/* 상단 버튼 그룹 (기본 뷰용) */}
+                        <div className="absolute top-12 right-4 flex gap-1 z-50">
+                            {CHARACTER_DETAILS[selectedProfile.id] && (
+                                <button 
+                                    onClick={() => { 
+                                        playSound('click'); 
+                                        setIsDetailView(true); 
+                                        setScrollTop(0); // 스크롤 초기화
+                                    }} 
+                                    className="p-2 text-white/80 hover:text-white transition"
+                                >
+                                    <Info size={24} dropShadow="0 2px 4px rgba(0,0,0,0.3)" />
+                                </button>
+                            )}
+                            <button 
+                                onClick={() => { setSelectedProfile(null); setIsEditingProfile(false); }} 
+                                className="p-2 text-white/80 hover:text-white transition"
+                            >
+                                <X size={24} dropShadow="0 2px 4px rgba(0,0,0,0.3)" />
+                            </button>
+                        </div>
+
+                        {/* 기본 프로필 컨텐츠 */}
+                        <div className="absolute bottom-0 w-full flex flex-col items-center pb-8 z-10 px-6">
+                            <div className="mb-3 relative group">
+                               {selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun' ? (
+                                 <>
+                                   <img src={selectedProfile.id === 'mark' ? myProfileImage : jaehyunProfileImage} alt="profile" className="w-[90px] h-[90px] rounded-[35px] object-cover shadow-2xl" />
+                                   <div className="absolute bottom-1 right-1 w-3.5 h-3.5 bg-green-400 border-2 border-white/50 rounded-full shadow-sm"></div>
+                                 </>
+                               ) : (
+                                 <div className={`w-[90px] h-[90px] rounded-[35px] flex items-center justify-center text-white shadow-2xl ${selectedProfile.color} bg-opacity-90 backdrop-blur-sm`}>
+                                   <User size={40} fill="rgba(255,255,255,0.6)" strokeWidth={1.5} />
+                                 </div>
+                               )}
+                            </div>
+                            <h2 className="text-xl font-bold text-white mb-1 drop-shadow-md tracking-tight">{selectedProfile.name}</h2>
+                            <div className="text-sm text-white/90 text-center mb-4 min-h-[24px] flex items-center justify-center w-full">
+                              {selectedProfile.link ? (
+                                <a href={selectedProfile.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 transition border border-white/30 backdrop-blur-md group">
+                                  <span className="font-medium truncate max-w-[180px] drop-shadow-sm text-xs">{selectedProfile.status}</span>
+                                  <div className="w-px h-2.5 bg-white/40"></div>
+                                  <span className="font-light text-[10px] opacity-80">{selectedProfile.statusSuffix}</span>
+                                  <Music size={10} />
+                                </a>
+                              ) : (
+                                <span className="font-medium drop-shadow-sm opacity-90">{selectedProfile.status}</span>
+                              )}
+                            </div>
+                            <div className="w-full h-px bg-white/20 mb-6"></div>
+                            
+                            {/* 하단 액션 버튼들 (채팅/편집) */}
+                            {isEditingProfile && (selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun') ? (
+                              <div className="w-full bg-white/20 backdrop-blur-xl rounded-3xl p-5 animate-fade-in-up border border-white/20 shadow-lg">
+                                <div className="text-xs text-center text-white/90 mb-4 font-bold drop-shadow-sm">프로필 사진 변경</div>
+                                <div className="flex justify-center gap-3 mb-4">
+                                  {(selectedProfile.id === 'mark' ? MARK_IMAGES : JAEHYUN_IMAGES)
+                                    .filter(img => img !== (selectedProfile.id === 'mark' ? myProfileImage : jaehyunProfileImage))
+                                    .map((img, idx) => (
+                                      <button key={img} onClick={() => { if (selectedProfile.id === 'mark') setMyProfileImage(img); else setJaehyunProfileImage(img); setIsEditingProfile(false); }} className="relative w-14 h-14 rounded-2xl overflow-hidden border-2 border-white/30 transition-all hover:scale-110 hover:border-white shadow-md">
+                                        <img src={img} alt={`option-${idx}`} className="w-full h-full object-cover" />
+                                      </button>
+                                  ))}
+                                </div>
+                                <button onClick={() => setIsEditingProfile(false)} className="w-full py-3 text-sm font-medium text-white hover:bg-white/20 rounded-xl transition">취소</button>
+                              </div>
+                            ) : (
+                              <div className="flex w-full gap-10 justify-center pb-4">
+                                 {selectedProfile.id !== 'mark' && (
+                                  <button onClick={() => { playSound('click'); if (selectedProfile.id === 'jaehyun') { handleStartIntro(); } else { const id = selectedProfile.id; let sceneId = ''; if (id === 'eunjae') sceneId = 'eunjae_start'; else if (id === 'niko') sceneId = 'niko_start'; else if (id === 'jiwon') sceneId = 'jiwon_start'; else if (id === 'seonwoo') sceneId = 'seonwoo_talk'; else if (id === 'jaekyung') sceneId = 'jaekyung_talk'; else if (id === 'yeondeok') sceneId = 'yeondeok_talk'; if (sceneId) { setChatInfo({ name: selectedProfile.name, status: selectedProfile.status }); setSelectedProfile(null); setCurrentView('chat'); setMessages([]); setCurrentSequence([]); setStepIndex(0); setTimeout(() => { loadScene(sceneId); }, 500); } } }} className={`flex flex-col items-center gap-2 group ${['jaehyun', 'eunjae', 'niko', 'jiwon', 'seonwoo', 'jaekyung', 'yeondeok'].includes(selectedProfile.id) ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}>
+                                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
+                                      <MessageCircle size={26} fill={['jaehyun', 'eunjae', 'niko', 'jiwon', 'seonwoo', 'jaekyung', 'yeondeok'].includes(selectedProfile.id) ? "currentColor" : "none"} strokeWidth={1.5} />
+                                    </div>
+                                    <span className="text-[11px] font-medium text-white/90">1:1 채팅</span>
+                                  </button>
+                                )}
+                                 {(selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun') && (
+                                   <button onClick={() => setIsEditingProfile(true)} className="flex flex-col items-center gap-2 group cursor-pointer">
+                                     <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
+                                       {selectedProfile.id === 'mark' ? <Pencil size={26} strokeWidth={1.5} /> : <User size={26} strokeWidth={1.5} />}
+                                     </div>
+                                     <span className="text-[11px] font-medium text-white/90">{selectedProfile.id === 'mark' ? '프로필 편집' : '프로필 선택'}</span>
+                                   </button>
+                                 )}
+                              </div>
+                            )}
+                        </div>
+                     </>
                  )}
 
-                 {/* 
-                    [수정됨] fixed -> absolute로 변경하여 폰 프레임 안에 가둠
-                 */}
-                 {/* 상단바 (고정) */}
-                 <div className="absolute top-0 w-full z-[70] pt-3 pb-2 px-6 flex justify-between items-center text-white/90 text-sm font-bold select-none pointer-events-none mix-blend-plus-lighter">
-                    <span>{timeStr}</span>
-                    <div className="flex space-x-1.5">
-                        <Signal size={16} fill="currentColor" />
-                        <Wifi size={16} />
-                        <Battery size={16} fill="currentColor" />
-                    </div>
-                 </div>
+                 {/* =================================================================================
+                    [2] 상세 정보 뷰 (패럴랙스 스크롤 적용)
+                    ================================================================================= */}
+                 {isDetailView && CHARACTER_DETAILS[selectedProfile.id] && (
+                    <>
+                        {/* 1. 고정된 상단바 & 버튼 (스크롤 영향 X) */}
+                        <div className="absolute top-0 w-full z-[100] pt-3 pb-2 px-6 flex justify-between items-center text-white text-sm font-bold select-none pointer-events-none drop-shadow-md">
+                            <span>{timeStr}</span>
+                            <div className="flex space-x-1.5">
+                                <Signal size={16} fill="currentColor" />
+                                <Wifi size={16} />
+                                <Battery size={16} fill="currentColor" />
+                            </div>
+                        </div>
 
-                 {/* 상단 버튼 그룹 (고정) */}
-                 <div className="absolute top-12 right-4 flex gap-1.5 z-[70]">
-                    {/* 상세 정보 버튼 */}
-                    {CHARACTER_DETAILS[selectedProfile.id] && (
-                        <button 
-                            onClick={() => { 
-                                playSound('click'); 
-                                setIsDetailView(!isDetailView); 
-                                setShowRadioScript(false); 
-                            }} 
-                            className={`p-2 transition rounded-full ${isDetailView ? 'text-gray-500 bg-white/80 hover:bg-white shadow-sm' : 'text-white/80 hover:text-white bg-black/20 hover:bg-black/30'}`}
-                        >
-                            <Info size={28} dropShadow="0 2px 4px rgba(0,0,0,0.3)" />
-                        </button>
-                    )}
-                    {/* 닫기 버튼 */}
-                    <button 
-                        onClick={() => { 
-                            setSelectedProfile(null); 
-                            setIsEditingProfile(false); 
-                            setIsDetailView(false);
-                            setShowRadioScript(false);
-                        }} 
-                        className={`p-2 transition rounded-full ${isDetailView ? 'text-gray-500 bg-white/80 hover:bg-white shadow-sm' : 'text-white/80 hover:text-white'}`}
-                    >
-                        <X size={28} dropShadow="0 2px 4px rgba(0,0,0,0.3)" />
-                    </button>
-                 </div>
+                        <div className="absolute top-12 right-4 flex gap-1 z-[100]">
+                            <button 
+                                onClick={() => { playSound('click'); setIsDetailView(false); setShowRadioScript(false); }} 
+                                className="p-2 text-white hover:text-gray-200 transition bg-transparent"
+                            >
+                                <Info size={24} dropShadow="0 2px 4px rgba(0,0,0,0.5)" />
+                            </button>
+                            <button 
+                                onClick={() => { setSelectedProfile(null); setIsEditingProfile(false); setIsDetailView(false); setShowRadioScript(false); }} 
+                                className="p-2 text-white hover:text-gray-200 transition bg-transparent"
+                            >
+                                <X size={24} dropShadow="0 2px 4px rgba(0,0,0,0.5)" />
+                            </button>
+                        </div>
 
-                 {/* [2] 상세 정보 뷰 (폰 화면 내 스크롤) */}
-                 {isDetailView && CHARACTER_DETAILS[selectedProfile.id] ? (
-                    <div className="absolute inset-0 z-[60] bg-white overflow-y-auto custom-scrollbar animate-fade-in">
-                        
-                        {/* 헤더 이미지 영역 */}
-                        <div className="relative w-full">
-                            {/* 이미지 높이 제한 제거 (h-auto), 원본 비율 유지 */}
+                        {/* 2. 배경 이미지 (고정됨, 스크롤 시 어두워짐) */}
+                        <div className="absolute inset-0 z-0 bg-gray-900">
                             {CHARACTER_DETAILS[selectedProfile.id].headerImage ? (
                                 <img 
                                     src={CHARACTER_DETAILS[selectedProfile.id].headerImage} 
                                     alt="header" 
-                                    className="w-full h-auto block" 
+                                    className="w-full h-[60%] object-cover absolute top-0 left-0 transition-opacity duration-300"
+                                    style={{ opacity: Math.max(0.3, 1 - scrollTop / 400) }} // 스크롤 내리면 어두워짐
                                 />
                             ) : (
-                                <div className={`w-full h-96 ${selectedProfile.id === 'mark' ? 'bg-green-100' : 'bg-sky-100'}`}></div>
+                                <div className={`w-full h-[60%] absolute top-0 left-0 ${selectedProfile.id === 'mark' ? 'bg-green-200' : 'bg-sky-200'}`}></div>
                             )}
-
-                            {/* 텍스트 가독성을 위한 하단 그라데이션 (어두움) */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90"></div>
-                            
-                            {/* 자연스러운 트랜지션 (이미지 끝부분을 흰색으로 블렌딩) */}
-                            <div className="absolute bottom-0 w-full h-24 bg-gradient-to-t from-white via-white/60 to-transparent"></div>
-
-                            {/* 직업 & 이름 텍스트를 사진 위에 배치 */}
-                            <div className="absolute bottom-6 left-0 w-full px-6 pb-4 z-10">
-                                <span className={`text-sm font-bold tracking-widest uppercase mb-1 block drop-shadow-md ${CHARACTER_DETAILS[selectedProfile.id].headerImage ? 'text-white/90' : CHARACTER_DETAILS[selectedProfile.id].roleColor}`}>
-                                    {CHARACTER_DETAILS[selectedProfile.id].role}
-                                </span>
-                                <h2 className={`text-5xl font-black tracking-tighter drop-shadow-lg ${CHARACTER_DETAILS[selectedProfile.id].headerImage ? 'text-white' : 'text-gray-800'}`}>
-                                    {CHARACTER_DETAILS[selectedProfile.id].fullName}
-                                </h2>
-                            </div>
+                            {/* 이미지 하단 그라데이션 (자연스러운 연결) */}
+                            <div className="absolute top-0 w-full h-[60%] bg-gradient-to-b from-black/30 via-transparent to-black/60"></div>
                         </div>
 
-                        {/* 본문 컨텐츠 영역 */}
-                        <div className="px-6 pb-20 bg-white relative z-20">
-                            {/* 소개글 */}
-                            <p className="text-[15px] text-gray-700 leading-loose text-justify mb-12 break-keep font-medium pt-4">
-                                {CHARACTER_DETAILS[selectedProfile.id].desc}
-                            </p>
-
-                            {/* 마크: 아이팟 클래식 스타일 앨범 정보 */}
-                            {selectedProfile.id === 'mark' && CHARACTER_DETAILS.mark.album && (
-                                <div className="mb-12 animate-fade-in-up flex justify-center">
-                                    <div className="w-64 bg-gray-200 rounded-[2rem] p-4 shadow-2xl border-4 border-gray-300 relative">
-                                        <div className="bg-white h-40 rounded-lg mb-6 border-2 border-gray-400 overflow-hidden flex flex-col shadow-inner">
-                                            <div className="h-5 bg-gradient-to-b from-gray-100 to-gray-300 border-b border-gray-400 flex items-center justify-between px-2">
-                                                <span className="text-[8px] font-bold text-gray-600">Now Playing</span>
-                                                <div className="flex gap-0.5">
-                                                    <div className="w-2 h-1 bg-gray-600"></div>
-                                                    <div className="w-0.5 h-1 bg-gray-400"></div>
-                                                </div>
-                                            </div>
-                                            <div className="flex-1 flex items-center p-3 gap-3">
-                                                <img src={CHARACTER_DETAILS.mark.album.cover} alt="Album" className="w-20 h-20 shadow-md object-cover" />
-                                                <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                    <div className="text-[10px] font-bold text-gray-800 truncate">{CHARACTER_DETAILS.mark.album.tracks[0]}</div>
-                                                    <div className="text-[9px] text-gray-500 truncate">{CHARACTER_DETAILS.mark.album.title}</div>
-                                                    <div className="text-[9px] text-gray-500 truncate">NCT MARK</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="w-40 h-40 rounded-full bg-white border border-gray-300 mx-auto relative flex items-center justify-center shadow-sm">
-                                            <div className="absolute top-3 text-[10px] font-bold text-gray-400">MENU</div>
-                                            <div className="absolute bottom-3 text-[10px] font-bold text-gray-400"><Play size={10} fill="currentColor"/></div>
-                                            <div className="absolute left-3 text-[10px] font-bold text-gray-400"><ChevronLeft size={10} /></div>
-                                            <div className="absolute right-3 text-[10px] font-bold text-gray-400"><ChevronLeft size={10} className="rotate-180" /></div>
-                                            <div className="w-14 h-14 rounded-full bg-gray-200 shadow-inner"></div>
-                                        </div>
-                                    </div>
+                        {/* 3. 스크롤 가능한 컨텐츠 영역 */}
+                        <div 
+                            className="absolute inset-0 z-10 overflow-y-auto custom-scrollbar"
+                            onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
+                        >
+                            {/* 투명한 공간 (이미지가 보이는 영역) */}
+                            <div className="h-[45%] w-full bg-transparent relative">
+                                {/* 이름 & 직업 (이미지 위에 고정된 것처럼 보이다가 스크롤 되면 올라감) */}
+                                <div className="absolute bottom-8 left-0 w-full px-6 z-20">
+                                    {/* [수정됨] 직업 색상: 고유 색상 적용 (text-shadow로 가독성 확보) */}
+                                    <span className={`text-sm font-bold tracking-widest uppercase mb-1 block drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] ${CHARACTER_DETAILS[selectedProfile.id].roleColor}`}>
+                                        {CHARACTER_DETAILS[selectedProfile.id].role}
+                                    </span>
+                                    <h2 className="text-5xl font-black tracking-tighter text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
+                                        {CHARACTER_DETAILS[selectedProfile.id].fullName}
+                                    </h2>
                                 </div>
-                            )}
+                            </div>
 
-                            {/* 재현: 필모그래피 & 라디오 */}
-                            {selectedProfile.id === 'jaehyun' && (
-                                <div className="space-y-12 animate-fade-in-up pb-10">
-                                    {/* 필모그래피 */}
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <div className="w-1 h-4 bg-gray-800"></div>
-                                            <div className="text-xs font-bold text-gray-800 tracking-widest">FILMOGRAPHY</div>
-                                        </div>
-                                        <div className="text-xl font-black text-gray-900 mb-4 tracking-tight">익명의 편지가 이국에서</div>
-                                        
-                                        <div className="grid grid-cols-3 gap-1.5 mb-6">
-                                            {CHARACTER_DETAILS.jaehyun.hexImages.map((img, i) => (
-                                                <div key={i} className="aspect-[3/4] relative overflow-hidden shadow-sm transition-transform hover:scale-105 bg-gray-100">
-                                                    <img src={img} alt={`scene-${i}`} className="w-full h-full object-cover" />
+                            {/* 흰색 본문 (위로 올라오면서 덮음) */}
+                            <div className="bg-white min-h-[60%] rounded-t-[2.5rem] px-6 pt-10 pb-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.3)] relative">
+                                {/* 소개글 */}
+                                <p className="text-[15px] text-gray-700 leading-loose text-justify mb-12 break-keep font-medium">
+                                    {CHARACTER_DETAILS[selectedProfile.id].desc}
+                                </p>
+
+                                {/* 마크: 아이팟 클래식 스타일 앨범 정보 */}
+                                {selectedProfile.id === 'mark' && CHARACTER_DETAILS.mark.album && (
+                                    <div className="mb-12 animate-fade-in-up flex justify-center">
+                                        <div className="w-64 bg-gray-200 rounded-[2rem] p-4 shadow-2xl border-4 border-gray-300 relative">
+                                            <div className="bg-white h-40 rounded-lg mb-6 border-2 border-gray-400 overflow-hidden flex flex-col shadow-inner">
+                                                <div className="h-5 bg-gradient-to-b from-gray-100 to-gray-300 border-b border-gray-400 flex items-center justify-between px-2">
+                                                    <span className="text-[8px] font-bold text-gray-600">Now Playing</span>
+                                                    <div className="flex gap-0.5">
+                                                        <div className="w-2 h-1 bg-gray-600"></div>
+                                                        <div className="w-0.5 h-1 bg-gray-400"></div>
+                                                    </div>
                                                 </div>
-                                            ))}
+                                                <div className="flex-1 flex items-center p-3 gap-3">
+                                                    <img src={CHARACTER_DETAILS.mark.album.cover} alt="Album" className="w-20 h-20 shadow-md object-cover" />
+                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                        <div className="text-[10px] font-bold text-gray-800 truncate">{CHARACTER_DETAILS.mark.album.tracks[0]}</div>
+                                                        <div className="text-[9px] text-gray-500 truncate">{CHARACTER_DETAILS.mark.album.title}</div>
+                                                        <div className="text-[9px] text-gray-500 truncate">NCT MARK</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="w-40 h-40 rounded-full bg-white border border-gray-300 mx-auto relative flex items-center justify-center shadow-sm">
+                                                <div className="absolute top-3 text-[10px] font-bold text-gray-400">MENU</div>
+                                                <div className="absolute bottom-3 text-[10px] font-bold text-gray-400"><Play size={10} fill="currentColor"/></div>
+                                                <div className="absolute left-3 text-[10px] font-bold text-gray-400"><ChevronLeft size={10} /></div>
+                                                <div className="absolute right-3 text-[10px] font-bold text-gray-400"><ChevronLeft size={10} className="rotate-180" /></div>
+                                                <div className="w-14 h-14 rounded-full bg-gray-200 shadow-inner"></div>
+                                            </div>
                                         </div>
-                                        
-                                        <button className="w-full py-3.5 bg-black text-white text-xs font-bold rounded-none shadow-lg hover:bg-gray-800 transition flex items-center justify-center gap-2 tracking-wider">
-                                            인터뷰 보러 가기 <ChevronLeft size={12} className="rotate-180" />
-                                        </button>
                                     </div>
+                                )}
 
-                                    {/* 라디오 */}
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <div className="w-1 h-4 bg-indigo-600"></div>
-                                            <div className="text-xs font-bold text-indigo-900 tracking-widest">RADIO DJ</div>
-                                        </div>
-                                        <div className="bg-white p-6 border border-gray-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden">
-                                            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-4 -mt-4 z-0"></div>
+                                {/* 재현: 필모그래피 & 라디오 */}
+                                {selectedProfile.id === 'jaehyun' && (
+                                    <div className="space-y-12 animate-fade-in-up pb-10">
+                                        {/* 필모그래피 */}
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <div className="w-1 h-4 bg-gray-800"></div>
+                                                <div className="text-xs font-bold text-gray-800 tracking-widest">FILMOGRAPHY</div>
+                                            </div>
+                                            <div className="text-xl font-black text-gray-900 mb-4 tracking-tight">익명의 편지가 이국에서</div>
                                             
-                                            <div className="relative z-10">
-                                                <div className="flex justify-between items-start mb-6">
-                                                    <div>
-                                                        <div className="font-black text-2xl text-gray-900 mb-1">{CHARACTER_DETAILS.jaehyun.radio.title}</div>
-                                                        <div className="text-xs font-medium text-gray-400">{CHARACTER_DETAILS.jaehyun.radio.station}</div>
+                                            <div className="grid grid-cols-3 gap-1.5 mb-6">
+                                                {CHARACTER_DETAILS.jaehyun.hexImages.map((img, i) => (
+                                                    <div key={i} className="aspect-[3/4] relative overflow-hidden shadow-sm transition-transform hover:scale-105 bg-gray-100">
+                                                        <img src={img} alt={`scene-${i}`} className="w-full h-full object-cover" />
                                                     </div>
-                                                    <div className="bg-indigo-600 p-2.5 rounded-full text-white shadow-md shadow-indigo-200">
-                                                        <Music size={20} />
-                                                    </div>
-                                                </div>
-                                                
-                                                <button 
-                                                    onClick={() => setShowRadioScript(!showRadioScript)}
-                                                    className="w-full py-3 bg-gray-50 text-gray-600 text-xs font-bold border border-gray-200 hover:bg-gray-100 transition flex items-center justify-center gap-2"
-                                                >
-                                                    {showRadioScript ? "대본 닫기" : "들으러 가기"}
-                                                    <Play size={10} fill="currentColor" className={`ml-1 ${showRadioScript ? 'hidden' : ''}`} />
-                                                </button>
+                                                ))}
+                                            </div>
+                                            
+                                            <button className="w-full py-3.5 bg-black text-white text-xs font-bold rounded-none shadow-lg hover:bg-gray-800 transition flex items-center justify-center gap-2 tracking-wider">
+                                                인터뷰 보러 가기 <ChevronLeft size={12} className="rotate-180" />
+                                            </button>
+                                        </div>
 
-                                                {showRadioScript && (
-                                                    <div className="mt-4 p-4 bg-gray-50 text-[11px] text-gray-600 leading-loose whitespace-pre-wrap h-48 overflow-y-auto custom-scrollbar border-t border-gray-200">
-                                                        {CHARACTER_DETAILS.jaehyun.radio.script}
+                                        {/* 라디오 */}
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <div className="w-1 h-4 bg-indigo-600"></div>
+                                                <div className="text-xs font-bold text-indigo-900 tracking-widest">RADIO DJ</div>
+                                            </div>
+                                            <div className="bg-white p-6 border border-gray-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-4 -mt-4 z-0"></div>
+                                                
+                                                <div className="relative z-10">
+                                                    <div className="flex justify-between items-start mb-6">
+                                                        <div>
+                                                            <div className="font-black text-2xl text-gray-900 mb-1">{CHARACTER_DETAILS.jaehyun.radio.title}</div>
+                                                            <div className="text-xs font-medium text-gray-400">{CHARACTER_DETAILS.jaehyun.radio.station}</div>
+                                                        </div>
+                                                        <div className="bg-indigo-600 p-2.5 rounded-full text-white shadow-md shadow-indigo-200">
+                                                            <Music size={20} />
+                                                        </div>
                                                     </div>
-                                                )}
+                                                    
+                                                    <button 
+                                                        onClick={() => setShowRadioScript(!showRadioScript)}
+                                                        className="w-full py-3 bg-gray-50 text-gray-600 text-xs font-bold border border-gray-200 hover:bg-gray-100 transition flex items-center justify-center gap-2"
+                                                    >
+                                                        {showRadioScript ? "대본 닫기" : "들으러 가기"}
+                                                        <Play size={10} fill="currentColor" className={`ml-1 ${showRadioScript ? 'hidden' : ''}`} />
+                                                    </button>
+
+                                                    {showRadioScript && (
+                                                        <div className="mt-4 p-4 bg-gray-50 text-[11px] text-gray-600 leading-loose whitespace-pre-wrap h-48 overflow-y-auto custom-scrollbar border-t border-gray-200">
+                                                            {CHARACTER_DETAILS.jaehyun.radio.script}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                 ) : (
-                     /* [3] 기본 프로필 컨텐츠 (상세 정보가 아닐 때만 보임) */
-                     <div className="absolute bottom-0 w-full flex flex-col items-center pb-8 z-10 px-6">
-                        
-                        {/* 프로필 사진 */}
-                        <div className="mb-3 relative group">
-                           {selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun' ? (
-                             <>
-                               <img 
-                                 src={selectedProfile.id === 'mark' ? myProfileImage : jaehyunProfileImage} 
-                                 alt="profile" 
-                                 className="w-[90px] h-[90px] rounded-[35px] object-cover shadow-2xl transition-transform duration-500 hover:scale-105" 
-                                 onError={(e) => {e.target.src='https://via.placeholder.com/112?text=User'}} 
-                               />
-                               <div className="absolute bottom-1 right-1 w-3.5 h-3.5 bg-green-400 border-2 border-white/50 rounded-full shadow-sm"></div>
-                             </>
-                           ) : (
-                             <div className={`w-[90px] h-[90px] rounded-[35px] flex items-center justify-center text-white shadow-2xl ${selectedProfile.color} bg-opacity-90 backdrop-blur-sm`}>
-                               <User size={40} fill="rgba(255,255,255,0.6)" strokeWidth={1.5} />
-                             </div>
-                           )}
-                        </div>
-
-                        {/* 이름 */}
-                        <h2 className="text-xl font-bold text-white mb-1 drop-shadow-md tracking-tight">{selectedProfile.name}</h2>
-                        
-                        {/* 상태 메시지 */}
-                        <div className="text-sm text-white/90 text-center mb-4 min-h-[24px] flex items-center justify-center w-full">
-                          {selectedProfile.link ? (
-                            <a href={selectedProfile.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 transition border border-white/30 backdrop-blur-md group">
-                              <span className="font-medium truncate max-w-[180px] drop-shadow-sm text-xs">{selectedProfile.status}</span>
-                              <div className="w-px h-2.5 bg-white/40"></div>
-                              <span className="font-light text-[10px] opacity-80">{selectedProfile.statusSuffix}</span>
-                              <Music size={10} />
-                            </a>
-                          ) : (
-                            <span className="font-medium drop-shadow-sm opacity-90">{selectedProfile.status}</span>
-                          )}
-                        </div>
-
-                        {/* 구분선 */}
-                        <div className="w-full h-px bg-white/20 mb-6"></div>
-                        
-                        {/* 하단 액션 버튼들 */}
-                        {isEditingProfile && (selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun') ? (
-                          <div className="w-full bg-white/20 backdrop-blur-xl rounded-3xl p-5 animate-fade-in-up border border-white/20 shadow-lg">
-                            <div className="text-xs text-center text-white/90 mb-4 font-bold drop-shadow-sm">
-                              {selectedProfile.id === 'mark' ? '나의 프로필 사진 변경' : '재현의 프로필 사진 변경'}
+                                )}
                             </div>
-                            <div className="flex justify-center gap-3 mb-4">
-                              {(selectedProfile.id === 'mark' ? MARK_IMAGES : JAEHYUN_IMAGES)
-                                .filter(img => img !== (selectedProfile.id === 'mark' ? myProfileImage : jaehyunProfileImage))
-                                .map((img, idx) => (
-                                  <button 
-                                    key={img} 
-                                    onClick={() => { 
-                                      if (selectedProfile.id === 'mark') setMyProfileImage(img);
-                                      else setJaehyunProfileImage(img);
-                                      setIsEditingProfile(false); 
-                                    }}
-                                    className="relative w-14 h-14 rounded-2xl overflow-hidden border-2 border-white/30 transition-all hover:scale-110 hover:border-white shadow-md"
-                                  >
-                                    <img src={img} alt={`option-${idx}`} className="w-full h-full object-cover" />
-                                  </button>
-                              ))}
-                            </div>
-                            <button onClick={() => setIsEditingProfile(false)} className="w-full py-3 text-sm font-medium text-white hover:bg-white/20 rounded-xl transition">취소</button>
-                          </div>
-                        ) : (
-                          <div className="flex w-full gap-10 justify-center pb-4">
-                             {selectedProfile.id !== 'mark' && (
-                              <button 
-                                onClick={() => {
-                                   playSound('click');
-                                   if (selectedProfile.id === 'jaehyun') {
-                                       handleStartIntro();
-                                   } else {
-                                       const id = selectedProfile.id;
-                                       let sceneId = '';
-                                       if (id === 'eunjae') sceneId = 'eunjae_start';
-                                       else if (id === 'niko') sceneId = 'niko_start';
-                                       else if (id === 'jiwon') sceneId = 'jiwon_start';
-                                       else if (id === 'seonwoo') sceneId = 'seonwoo_talk';
-                                       else if (id === 'jaekyung') sceneId = 'jaekyung_talk';
-                                       else if (id === 'yeondeok') sceneId = 'yeondeok_talk';
-                                       
-                                       if (sceneId) {
-                                           setChatInfo({ name: selectedProfile.name, status: selectedProfile.status });
-                                           setSelectedProfile(null); 
-                                           setCurrentView('chat');
-                                           setMessages([]);
-                                           setCurrentSequence([]);
-                                           setStepIndex(0);
-                                           setTimeout(() => { loadScene(sceneId); }, 500);
-                                       }
-                                   }
-                                }}
-                                className={`flex flex-col items-center gap-2 group 
-                                  ${['jaehyun', 'eunjae', 'niko', 'jiwon', 'seonwoo', 'jaekyung', 'yeondeok'].includes(selectedProfile.id) 
-                                    ? 'cursor-pointer' 
-                                    : 'cursor-not-allowed opacity-40'}`}
-                              >
-                                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
-                                  <MessageCircle size={26} 
-                                    fill={['jaehyun', 'eunjae', 'niko', 'jiwon', 'seonwoo', 'jaekyung', 'yeondeok'].includes(selectedProfile.id) ? "currentColor" : "none"} 
-                                    strokeWidth={1.5} 
-                                  />
-                                </div>
-                                <span className="text-[11px] font-medium text-white/90">1:1 채팅</span>
-                              </button>
-                            )}
-                             {(selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun') && (
-                               <button onClick={() => setIsEditingProfile(true)} className="flex flex-col items-center gap-2 group cursor-pointer">
-                                 <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
-                                   {selectedProfile.id === 'mark' ? <Pencil size={26} strokeWidth={1.5} /> : <User size={26} strokeWidth={1.5} />}
-                                 </div>
-                                 <span className="text-[11px] font-medium text-white/90">
-                                   {selectedProfile.id === 'mark' ? '프로필 편집' : '프로필 선택'}
-                                 </span>
-                               </button>
-                             )}
-                          </div>
-                        )}
-                     </div>
+                        </div>
+                    </>
                  )}
             </div>
         )}
