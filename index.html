@@ -1089,30 +1089,32 @@ return (
 
         {/* 프로필 모달 */}
         {selectedProfile && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center animate-fade-in">
+            <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in">
                  
-                 {/* [1] 배경 레이어 (기본 배경색) */}
-                 <div className={`absolute inset-0 transition-colors duration-700 
-                   ${selectedProfile.id === 'mark' ? 'bg-[#85C1E9]' : 
-                     selectedProfile.id === 'jaehyun' ? 'bg-[#D7BDE2]' : 
-                     'bg-gray-300' 
-                   }`}>
-                   
-                   {PROFILE_BG_IMAGES[selectedProfile.id] && (
-                     <div className="absolute inset-0 bg-cover bg-center animate-fade-in" 
-                          style={{ backgroundImage: `url(${PROFILE_BG_IMAGES[selectedProfile.id]})` }}>
-                     </div>
-                   )}
+                 {/* [1] 배경 레이어 (기본 프로필용) */}
+                 {!isDetailView && (
+                     <div className={`absolute inset-0 transition-colors duration-700 
+                       ${selectedProfile.id === 'mark' ? 'bg-[#85C1E9]' : 
+                         selectedProfile.id === 'jaehyun' ? 'bg-[#D7BDE2]' : 
+                         'bg-gray-300' 
+                       }`}>
+                       
+                       {PROFILE_BG_IMAGES[selectedProfile.id] && (
+                         <div className="absolute inset-0 bg-cover bg-center animate-fade-in" 
+                              style={{ backgroundImage: `url(${PROFILE_BG_IMAGES[selectedProfile.id]})` }}>
+                         </div>
+                       )}
 
-                   <div className="absolute inset-0 bg-black/10"></div>
-                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10"></div>
-                 </div>
+                       <div className="absolute inset-0 bg-black/10"></div>
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10"></div>
+                     </div>
+                 )}
 
                  {/* 
-                    [수정됨 1] 상단바와 버튼을 스크롤 영역 밖(z-50)으로 빼서 고정시킴 
+                    [수정됨 1] 상단바와 버튼을 'fixed'로 변경하여 스크롤과 무관하게 화면에 고정 
                  */}
-                 {/* 상단바 */}
-                 <div className="absolute top-0 w-full z-50 pt-3 pb-2 px-6 flex justify-between items-center text-white/90 text-sm font-bold select-none pointer-events-none">
+                 {/* 상단바 (고정) */}
+                 <div className="fixed top-0 w-full z-[70] pt-3 pb-2 px-6 flex justify-between items-center text-white/90 text-sm font-bold select-none pointer-events-none mix-blend-plus-lighter">
                     <span>{timeStr}</span>
                     <div className="flex space-x-1.5">
                         <Signal size={16} fill="currentColor" />
@@ -1121,8 +1123,8 @@ return (
                     </div>
                  </div>
 
-                 {/* 상단 버튼 그룹 */}
-                 <div className="absolute top-12 right-4 flex gap-1.5 z-50">
+                 {/* 상단 버튼 그룹 (고정) */}
+                 <div className="fixed top-12 right-4 flex gap-1.5 z-[70]">
                     {/* 상세 정보 버튼 */}
                     {CHARACTER_DETAILS[selectedProfile.id] && (
                         <button 
@@ -1131,7 +1133,7 @@ return (
                                 setIsDetailView(!isDetailView); 
                                 setShowRadioScript(false); 
                             }} 
-                            className="p-2 text-white/80 hover:text-white transition"
+                            className={`p-2 transition rounded-full ${isDetailView ? 'text-gray-500 bg-white/80 hover:bg-white shadow-sm' : 'text-white/80 hover:text-white bg-black/20 hover:bg-black/30'}`}
                         >
                             <Info size={28} dropShadow="0 2px 4px rgba(0,0,0,0.3)" />
                         </button>
@@ -1144,59 +1146,58 @@ return (
                             setIsDetailView(false);
                             setShowRadioScript(false);
                         }} 
-                        className="p-2 text-white/80 hover:text-white transition"
+                        className={`p-2 transition rounded-full ${isDetailView ? 'text-gray-500 bg-white/80 hover:bg-white shadow-sm' : 'text-white/80 hover:text-white'}`}
                     >
                         <X size={28} dropShadow="0 2px 4px rgba(0,0,0,0.3)" />
                     </button>
                  </div>
 
-                 {/* [2] 상세 정보 뷰 */}
-                 {isDetailView && CHARACTER_DETAILS[selectedProfile.id] && (
-                    <div className="absolute inset-0 z-40 animate-fade-in flex flex-col overflow-y-auto custom-scrollbar bg-transparent">
+                 {/* [2] 상세 정보 뷰 (전체 화면 스크롤) */}
+                 {isDetailView && CHARACTER_DETAILS[selectedProfile.id] ? (
+                    <div className="fixed inset-0 z-[60] bg-white overflow-y-auto custom-scrollbar animate-fade-in">
                         
-                        {/* 헤더 이미지 (스크롤 시 배경처럼 보이게 처리) */}
-                        {CHARACTER_DETAILS[selectedProfile.id].headerImage ? (
-                            <div className="relative w-full shrink-0">
+                        {/* 헤더 이미지 영역 */}
+                        <div className="relative w-full">
+                            {/* [수정됨 2] 이미지 높이 제한 제거 (h-auto), 원본 비율 유지 */}
+                            {CHARACTER_DETAILS[selectedProfile.id].headerImage ? (
                                 <img 
                                     src={CHARACTER_DETAILS[selectedProfile.id].headerImage} 
                                     alt="header" 
-                                    className="w-full h-auto object-cover" 
+                                    className="w-full h-auto block" 
                                 />
-                                {/* [수정됨 3] 이미지 하단 그라데이션을 길게 빼서 경계선 제거 */}
-                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent via-black/10 to-white/90"></div>
-                                <div className="absolute bottom-0 w-full h-32 bg-gradient-to-t from-white via-white/80 to-transparent"></div>
-                            </div>
-                        ) : (
-                            <div className="h-32 shrink-0 bg-transparent"></div>
-                        )}
+                            ) : (
+                                <div className={`w-full h-96 ${selectedProfile.id === 'mark' ? 'bg-green-100' : 'bg-sky-100'}`}></div>
+                            )}
 
-                        {/* 컨텐츠 영역 */}
-                        {/* [수정됨 2] -mt-32로 텍스트를 이미지 위로 더 많이 끌어올림 */}
-                        <div className={`px-6 pb-10 flex-1 bg-white min-h-screen ${CHARACTER_DETAILS[selectedProfile.id].headerImage ? '-mt-32 relative z-10 bg-gradient-to-b from-transparent via-white to-white' : 'bg-white/90 backdrop-blur-xl pt-10'}`}>
+                            {/* 텍스트 가독성을 위한 하단 그라데이션 (어두움) */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90"></div>
                             
-                            {/* 직업 & 이름 */}
-                            <div className="text-left mb-8 pl-1">
-                                <span className={`text-xs font-bold tracking-widest uppercase mb-1 block drop-shadow-sm ${CHARACTER_DETAILS[selectedProfile.id].headerImage ? 'text-white/90' : CHARACTER_DETAILS[selectedProfile.id].roleColor}`}>
+                            {/* [수정됨 3] 자연스러운 트랜지션 (이미지 끝부분을 흰색으로 블렌딩) */}
+                            <div className="absolute bottom-0 w-full h-24 bg-gradient-to-t from-white via-white/60 to-transparent"></div>
+
+                            {/* [수정됨 2] 직업 & 이름 텍스트를 사진 위에 배치 */}
+                            <div className="absolute bottom-6 left-0 w-full px-6 pb-4 z-10">
+                                <span className={`text-sm font-bold tracking-widest uppercase mb-1 block drop-shadow-md ${CHARACTER_DETAILS[selectedProfile.id].headerImage ? 'text-white/90' : CHARACTER_DETAILS[selectedProfile.id].roleColor}`}>
                                     {CHARACTER_DETAILS[selectedProfile.id].role}
                                 </span>
-                                <h2 className={`text-5xl font-black tracking-tighter drop-shadow-md ${CHARACTER_DETAILS[selectedProfile.id].headerImage ? 'text-white' : 'text-gray-800'}`}>
+                                <h2 className={`text-5xl font-black tracking-tighter drop-shadow-lg ${CHARACTER_DETAILS[selectedProfile.id].headerImage ? 'text-white' : 'text-gray-800'}`}>
                                     {CHARACTER_DETAILS[selectedProfile.id].fullName}
                                 </h2>
                             </div>
+                        </div>
 
+                        {/* 본문 컨텐츠 영역 */}
+                        <div className="px-6 pb-20 bg-white relative z-20">
                             {/* 소개글 */}
                             <p className="text-[15px] text-gray-700 leading-loose text-justify mb-12 break-keep font-medium pt-4">
                                 {CHARACTER_DETAILS[selectedProfile.id].desc}
                             </p>
 
-                            {/* [수정됨 4] 마크: 아이팟 클래식 스타일 앨범 정보 */}
+                            {/* 마크: 아이팟 클래식 스타일 앨범 정보 */}
                             {selectedProfile.id === 'mark' && CHARACTER_DETAILS.mark.album && (
                                 <div className="mb-12 animate-fade-in-up flex justify-center">
-                                    {/* 아이팟 바디 */}
                                     <div className="w-64 bg-gray-200 rounded-[2rem] p-4 shadow-2xl border-4 border-gray-300 relative">
-                                        {/* 화면 */}
                                         <div className="bg-white h-40 rounded-lg mb-6 border-2 border-gray-400 overflow-hidden flex flex-col shadow-inner">
-                                            {/* 상단 바 */}
                                             <div className="h-5 bg-gradient-to-b from-gray-100 to-gray-300 border-b border-gray-400 flex items-center justify-between px-2">
                                                 <span className="text-[8px] font-bold text-gray-600">Now Playing</span>
                                                 <div className="flex gap-0.5">
@@ -1204,7 +1205,6 @@ return (
                                                     <div className="w-0.5 h-1 bg-gray-400"></div>
                                                 </div>
                                             </div>
-                                            {/* 앨범 내용 */}
                                             <div className="flex-1 flex items-center p-3 gap-3">
                                                 <img src={CHARACTER_DETAILS.mark.album.cover} alt="Album" className="w-20 h-20 shadow-md object-cover" />
                                                 <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -1214,15 +1214,11 @@ return (
                                                 </div>
                                             </div>
                                         </div>
-
-                                        {/* 클릭 휠 */}
                                         <div className="w-40 h-40 rounded-full bg-white border border-gray-300 mx-auto relative flex items-center justify-center shadow-sm">
                                             <div className="absolute top-3 text-[10px] font-bold text-gray-400">MENU</div>
                                             <div className="absolute bottom-3 text-[10px] font-bold text-gray-400"><Play size={10} fill="currentColor"/></div>
                                             <div className="absolute left-3 text-[10px] font-bold text-gray-400"><ChevronLeft size={10} /></div>
                                             <div className="absolute right-3 text-[10px] font-bold text-gray-400"><ChevronLeft size={10} className="rotate-180" /></div>
-                                            
-                                            {/* 센터 버튼 */}
                                             <div className="w-14 h-14 rounded-full bg-gray-200 shadow-inner"></div>
                                         </div>
                                     </div>
@@ -1232,7 +1228,7 @@ return (
                             {/* 재현: 필모그래피 & 라디오 */}
                             {selectedProfile.id === 'jaehyun' && (
                                 <div className="space-y-12 animate-fade-in-up pb-10">
-                                    {/* 필모그래피 (직사각형 그리드) */}
+                                    {/* 필모그래피 */}
                                     <div>
                                         <div className="flex items-center gap-2 mb-4">
                                             <div className="w-1 h-4 bg-gray-800"></div>
@@ -1240,7 +1236,6 @@ return (
                                         </div>
                                         <div className="text-xl font-black text-gray-900 mb-4 tracking-tight">익명의 편지가 이국에서</div>
                                         
-                                        {/* 직사각형 그리드 (3열 2행) */}
                                         <div className="grid grid-cols-3 gap-1.5 mb-6">
                                             {CHARACTER_DETAILS.jaehyun.hexImages.map((img, i) => (
                                                 <div key={i} className="aspect-[3/4] relative overflow-hidden shadow-sm transition-transform hover:scale-105 bg-gray-100">
@@ -1294,10 +1289,8 @@ return (
                             )}
                         </div>
                     </div>
-                 )}
-
-                 {/* [3] 기본 프로필 컨텐츠 (상세 정보가 아닐 때만 보임) */}
-                 {!isDetailView && (
+                 ) : (
+                     /* [3] 기본 프로필 컨텐츠 (상세 정보가 아닐 때만 보임) */
                      <div className="absolute bottom-0 w-full flex flex-col items-center pb-8 z-10 px-6">
                         
                         {/* 프로필 사진 */}
