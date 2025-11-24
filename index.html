@@ -730,19 +730,20 @@ return (
         )}
 
         {/* 인트로 화면 */}
+        {/* 인트로 화면 */}
         {currentView === 'intro' && (
             <div className="flex flex-col h-full bg-white p-8 items-center justify-center animate-fade-in relative overflow-hidden">
               <button onClick={handleBackToFriends} className="absolute top-6 left-6 p-2 rounded-full hover:bg-gray-100 text-gray-400 transition"><ChevronLeft size={24} /></button>
               
-              {/* 아이콘 영역: 테두리 없애고 더 심플하게 */}
-              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-8 text-gray-400">
-                <BookOpen size={28} />
+              {/* 아이콘 */}
+              <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mb-8 text-gray-400 border border-gray-100">
+                <BookOpen size={24} />
               </div>
               
-              <h2 className="text-xl font-bold text-gray-800 mb-10 tracking-tight">안내사항</h2>
+              <h2 className="text-xl font-bold text-gray-800 mb-8 tracking-tight">안내사항</h2>
               
-              {/* 텍스트 영역 */}
-              <div className="text-[14px] text-gray-600 text-center space-y-8 leading-loose break-keep tracking-tight mb-14 w-full max-w-[280px]">
+              {/* 메인 텍스트 */}
+              <div className="text-[14px] text-gray-600 text-center space-y-6 leading-loose break-keep tracking-tight mb-12 w-full max-w-[280px]">
                 <p>
                   본 시뮬레이션은 <span className="font-bold text-gray-800">&lt;당신 집에서 잘 수 있나요?&gt;</span><br/>
                   3화를 기준으로 만들어졌습니다.
@@ -752,32 +753,36 @@ return (
                   전체적인 맥락을 이해하는 데<br className="hidden sm:block"/> 
                   어려움이 있을 수 있습니다.
                 </p>
-                {/* [수정] 회색으로 변경, 아이콘 제거하여 깔끔하게 */}
-                <p className="text-gray-400 text-xs font-medium">
-                  모바일 환경에선 무음을 해제하셔야<br/>
-                  효과음이 재생됩니다.
-                </p>
               </div>
 
-              {/* 확인 버튼: 배경에 은은한 그라데이션 적용 */}
-              <button 
-                onClick={() => setCurrentView('chapterSelect')} 
-                className="w-full max-w-[240px] py-4 rounded-2xl font-bold text-gray-700 shadow-sm hover:shadow-md transition-all duration-500 transform hover:-translate-y-0.5 active:scale-95 bg-gradient-to-r from-sky-100 via-green-100 to-sky-100 animate-gradient-xy text-sm tracking-widest"
-              >
-                (｡◠‿◠｡) ෆ ( ͡•. •. ͡ )
-              </button>
+              {/* 하단 액션 영역 */}
+              <div className="w-full max-w-[260px] flex flex-col items-center">
+                
+                {/* 무음 해제 안내 (회색으로 변경) */}
+                <p className="text-gray-400 text-[11px] mb-3 text-center font-medium">
+                  📢 모바일 환경에선 무음을 해제하셔야 효과음이 재생됩니다.
+                </p>
 
-              {/* 링크 영역 */}
-              <div className="mt-8 text-center">
-                <span className="text-[11px] text-gray-400 block mb-1.5">아직 읽지 못했다면?</span>
-                <a 
-                  href="https://posty.pe/h8qb64" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-[11px] text-gray-500 border-b border-gray-300 pb-0.5 hover:text-gray-800 hover:border-gray-600 transition-all"
+                {/* 확인 버튼: 흰색 배경 + 은은한 파스텔 보라빛 그림자 */}
+                <button 
+                  onClick={() => setCurrentView('chapterSelect')} 
+                  className="w-full py-4 rounded-2xl font-bold text-gray-600 bg-white border border-gray-100 shadow-[0_10px_30px_-10px_rgba(167,139,250,0.3)] hover:shadow-[0_10px_30px_-5px_rgba(167,139,250,0.5)] hover:border-indigo-100 hover:-translate-y-0.5 transition-all duration-300 active:scale-95 text-sm tracking-widest mb-6"
                 >
-                  최신 에피소드 확인하러 가기
-                </a>
+                  (｡◠‿◠｡) ෆ ( ͡•. •. ͡ )
+                </button>
+
+                {/* 링크 */}
+                <div className="text-center">
+                  <span className="text-[11px] text-gray-400 block mb-1">아직 읽지 못했다면?</span>
+                  <a 
+                    href="https://posty.pe/h8qb64" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-[11px] text-gray-500 border-b border-gray-300 pb-0.5 hover:text-gray-800 hover:border-gray-600 transition-all"
+                  >
+                    최신 에피소드 확인하러 가기
+                  </a>
+                </div>
               </div>
             </div>
         )}
