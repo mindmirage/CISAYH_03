@@ -1317,7 +1317,7 @@ return (
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="absolute bottom-0 w-full z-20 p-4 pb-8 ease-in-out sm:rounded-b-[2.5rem] transition-all duration-500 bg-white/80 backdrop-blur-md border-t border-white/50">
+            <div className="absolute bottom-0 w-full z-20 p-4 pb-8 ease-in-out rounded-t-[2rem] sm:rounded-b-[2.5rem] transition-all duration-500 bg-white/80 backdrop-blur-md border-t border-white/50">
               {(!choices.length || isChoiceMinimized || isChoiceFading) && (
                 <div 
                   onClick={() => { if(choices.length > 0 && !isChoiceFading) setIsChoiceMinimized(false); }}
