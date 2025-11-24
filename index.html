@@ -952,29 +952,29 @@ return (
                       <div className="flex w-full gap-10 justify-center pb-4">
                          {/* 1:1 채팅 버튼 */}
                          {selectedProfile.id !== 'mark' && (
-                           <button 
-                             // 재현 -> 인트로, 은재 -> eunjae_start 시나리오로 연결
-                             onClick={() => {
-                                if (selectedProfile.id === 'jaehyun') handleStartIntro();
-                                else if (selectedProfile.id === 'eunjae') {
-                                    // [추가] 은재 채팅 시작 로직
-                                    playSound('narrative');
-                                    setCurrentView('chat');
-                                    setMessages([]);
-                                    setCurrentSequence([]);
-                                    setStepIndex(0);
-                                    setTimeout(() => { loadScene('eunjae_start'); }, 500);
-                                }
-                             }}
-                             // 커서 및 투명도 조건 변경
-                             className={`flex flex-col items-center gap-2 group ${(selectedProfile.id === 'jaehyun' || selectedProfile.id === 'eunjae') ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}
-                           >
-                             <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
-                               <MessageCircle size={26} fill={(selectedProfile.id === 'jaehyun' || selectedProfile.id === 'eunjae') ? "currentColor" : "none"} strokeWidth={1.5} />
-                             </div>
-                             <span className="text-[11px] font-medium text-white/90">1:1 채팅</span>
-                           </button>
-                         )}
+  <button 
+    onClick={() => {
+       if (selectedProfile.id === 'jaehyun') {
+           handleStartIntro(); // 재현이는 이 함수 안에 모달 닫기가 포함되어 있음
+       } else if (selectedProfile.id === 'eunjae') {
+           // [수정] 은재 채팅 시작 로직
+           setSelectedProfile(null); // <--- ★ 이 줄을 꼭 추가해야 모달이 닫힙니다! ★
+           playSound('narrative');
+           setCurrentView('chat');
+           setMessages([]);
+           setCurrentSequence([]);
+           setStepIndex(0);
+           setTimeout(() => { loadScene('eunjae_start'); }, 500);
+       }
+    }}
+    className={`flex flex-col items-center gap-2 group ${(selectedProfile.id === 'jaehyun' || selectedProfile.id === 'eunjae') ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}
+  >
+    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
+      <MessageCircle size={26} fill={(selectedProfile.id === 'jaehyun' || selectedProfile.id === 'eunjae') ? "currentColor" : "none"} strokeWidth={1.5} />
+    </div>
+    <span className="text-[11px] font-medium text-white/90">1:1 채팅</span>
+  </button>
+)}
                          {/* 프로필 편집/선택 버튼 */}
                          {(selectedProfile.id === 'mark' || selectedProfile.id === 'jaehyun') && (
                            <button onClick={() => setIsEditingProfile(true)} className="flex flex-col items-center gap-2 group cursor-pointer">
