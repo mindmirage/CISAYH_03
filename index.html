@@ -42,15 +42,15 @@ html, body {
   100% { transform: translateY(0px) rotate(0deg); }
 }
 .animate-float { animation: float 6s ease-in-out infinite; 
-@keyframes border-flow {
+@keyframes gradient-xy {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
-.animate-border-flow {
+.animate-gradient-xy {
     background-size: 200% 200%;
-    animation: border-flow 3s ease infinite;
-}                
+    animation: gradient-xy 6s ease infinite; /* 속도를 6s로 늦춰 더 은은하게 */
+}
 </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden">
@@ -734,15 +734,15 @@ return (
             <div className="flex flex-col h-full bg-white p-8 items-center justify-center animate-fade-in relative overflow-hidden">
               <button onClick={handleBackToFriends} className="absolute top-6 left-6 p-2 rounded-full hover:bg-gray-100 text-gray-400 transition"><ChevronLeft size={24} /></button>
               
-              {/* 아이콘 영역 */}
-              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-6 text-gray-400 shadow-sm border border-gray-100">
+              {/* 아이콘 영역: 테두리 없애고 더 심플하게 */}
+              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-8 text-gray-400">
                 <BookOpen size={28} />
               </div>
               
-              <h2 className="text-xl font-bold text-gray-800 mb-8 tracking-tight">안내사항</h2>
+              <h2 className="text-xl font-bold text-gray-800 mb-10 tracking-tight">안내사항</h2>
               
               {/* 텍스트 영역 */}
-              <div className="text-[14px] text-gray-600 text-center space-y-6 leading-loose break-keep tracking-tight mb-12 w-full max-w-[280px]">
+              <div className="text-[14px] text-gray-600 text-center space-y-8 leading-loose break-keep tracking-tight mb-14 w-full max-w-[280px]">
                 <p>
                   본 시뮬레이션은 <span className="font-bold text-gray-800">&lt;당신 집에서 잘 수 있나요?&gt;</span><br/>
                   3화를 기준으로 만들어졌습니다.
@@ -752,31 +752,29 @@ return (
                   전체적인 맥락을 이해하는 데<br className="hidden sm:block"/> 
                   어려움이 있을 수 있습니다.
                 </p>
-                <p className="text-rose-400 font-medium text-xs">
-                  📢 모바일 환경에선 무음을 해제하셔야<br/>
+                {/* [수정] 회색으로 변경, 아이콘 제거하여 깔끔하게 */}
+                <p className="text-gray-400 text-xs font-medium">
+                  모바일 환경에선 무음을 해제하셔야<br/>
                   효과음이 재생됩니다.
                 </p>
               </div>
 
-              {/* 확인 버튼 (재현 하늘 + 마크 연두 움직이는 테두리) */}
-              {/* 바깥 div: 그라데이션 테두리 역할 (p-[2px]가 테두리 두께) */}
-              <div className="p-[2px] rounded-full bg-gradient-to-r from-sky-200 via-green-200 to-sky-200 animate-border-flow shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95">
-                <button 
-                  onClick={() => setCurrentView('chapterSelect')} 
-                  className="px-12 py-3.5 rounded-full font-medium text-gray-500 bg-white hover:bg-gray-50 transition-colors duration-300 text-sm tracking-wider w-full h-full"
-                >
-                  (｡◠‿◠｡) ෆ ( ͡•. •. ͡ )
-                </button>
-              </div>
+              {/* 확인 버튼: 배경에 은은한 그라데이션 적용 */}
+              <button 
+                onClick={() => setCurrentView('chapterSelect')} 
+                className="w-full max-w-[240px] py-4 rounded-2xl font-bold text-gray-700 shadow-sm hover:shadow-md transition-all duration-500 transform hover:-translate-y-0.5 active:scale-95 bg-gradient-to-r from-sky-100 via-green-100 to-sky-100 animate-gradient-xy text-sm tracking-widest"
+              >
+                (｡◠‿◠｡) ෆ ( ͡•. •. ͡ )
+              </button>
 
               {/* 링크 영역 */}
               <div className="mt-8 text-center">
-                <span className="text-[11px] text-gray-400 block mb-1">아직 읽지 못했다면?</span>
+                <span className="text-[11px] text-gray-400 block mb-1.5">아직 읽지 못했다면?</span>
                 <a 
                   href="https://posty.pe/h8qb64" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-[11px] text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-gray-800 transition-colors"
+                  className="text-[11px] text-gray-500 border-b border-gray-300 pb-0.5 hover:text-gray-800 hover:border-gray-600 transition-all"
                 >
                   최신 에피소드 확인하러 가기
                 </a>
