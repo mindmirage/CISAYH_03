@@ -278,18 +278,19 @@ mission_hug_1: [{ type: 'narrative', content: "마크가 더는 볼 것도 없�
     { type: 'text', sender: '은재', content: "아까 니코랑 너랑 설거지할 때 말이야." },
     { type: 'text', sender: '은재', content: "재현이가 뒤에서 너 어떻게 쳐다봤는지 알아?" },
     { type: 'choice', options: [
-        { text: "어떻게 쳐다봤는데요?", nextId: 'eunjae_secret' },
-        { text: "아, 궁금하게 뜸 들이지 마요! 어떻게 봤는데요?", nextId: 'eunjae_secret' },
+        { text: "저 안 보는 것 같던데요?", nextId: 'eunjae_secret' },
+        { text: "어떻게 봤는데요?", nextId: 'eunjae_secret' },
         { text: "음... 그냥 쳐다본 거 아니에요? 별 의미 없을걸요?", nextId: 'eunjae_secret' }
     ]}
   ],
   eunjae_secret: [
     { type: 'text', sender: '은재', content: "아, 반응 보니까 괜히 알려 주면 안 될 것 같은데?" },
     { type: 'text', sender: '은재', content: "비밀로 해야겠다." },
-    { type: 'end' },
-  ]
-};
-   niko_start: [
+    { type: 'end' }
+  ], // <--- [중요] 콤마 추가
+  
+  // [추가] 니코 데이터
+  niko_start: [
     { type: 'text', sender: '니코', content: "선배님...!" },
     { type: 'text', sender: '니코', content: "저 지금 일기장에 멤버들 캐릭터 그리고 있거든요?" },
     { type: 'text', sender: '니코', content: "근데 재현 선배님 눈을 어떻게 그려야 할지 모르겠어요..." },
@@ -307,6 +308,7 @@ mission_hug_1: [{ type: 'narrative', content: "마크가 더는 볼 것도 없�
     { type: 'text', sender: '니코', content: "완성되면 제일 먼저 보여 드릴게요!" },
     { type: 'end' }
   ]
+}; // <--- 여기서 닫아야 합니다.
 const NIGHT_MESSAGES = [
   {
     id: 1,
