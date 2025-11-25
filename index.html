@@ -869,7 +869,7 @@ function App() {
 
       playSound('click');
 
-      // [CASE 1] Now Playing (Level 0) -> 트랙 변경
+      // [CASE 1] Now Playing (Level 0) -> 트랙 변경 (기존 유지)
       if (menuLevel === 0) {
           const currentAlbum = getAlbumData();
           const tracksLength = currentAlbum.tracks.length;
@@ -896,7 +896,7 @@ function App() {
           }, 400); 
       }
       
-      // [CASE 2] Album List (Level 2) -> 앨범 변경
+      // ▼▼▼ [CASE 2] 앨범 커버 플로우 (수정된 부분) ▼▼▼
       else if (menuLevel === 2) {
           const albumCount = MARK_ALBUMS_DATA.length;
           const currentIndex = MARK_ALBUMS_DATA.findIndex(a => a.id === currentAlbumId);
@@ -909,9 +909,12 @@ function App() {
           }
 
           const newAlbumId = MARK_ALBUMS_DATA[newIndex].id;
-          setCurrentAlbumId(newAlbumId);
 
-          // 앨범 카드로 스크롤 이동
+          // [핵심 수정] 
+          // setCurrentAlbumId(newAlbumId);  <-- 이 줄을 삭제했습니다!
+          // 상태를 강제로 바꾸지 않고 스크롤만 이동시키면, 
+          // onScroll 이벤트가 앨범이 가운데로 올 때 자연스럽게 상태를 바꿔줍니다.
+
           const element = document.getElementById(`album-${newAlbumId}`);
           if (element) {
               element.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
