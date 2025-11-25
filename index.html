@@ -1479,6 +1479,7 @@ return (
             {/* [수정 2] 화면: bg-black/40 -> bg-black/60 (본체가 밝아졌으므로 화면은 더 어둡게 대비) */}
             <div className="bg-black/60 h-40 rounded-lg mb-6 border border-white/10 overflow-hidden flex flex-col shadow-inner relative">
                 
+                JavaScript
                 {/* 데이터 헬퍼 호출 */}
                 {(() => {
                     const currentAlbum = getAlbumData();
@@ -1508,18 +1509,18 @@ return (
                         }
                     };
 
-                    // Level 2: 앨범 목록 (Cover Flow) - [간격 미세 조정 완료]
+                    // Level 2: 앨범 목록 (Cover Flow) - [잘림 해결 & 텍스트 하단 이동]
                     if (menuLevel === 2) {
                         return (
                             <div className="absolute inset-0 flex flex-col z-10 animate-fade-in bg-black/20 backdrop-blur-sm rounded-2xl overflow-hidden">
-                                {/* [수정] pb-1 mb-1 추가: Albums 글씨와 앨범 사이 간격 확보 */}
-                                <div className="text-[10px] font-bold text-white/60 text-center pt-4 pb-1 mb-1 shrink-0">
+                                {/* [수정] mb-2 추가: 앨범을 아래로 살짝 밀어냄 */}
+                                <div className="text-[10px] font-bold text-white/60 text-center pt-4 pb-1 mb-2 shrink-0">
                                     Albums
                                 </div>
                                 
-                                {/* [수정] py-2 -> py-3: 앨범 위아래 여백 미세 조정 */}
+                                {/* [수정] py-8: 앨범 위아래 공간 충분히 확보 (잘림 방지) */}
                                 <div 
-                                    className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-6 px-[38%] hide-scrollbar py-3"
+                                    className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-6 px-[38%] hide-scrollbar py-8"
                                     onScroll={handleAlbumScroll}
                                 >
                                     {MARK_ALBUMS_DATA.map((album) => (
@@ -1532,8 +1533,8 @@ return (
                                             id={`album-${album.id}`}
                                             className={`flex-shrink-0 relative transition-all duration-500 ease-out snap-center focus:outline-none ${
                                                 album.id === currentAlbumId 
-                                                    ? 'w-20 h-20 scale-110 z-20 opacity-100' 
-                                                    : 'w-16 h-16 scale-90 z-0 opacity-50 grayscale-[50%]' 
+                                                    ? 'w-20 h-20 scale-110 z-20 opacity-100' // 선택됨
+                                                    : 'w-16 h-16 scale-90 z-0 opacity-50 grayscale-[50%]' // 선택 안됨
                                             }`}
                                         >
                                             <img 
@@ -1552,12 +1553,12 @@ return (
                                     ))}
                                 </div>
                                 
-                                {/* [수정] pt-2 추가: 앨범 사진과 노래 제목 사이 간격 확보 */}
-                                <div className="shrink-0 pb-4 pt-2 text-center px-4 h-14 flex flex-col justify-start">
+                                {/* [수정] h-24, pt-4: 텍스트 영역을 키우고 위쪽 여백을 줘서 글씨를 바닥으로 내림 */}
+                                <div className="shrink-0 pb-4 pt-4 text-center px-4 h-24 flex flex-col justify-start">
                                     <div className="text-[10px] font-bold text-white tracking-wide drop-shadow-md animate-fade-in transition-all duration-300 line-clamp-1 leading-tight">
                                         {currentAlbum.title}
                                     </div>
-                                    <div className="text-[8px] text-white/60 mt-0.5 truncate">
+                                    <div className="text-[8px] text-white/60 mt-1 truncate">
                                         {currentAlbum.artist}
                                     </div>
                                 </div>
@@ -1600,6 +1601,7 @@ return (
                     // Level 0: Now Playing
                     return (
                         <div className={`h-full w-full absolute inset-0 flex flex-col ${albumAnimation}`}>
+                            {/* 헤더 */}
                             <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3 shrink-0">
                                 <span className="text-[9px] font-bold text-white/50">Now Playing</span>
                                 <div className="flex gap-0.5">
