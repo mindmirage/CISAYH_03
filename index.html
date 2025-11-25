@@ -1484,7 +1484,7 @@ return (
                     const currentAlbum = getAlbumData();
                     const currentTrack = getTrackData(currentAlbum);
 
-                    // [추가] 스크롤 시 중앙에 있는 앨범 감지하여 제목 변경하는 함수
+                    // [기능] 스크롤 시 중앙에 있는 앨범을 감지하여 제목을 변경하는 함수
                     const handleAlbumScroll = (e) => {
                         const container = e.target;
                         const center = container.scrollLeft + container.clientWidth / 2;
@@ -1493,6 +1493,7 @@ return (
                         let closestId = null;
                         let minDiff = Infinity;
 
+                        // 현재 화면 중앙과 가장 가까운 앨범 찾기
                         Array.from(children).forEach((child, index) => {
                             const childCenter = child.offsetLeft + child.offsetWidth / 2;
                             const diff = Math.abs(center - childCenter);
@@ -1503,12 +1504,13 @@ return (
                             }
                         });
 
+                        // 찾은 앨범이 현재 앨범과 다르면 상태 업데이트 (제목 변경됨)
                         if (closestId && closestId !== currentAlbumId) {
                             setCurrentAlbumId(closestId);
                         }
                     };
 
-                    // Level 2: 앨범 목록 (Cover Flow) - [잘림 방지 적용됨: py-20]
+                    // Level 2: 앨범 목록 (Cover Flow) - [앨범 잘림 방지: py-20 적용]
                     if (menuLevel === 2) {
                         return (
                             <div className="absolute inset-0 flex flex-col z-10 animate-fade-in bg-black/20 backdrop-blur-sm rounded-2xl overflow-hidden">
@@ -1516,6 +1518,7 @@ return (
                                     Albums
                                 </div>
                                 
+                                {/* 스크롤 영역: 위아래 여백(py-20)을 충분히 주어 앨범이 잘리지 않게 함 */}
                                 <div 
                                     className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-8 px-[38%] hide-scrollbar py-20"
                                     onScroll={handleAlbumScroll}
@@ -1525,13 +1528,14 @@ return (
                                             key={album.id}
                                             onClick={() => {
                                                 selectAlbumFromMenu(album.id);
+                                                // 클릭 시 해당 앨범으로 부드럽게 스크롤 이동
                                                 document.getElementById(`album-${album.id}`).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                                             }}
                                             id={`album-${album.id}`}
                                             className={`flex-shrink-0 relative transition-all duration-500 ease-out snap-center focus:outline-none ${
                                                 album.id === currentAlbumId 
-                                                    ? 'w-28 h-28 scale-110 z-20 opacity-100' 
-                                                    : 'w-20 h-20 scale-90 z-0 opacity-40 grayscale-[50%]' 
+                                                    ? 'w-28 h-28 scale-110 z-20 opacity-100' // 선택됨
+                                                    : 'w-20 h-20 scale-90 z-0 opacity-40 grayscale-[50%]' // 선택 안됨
                                             }`}
                                         >
                                             <img 
@@ -1542,6 +1546,7 @@ return (
                                                 }`}
                                                 onError={(e) => { e.target.src='https://via.placeholder.com/100x100/333333/FFFFFF?text=Album'; }}
                                             />
+                                            {/* 반사 효과 */}
                                             {album.id === currentAlbumId && (
                                                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
                                             )}
@@ -1561,7 +1566,7 @@ return (
                         );
                     }
                     
-                    // Level 1: 트랙 리스트
+                    // Level 1: 트랙 리스트 (기존 유지)
                     if (menuLevel === 1) {
                         return (
                             <div className="absolute inset-0 p-3 flex flex-col z-10 animate-fade-in">
@@ -1593,9 +1598,10 @@ return (
                         );
                     }
                     
-                    // Level 0: Now Playing
+                    // Level 0: Now Playing - [12자 이상 흐르기 적용]
                     return (
                         <div className={`h-full w-full absolute inset-0 flex flex-col ${albumAnimation}`}>
+                            {/* 헤더 */}
                             <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3 shrink-0">
                                 <span className="text-[9px] font-bold text-white/50">Now Playing</span>
                                 <div className="flex gap-0.5">
@@ -1607,7 +1613,78 @@ return (
                             <div className="flex-1 flex flex-row items-center px-5 gap-4 overflow-hidden">
                                 <div className="relative shrink-0">
                                     <img 
-                                        src={currentAlbum.
+                                        src={currentAlbum.cover} 
+                                        alt="Album" 
+                                        className="w-20 h-20 aspect-square shadow-2xl object-cover rounded-xl" 
+                                        onError={(e) => { e.target.src='https://via.placeholder.com/80x80/333333/FFFFFF?text=A'; }}
+                                    />
+                                </div>
+
+                                <div className="flex-1 min-w-0 flex flex-col justify-center gap-1 overflow-hidden">
+                                    {/* [수정] 12자 이상일 때만 흐르도록 조건 변경 (length >= 12) */}
+                                    <div className="w-full overflow-hidden relative h-[18px]">
+                                        {currentTrack.title.length >= 12 ? (
+                                            <div 
+                                                className="animate-marquee" 
+                                                style={{ animationDuration: `${Math.max(5, currentTrack.title.length * 0.4)}s` }}
+                                            >
+                                                <a 
+                                                    href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
+                                                    onClick={() => playSound('click')}
+                                                >
+                                                    {currentTrack.title}
+                                                </a>
+                                                <a 
+                                                    href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
+                                                    onClick={() => playSound('click')}
+                                                >
+                                                    {currentTrack.title}
+                                                </a>
+                                            </div>
+                                        ) : (
+                                            <a 
+                                                href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md block truncate"
+                                                onClick={() => playSound('click')}
+                                            >
+                                                {currentTrack.title}
+                                            </a>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="text-[11px] text-white/80 truncate leading-tight font-medium">{currentAlbum.artist}</div>
+                                    <div className="text-[10px] text-white/50 truncate leading-tight">{currentAlbum.title}</div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
+            </div>
+
+            {/* [수정 3] 휠: 버튼 로직 및 기능 연결 */}
+            <div className="w-40 h-40 rounded-full bg-white/20 border border-white/20 mx-auto relative flex items-center justify-center shadow-lg backdrop-blur-sm">
+                {/* MENU 버튼 */}
+                <button onClick={handleMenuClick} className="absolute top-4 text-[10px] font-bold text-white/60 p-2 -mt-2 -mx-2 hover:text-white transition">MENU</button>
+                {/* 재생 버튼 */}
+                <button onClick={() => { if (menuLevel !== 0) return; playSound('click'); const track = getTrackData(); window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank'); }} className={`absolute bottom-4 text-[10px] font-bold p-2 -mb-2 -mx-2 transition ${menuLevel === 0 ? 'text-white hover:text-green-300' : 'text-white/40'}`}><Play size={10} fill="currentColor"/></button>
+                {/* 이전 곡 버튼 */}
+                <button onClick={() => handleTrackChange('prev')} className={`absolute left-4 text-[10px] font-bold p-2 -ml-2 -my-2 transition ${menuLevel === 0 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}><ChevronLeft size={10} /></button>
+                {/* 다음 곡 버튼 */}
+                <button onClick={() => handleTrackChange('next')} className={`absolute right-4 text-[10px] font-bold p-2 -mr-2 -my-2 transition ${menuLevel === 0 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}><ChevronLeft size={10} className="rotate-180" /></button>
+                {/* 가운데 버튼 */}
+                <div className="w-14 h-14 rounded-full bg-white/40 shadow-inner border border-white/20"></div>
+            </div>
+        </div>
+    </div>
+)}
                                 {/* 재현: 필모그래피 & 라디오 (다크 모드 스타일) */}
                                 {selectedProfile.id === 'jaehyun' && (
                                     <div className="space-y-16 animate-fade-in-up pb-10">
