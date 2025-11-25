@@ -918,6 +918,20 @@ function App() {
           }
       }
   };
+    // 휠 가운데 버튼 (Enter) 동작
+  const handleCenterClick = () => {
+      playSound('click');
+
+      // [Level 2] 앨범 커버 플로우 -> 선택한 앨범의 트랙 리스트로 진입
+      if (menuLevel === 2) {
+          selectAlbumFromMenu(currentAlbumId);
+      } 
+      // [Level 0] 재생 화면 -> 현재 곡 재생 (유튜브)
+      else if (menuLevel === 0) {
+          const track = getTrackData();
+          window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank');
+      }
+  };
   
   // 휠 버튼 - 메뉴 클릭 로직 (4번 요청)
   const handleMenuClick = () => {
@@ -1701,7 +1715,7 @@ return (
                 {/* MENU 버튼 */}
                 <button onClick={handleMenuClick} className="absolute top-4 text-[10px] font-bold text-white/60 p-2 -mt-2 -mx-2 hover:text-white transition">MENU</button>
                 
-                {/* 재생 버튼 (Level 0에서만 활성화 유지) */}
+                {/* 재생 버튼 */}
                 <button 
                     onClick={() => { if (menuLevel !== 0) return; playSound('click'); const track = getTrackData(); window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank'); }} 
                     className={`absolute bottom-4 text-[10px] font-bold p-2 -mb-2 -mx-2 transition ${menuLevel === 0 ? 'text-white hover:text-green-300' : 'text-white/40'}`}
@@ -1709,7 +1723,7 @@ return (
                     <Play size={10} fill="currentColor"/>
                 </button>
                 
-                {/* 이전 버튼 (Level 0 또는 2에서 활성화) */}
+                {/* 이전 버튼 */}
                 <button 
                     onClick={() => handleTrackChange('prev')} 
                     className={`absolute left-4 text-[10px] font-bold p-2 -ml-2 -my-2 transition ${menuLevel === 0 || menuLevel === 2 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
@@ -1717,7 +1731,7 @@ return (
                     <ChevronLeft size={10} />
                 </button>
                 
-                {/* 다음 버튼 (Level 0 또는 2에서 활성화) */}
+                {/* 다음 버튼 */}
                 <button 
                     onClick={() => handleTrackChange('next')} 
                     className={`absolute right-4 text-[10px] font-bold p-2 -mr-2 -my-2 transition ${menuLevel === 0 || menuLevel === 2 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
@@ -1725,8 +1739,11 @@ return (
                     <ChevronLeft size={10} className="rotate-180" />
                 </button>
                 
-                {/* 가운데 버튼 */}
-                <div className="w-14 h-14 rounded-full bg-white/40 shadow-inner border border-white/20"></div>
+                {/* [수정] 가운데 버튼 (Enter 기능 추가됨) */}
+                <button 
+                    onClick={handleCenterClick}
+                    className="w-14 h-14 rounded-full bg-white/40 shadow-inner border border-white/20 active:scale-95 transition-transform hover:bg-white/50"
+                ></button>
             </div>
         </div>
     </div>
