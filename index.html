@@ -919,23 +919,23 @@ function App() {
       }
   };
     // 휠 가운데 버튼 (Enter) 동작
-const handleCenterClick = () => {
-    playSound('click');
+  const handleCenterClick = () => {
+      playSound('click');
 
-    // [Level 2] 앨범 커버 플로우 -> 선택한 앨범의 트랙 리스트로 진입
-    if (menuLevel === 2) {
-        selectAlbumFromMenu(currentAlbumId);
-    } 
-    // [추가됨] [Level 1] 트랙 리스트 -> Now Playing으로 이동
-    else if (menuLevel === 1) {
-        selectTrackFromList(currentTrackIndex);
-    }
-    // [Level 0] 재생 화면 -> 현재 곡 재생 (유튜브)
-    else if (menuLevel === 0) {
-        const track = getTrackData();
-        window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank');
-    }
-};
+      // [Level 2] 앨범 커버 플로우 -> 선택한 앨범의 트랙 리스트로 진입
+      if (menuLevel === 2) {
+          selectAlbumFromMenu(currentAlbumId);
+      } 
+      // [추가됨] [Level 1] 트랙 리스트 -> Now Playing으로 이동
+      else if (menuLevel === 1) {
+          selectTrackFromList(currentTrackIndex);
+      }
+      // [Level 0] 재생 화면 -> 현재 곡 재생 (유튜브)
+      else if (menuLevel === 0) {
+          const track = getTrackData();
+          window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank');
+      }
+  };
   
   // 휠 버튼 - 메뉴 클릭 로직 (4번 요청)
   const handleMenuClick = () => {
@@ -958,6 +958,17 @@ const handleCenterClick = () => {
       setCurrentTrackIndex(index);
       setMenuLevel(0); // Now Playing으로 이동
   };
+  // [추가] 메뉴 레벨이 2(Album List)가 될 때 현재 선택된 앨범으로 스크롤 자동 이동
+  useEffect(() => {
+      if (menuLevel === 2) {
+          setTimeout(() => {
+              const element = document.getElementById(`album-${currentAlbumId}`);
+              if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+              }
+          }, 100);
+      }
+  }, [menuLevel]);
   const getSenderInfo = (sender) => {
     if (sender === '재현') return { color: COLORS.jaehyun, isImage: true };
     if (sender === '은재') return { color: COLORS.eunjae, avatarBg: 'bg-orange-200' };
