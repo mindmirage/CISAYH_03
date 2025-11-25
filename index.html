@@ -1508,21 +1508,18 @@ return (
                         }
                     };
 
-                    // Level 2: 앨범 목록 (Cover Flow) - [잘림 방지 & 텍스트 위치 수정]
+                    // Level 2: 앨범 목록 (Cover Flow) - [간격 조정 및 잘림 방지]
                     if (menuLevel === 2) {
                         return (
                             <div className="absolute inset-0 flex flex-col z-10 animate-fade-in bg-black/20 backdrop-blur-sm rounded-2xl overflow-hidden">
-                                {/* 상단 제목 */}
-                                <div className="text-[10px] font-bold text-white/60 text-center pt-3 shrink-0">
+                                {/* [수정] 상단 여백 확보: pt-3 -> pt-5, mb-1 추가하여 사진과 거리 벌림 */}
+                                <div className="text-[10px] font-bold text-white/60 text-center pt-5 mb-1 shrink-0">
                                     Albums
                                 </div>
                                 
-                                {/* [수정 포인트]
-                                    1. py-2: 불필요한 여백을 줄여 앨범이 중앙에 넓게 자리 잡게 함
-                                    2. 앨범 크기: w-18 (72px)로 미세 조정하여 위아래 잘림 방지
-                                */}
+                                {/* [수정] 앨범 리스트: py-2 -> py-3 (위아래 공간을 늘려 그림자/확대 시 잘림 방지) */}
                                 <div 
-                                    className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-8 px-[38%] hide-scrollbar py-2"
+                                    className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-6 px-[38%] hide-scrollbar py-3"
                                     onScroll={handleAlbumScroll}
                                 >
                                     {MARK_ALBUMS_DATA.map((album) => (
@@ -1535,8 +1532,8 @@ return (
                                             id={`album-${album.id}`}
                                             className={`flex-shrink-0 relative transition-all duration-500 ease-out snap-center focus:outline-none ${
                                                 album.id === currentAlbumId 
-                                                    ? 'w-18 h-18 scale-110 z-20 opacity-100' // [수정] w-20 -> w-18 (잘림 방지 안전 크기)
-                                                    : 'w-14 h-14 scale-90 z-0 opacity-50 grayscale-[50%]' 
+                                                    ? 'w-20 h-20 scale-110 z-20 opacity-100' // 선택됨
+                                                    : 'w-16 h-16 scale-90 z-0 opacity-50 grayscale-[50%]' // 선택 안됨
                                             }`}
                                         >
                                             <img 
@@ -1555,16 +1552,12 @@ return (
                                     ))}
                                 </div>
                                 
-                                {/* [수정 포인트]
-                                    하단 영역(h-14)을 줄여서 앨범 공간을 확보하고,
-                                    내용을 아래쪽(justify-end)이 아닌 위쪽(justify-start) + 패딩(pt-1)으로 배치해
-                                    앨범과 겹치지 않게 적당히 떨어뜨림
-                                */}
-                                <div className="shrink-0 pb-4 text-center px-4 h-14 flex flex-col justify-start pt-1">
+                                {/* [수정] 하단 텍스트 영역: mt-1 추가하여 사진과 거리 벌림, h-12 -> h-14로 공간 확보 */}
+                                <div className="shrink-0 pb-3 text-center px-4 h-14 flex flex-col justify-center mt-1">
                                     <div className="text-[10px] font-bold text-white tracking-wide drop-shadow-md animate-fade-in transition-all duration-300 line-clamp-1 leading-tight">
                                         {currentAlbum.title}
                                     </div>
-                                    <div className="text-[9px] text-white/60 mt-0.5 truncate">
+                                    <div className="text-[8px] text-white/60 mt-0.5 truncate">
                                         {currentAlbum.artist}
                                     </div>
                                 </div>
