@@ -1765,40 +1765,145 @@ return (
                                             </button>
                                         </div>
 
-                                        {/* 라디오 */}
+                                    
+                                       {/* 라디오 (가로형 프리미엄 워크맨 스타일) */}
                                         <div>
                                             <div className="flex items-center gap-2 mb-4">
                                                 <div className="w-1 h-4 bg-purple-400"></div>
-                                                <div className="text-xs font-bold text-purple-200 tracking-widest">RADIO DJ</div>
+                                                <div className="text-xs font-bold text-purple-200 tracking-widest">ON AIR</div>
                                             </div>
-                                            <div className="bg-white/5 backdrop-blur-md p-6 border border-white/10 shadow-xl relative overflow-hidden rounded-2xl">
-                                                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 rounded-bl-full -mr-8 -mt-8 z-0 blur-2xl"></div>
+                                            
+                                            {/* 디바이스 컨테이너 */}
+                                            <div className="relative w-full max-w-[320px] mx-auto perspective-1000 group/player">
                                                 
-                                                <div className="relative z-10">
-                                                    <div className="flex justify-between items-start mb-8">
-                                                        <div>
-                                                            <div className="font-black text-2xl text-white mb-1">{CHARACTER_DETAILS.jaehyun.radio.title}</div>
-                                                            <div className="text-xs font-medium text-white/50">{CHARACTER_DETAILS.jaehyun.radio.station}</div>
-                                                        </div>
-                                                        <div className="bg-white/10 p-3 rounded-full text-white shadow-inner border border-white/10">
-                                                            <Music size={20} />
+                                                {/* [1] 워크맨 본체 (가로형) */}
+                                                <div className="relative bg-gradient-to-b from-gray-700 to-gray-900 rounded-lg shadow-[0_20px_40px_-10px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.2)] border-t border-white/10 overflow-hidden transition-all duration-300 hover:translate-y-[-2px]">
+                                                    
+                                                    {/* 상단 메탈 프레임 (컨트롤 영역) */}
+                                                    <div className="h-12 bg-gradient-to-b from-[#dcdcdc] via-[#f0f0f0] to-[#bfbfbf] flex items-center justify-between px-5 border-b border-gray-600 shadow-md relative z-20">
+                                                        {/* 로고 각인 */}
+                                                        <div className="font-serif font-black text-gray-800 tracking-widest text-[10px] opacity-70">PROFESSIONAL</div>
+                                                        
+                                                        {/* 상단 버튼 그룹 */}
+                                                        <div className="flex items-center gap-3">
+                                                            {/* 재생 상태 표시 LED */}
+                                                            <div className="flex items-center gap-1.5 mr-2">
+                                                                <span className="text-[7px] font-bold text-gray-500">BATT</span>
+                                                                <div className={`w-1.5 h-1.5 rounded-full ${showRadioScript ? 'bg-red-500 shadow-[0_0_5px_rgba(239,68,68,1)] animate-pulse' : 'bg-red-900'}`}></div>
+                                                            </div>
+                                                            
+                                                            {/* 핫라인(Script) 버튼 */}
+                                                            <button 
+                                                                onClick={() => setShowRadioScript(!showRadioScript)}
+                                                                className="h-6 px-3 bg-gradient-to-b from-orange-400 to-orange-600 rounded-[2px] shadow-[0_2px_3px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.4)] active:scale-95 active:shadow-inner transition-transform flex items-center justify-center"
+                                                            >
+                                                                <span className="text-[8px] font-bold text-white drop-shadow-sm tracking-tighter">SCRIPT</span>
+                                                            </button>
                                                         </div>
                                                     </div>
-                                                    
-                                                    <button 
-                                                        onClick={() => setShowRadioScript(!showRadioScript)}
-                                                        className="w-full py-3 bg-white text-black text-xs font-bold hover:bg-gray-200 transition flex items-center justify-center gap-2 rounded-lg shadow-lg"
-                                                    >
-                                                        {showRadioScript ? "대본 닫기" : "들으러 가기"}
-                                                        <Play size={10} fill="currentColor" className={`ml-1 ${showRadioScript ? 'hidden' : ''}`} />
-                                                    </button>
 
-                                                    {showRadioScript && (
-                                                        <div className="mt-6 p-4 bg-black/30 rounded-xl text-[12px] text-gray-300 leading-loose whitespace-pre-wrap h-56 overflow-y-auto custom-scrollbar border border-white/5 shadow-inner">
+                                                    {/* 메인 바디 (다크 그레이 메탈) */}
+                                                    <div className="p-5 relative flex gap-5">
+                                                        {/* 왼쪽: 카세트 데크 (가로로 넓게) */}
+                                                        <div 
+                                                            onClick={() => setShowRadioScript(!showRadioScript)}
+                                                            className="flex-1 h-36 bg-[#151515] rounded-sm border-[3px] border-[#333] shadow-[inset_0_0_15px_rgba(0,0,0,1)] relative overflow-hidden group cursor-pointer"
+                                                        >
+                                                            {/* 유리 커버 효과 */}
+                                                            <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent z-30 pointer-events-none border-b border-white/5"></div>
+                                                            
+                                                            {/* 내부 테이프 디자인 */}
+                                                            <div className="absolute inset-2 bg-[#2a2a2a] rounded-[2px] flex items-center justify-center overflow-hidden shadow-inner">
+                                                                {/* 테이프 라벨 (상단) */}
+                                                                <div className="absolute top-0 w-full h-8 bg-[#f0f0f0] border-b border-gray-400 z-10 flex items-center justify-between px-3">
+                                                                    <span className="text-[8px] font-bold text-gray-800">JAEHYUN SIDE A</span>
+                                                                    <span className="text-[8px] font-bold text-red-600">60min</span>
+                                                                </div>
+
+                                                                {/* 릴 (Reels) */}
+                                                                <div className="flex gap-8 z-20 mt-4">
+                                                                    {/* 왼쪽 릴 */}
+                                                                    <div className={`w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_0_5px_rgba(0,0,0,0.5)] ${showRadioScript ? 'animate-[spin_4s_linear_infinite]' : ''}`}>
+                                                                        <div className="w-8 h-8 rounded-full border-[6px] border-white bg-black/80 flex items-center justify-center relative">
+                                                                            <div className="w-full h-1 bg-white/20 absolute"></div>
+                                                                            <div className="h-full w-1 bg-white/20 absolute"></div>
+                                                                            <div className="w-1.5 h-1.5 bg-metal-silver rounded-full bg-gray-300"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                    {/* 오른쪽 릴 */}
+                                                                    <div className={`w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_0_5px_rgba(0,0,0,0.5)] ${showRadioScript ? 'animate-[spin_4s_linear_infinite]' : ''}`}>
+                                                                        <div className="w-8 h-8 rounded-full border-[6px] border-white bg-black/80 flex items-center justify-center relative">
+                                                                            <div className="w-full h-1 bg-white/20 absolute"></div>
+                                                                            <div className="h-full w-1 bg-white/20 absolute"></div>
+                                                                            <div className="w-1.5 h-1.5 bg-metal-silver rounded-full bg-gray-300"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* 테이프 뷰 창 (가운데 투명 부분) */}
+                                                                <div className="absolute bottom-4 w-32 h-6 bg-[#4a2c2c] opacity-80 rounded-sm border border-gray-600/50"></div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 오른쪽: 컨트롤 패널 & 브랜딩 */}
+                                                        <div className="w-16 flex flex-col justify-between items-center py-1">
+                                                            {/* 브랜드 로고 */}
+                                                            <div className="text-center">
+                                                                <div className="font-serif font-black text-white/90 text-sm tracking-widest drop-shadow-md">SONY</div>
+                                                                <div className="text-[6px] font-medium text-gray-400 tracking-wider mt-0.5">WALKMAN</div>
+                                                            </div>
+
+                                                            {/* 물리 버튼 (입체감 강조) */}
+                                                            <div className="flex flex-col gap-2 w-full items-center">
+                                                                <button 
+                                                                    onClick={() => setShowRadioScript(true)}
+                                                                    className="w-10 h-10 rounded-full bg-gradient-to-br from-[#e0e0e0] to-[#a0a0a0] shadow-[3px_3px_5px_rgba(0,0,0,0.5),inset_1px_1px_1px_rgba(255,255,255,0.8)] flex items-center justify-center active:translate-y-0.5 active:shadow-inner transition-all group/btn"
+                                                                >
+                                                                    <Play size={14} className="fill-gray-700 text-gray-700 ml-0.5 group-hover/btn:fill-black" />
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => setShowRadioScript(false)}
+                                                                    className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4b5563] to-[#1f2937] shadow-[2px_2px_4px_rgba(0,0,0,0.5),inset_1px_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center active:translate-y-0.5 active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] transition-all group/btn"
+                                                                >
+                                                                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-[1px] group-hover/btn:bg-white transition-colors"></div>
+                                                                </button>
+                                                            </div>
+
+                                                            {/* 모델명 */}
+                                                            <div className="text-[8px] font-bold text-gray-500 border border-gray-600 px-1 rounded-sm">
+                                                                WM-D6C
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* 하단 장식 라인 */}
+                                                    <div className="h-1.5 bg-black/40 w-full border-t border-gray-600/30"></div>
+                                                </div>
+
+                                                {/* [2] 대본 (슬라이드 다운 효과) */}
+                                                {showRadioScript && (
+                                                    <div className="mx-2 bg-[#fdfbf7] rounded-b-lg shadow-xl relative z-0 animate-collapse origin-top border-t-0 -mt-1 pt-4 pb-6 px-6">
+                                                        {/* 종이 질감 */}
+                                                        <div className="absolute inset-0 opacity-[0.04] bg-black pointer-events-none rounded-b-lg" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+                                                        
+                                                        {/* 대본 내용 */}
+                                                        <div className="h-48 overflow-y-auto custom-scrollbar text-[13px] text-gray-800 leading-relaxed font-serif whitespace-pre-wrap relative z-10">
+                                                            <div className="sticky top-0 bg-[#fdfbf7]/90 backdrop-blur-sm pb-2 mb-2 border-b border-gray-200 text-center">
+                                                                <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Now Playing</span>
+                                                                <div className="text-sm font-bold text-gray-900">{CHARACTER_DETAILS.jaehyun.radio.title}</div>
+                                                            </div>
                                                             {CHARACTER_DETAILS.jaehyun.radio.script}
                                                         </div>
-                                                    )}
-                                                </div>
+
+                                                        {/* 닫기 버튼 */}
+                                                        <button 
+                                                            onClick={() => setShowRadioScript(false)}
+                                                            className="w-full mt-4 py-2 text-[10px] font-bold text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors uppercase tracking-wider"
+                                                        >
+                                                            Close Script
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -1812,6 +1917,7 @@ return (
         {/* 채팅 화면 */}
         {currentView === 'chat' && (
           <>
+```
             <div className="flex items-center justify-between px-4 py-2 bg-white/30 backdrop-blur-sm z-10 shrink-0">
               <button onClick={handleBackToFriends} className="p-2 rounded-full hover:bg-white/20 transition"><ChevronLeft size={24} className="text-gray-800" /></button>
               
