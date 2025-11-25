@@ -699,12 +699,8 @@ function App() {
   const [scrollTop, setScrollTop] = useState(0); // [추가] 스크롤 위치 저장
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0); // 현재 재생 중인 트랙 인덱스
   const [albumAnimation, setAlbumAnimation] = useState(''); // 트랙 전환 애니메이션 상태
-  
-  // [재생용] 실제 듣고 있는 앨범/트랙 (플레이어 상태 기억)
-  const [playingAlbumId, setPlayingAlbumId] = useState('firstfruit');
-  const [playingTrackIndex, setPlayingTrackIndex] = useState(0);
-
-  const [menuLevel, setMenuLevel] = useState(0); // 0: Now Playing, 1: Track List, 2: Album List
+  const [currentAlbumId, setCurrentAlbumId] = useState('firstfruit'); // 현재 재생/선택된 앨범 ID
+  const [menuLevel, setMenuLevel] = useState(0); // 0: Now Playing, 1: Track List, 2: Album List (Cover Flow)
 
   // ▼▼▼ [추가] 새로운 선택지가 생기면 자동으로 펼치기 ▼▼▼
   useEffect(() => {
@@ -865,104 +861,98 @@ function App() {
   // 앨범/트랙 데이터 헬퍼
   const getAlbumData = () => MARK_ALBUMS_DATA.find(a => a.id === currentAlbumId) || MARK_ALBUMS_DATA[0];
   const getTrackData = (album = getAlbumData()) => album.tracks[currentTrackIndex] || album.tracks[0];
-
-  // [1] 앨범 목록(Level 2)에서 앨범 선택 -> 트랙 리스트(Level 1)로 이동
-  const selectAlbumFromMenu = (albumId) => {
-      playSound('click');
-      setCurrentAlbumId(albumId);
-      setMenuLevel(1);
-  };
-
-  // [2] 트랙 리스트(Level 1)에서 곡 선택 -> 재생 화면(Level 0)으로 이동 및 재생
-  const selectTrackFromList = (index) => {
-      playSound('click');
-      // ★ 핵심: 구경하던 앨범(current)을 재생 앨범(playing)으로 확정
-      setPlayingAlbumId(currentAlbumId);
-      setPlayingTrackIndex(index);
-      setMenuLevel(0); 
-  };
-
-  // [3] 휠 돌리기 (이전/다음)
+  
+  // 휠 버튼 - 이전/다음 (트랙/앨범 변경 통합)
   const handleTrackChange = (direction) => {
-      if (menuLevel === 1) return; // 트랙 리스트에선 휠 좌우 이동 X
-      
+      // Level 1(트랙 리스트)에서는 좌우 버튼 동작 안 함
+      if (menuLevel === 1) return;
+
       playSound('click');
 
-      // Now Playing (Level 0) -> "재생 중인 곡" 변경
+      // [CASE 1] Now Playing (Level 0) -> 트랙 변경
       if (menuLevel === 0) {
-          const playingAlbum = MARK_ALBUMS_DATA.find(a => a.id === playingAlbumId) || MARK_ALBUMS_DATA[0];
-          const tracksLength = playingAlbum.tracks.length;
+          const currentAlbum = getAlbumData();
+          const tracksLength = currentAlbum.tracks.length;
+          if (tracksLength === 0) return;
           
           setAlbumAnimation(direction === 'next' ? 'animate-fade-out-left' : 'animate-fade-out-right');
 
           setTimeout(() => {
-              setPlayingTrackIndex(prev => {
+              setCurrentTrackIndex(prev => {
+                  let newIndex = prev;
                   const total = tracksLength;
-                  if (direction === 'next') return (prev + 1) % total;
-                  else return (prev - 1 + total) % total;
+                  if (direction === 'next') {
+                      newIndex = (prev + 1) % total;
+                  } else if (direction === 'prev') {
+                      newIndex = (prev - 1 + total) % total;
+                  }
+                  return newIndex;
               });
               setAlbumAnimation(direction === 'next' ? 'animate-fade-in-right' : 'animate-fade-in-left');
           }, 200); 
           
-          setTimeout(() => { setAlbumAnimation(''); }, 400); 
+          setTimeout(() => {
+              setAlbumAnimation('');
+          }, 400); 
       }
       
-      // Album List (Level 2) -> "구경 중인 앨범" 변경
+      // [CASE 2] Album List (Level 2) -> 앨범 변경
       else if (menuLevel === 2) {
           const albumCount = MARK_ALBUMS_DATA.length;
           const currentIndex = MARK_ALBUMS_DATA.findIndex(a => a.id === currentAlbumId);
           let newIndex = currentIndex;
 
-          if (direction === 'next') newIndex = (currentIndex + 1) % albumCount;
-          else newIndex = (currentIndex - 1 + albumCount) % albumCount;
+          if (direction === 'next') {
+              newIndex = (currentIndex + 1) % albumCount;
+          } else {
+              newIndex = (currentIndex - 1 + albumCount) % albumCount;
+          }
 
           const newAlbumId = MARK_ALBUMS_DATA[newIndex].id;
           setCurrentAlbumId(newAlbumId);
 
+          // 앨범 카드로 스크롤 이동
           const element = document.getElementById(`album-${newAlbumId}`);
           if (element) {
               element.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
           }
       }
   };
-
-  // [4] 휠 가운데 버튼 (Enter) 동작
+    // 휠 가운데 버튼 (Enter) 동작
   const handleCenterClick = () => {
       playSound('click');
 
-      // Level 2 (앨범 아트) -> Level 1 (트랙 리스트)로 진입
+      // [Level 2] 앨범 커버 플로우 -> 선택한 앨범의 트랙 리스트로 진입
       if (menuLevel === 2) {
-          setMenuLevel(1);
+          selectAlbumFromMenu(currentAlbumId);
       } 
-      // Level 0 (재생 화면) -> 유튜브 링크 열기
+      // [Level 0] 재생 화면 -> 현재 곡 재생 (유튜브)
       else if (menuLevel === 0) {
-          const playingAlbum = MARK_ALBUMS_DATA.find(a => a.id === playingAlbumId) || MARK_ALBUMS_DATA[0];
-          const track = playingAlbum.tracks[playingTrackIndex] || playingAlbum.tracks[0];
+          const track = getTrackData();
           window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank');
       }
   };
-
-  // [5] 메뉴 버튼 (뒤로 가기)
+  
+  // 휠 버튼 - 메뉴 클릭 로직 (4번 요청)
   const handleMenuClick = () => {
       playSound('click');
-      
-      // Level 0 -> Level 1 (듣고 있던 앨범 화면으로 이동)
-      if (menuLevel === 0) {
-          setCurrentAlbumId(playingAlbumId);
-          setMenuLevel(1);
-      }
-      // Level 1 -> Level 2
-      else if (menuLevel === 1) {
-          setMenuLevel(2);
-          setTimeout(() => {
-              const element = document.getElementById(`album-${currentAlbumId}`);
-              if (element) element.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
-          }, 0);
-      }
-      // Level 2 -> Level 0
-      else if (menuLevel === 2) {
-          setMenuLevel(0);
-      }
+      // 0(Now Playing) -> 1(Track List) -> 2(Album List) -> 0(Now Playing) 순환
+      setMenuLevel(prev => (prev + 1) % 3);
+  };
+  
+  // 앨범 목록 (Level 2)에서 앨범 선택 (3번 요청)
+  const selectAlbumFromMenu = (albumId) => {
+      playSound('click');
+      setCurrentAlbumId(albumId);
+      setCurrentTrackIndex(0); // 트랙 초기화
+      setMenuLevel(1); // 트랙 리스트로 이동
+  };
+  
+  // 트랙 리스트 (Level 1)에서 트랙 선택 (3번 요청)
+  const selectTrackFromList = (index) => {
+      playSound('click');
+      setCurrentTrackIndex(index);
+      setMenuLevel(0); // Now Playing으로 이동
   };
   const getSenderInfo = (sender) => {
     if (sender === '재현') return { color: COLORS.jaehyun, isImage: true };
@@ -1531,33 +1521,47 @@ return (
                 
                 {/* 데이터 헬퍼 호출 */}
                 {(() => {
-                    // [데이터 분리]
-                    // 1. 구경용 (Level 1, 2에서 사용 - 내가 보고 있는 앨범)
-                    const browsingAlbum = MARK_ALBUMS_DATA.find(a => a.id === currentAlbumId) || MARK_ALBUMS_DATA[0];
-                    
-                    // 2. 재생용 (Level 0에서 사용 - 실제 나오는 노래)
-                    const playingAlbum = MARK_ALBUMS_DATA.find(a => a.id === playingAlbumId) || MARK_ALBUMS_DATA[0];
-                    const playingTrack = playingAlbum.tracks[playingTrackIndex] || playingAlbum.tracks[0];
+                    const currentAlbum = getAlbumData();
+                    const currentTrack = getTrackData(currentAlbum);
 
+                    // [기능] 스크롤 시 중앙에 있는 앨범 감지
                     const handleAlbumScroll = (e) => {
                         const container = e.target;
                         const center = container.scrollLeft + container.clientWidth / 2;
                         const children = container.children;
-                        let closestId = null; let minDiff = Infinity;
+                        
+                        let closestId = null;
+                        let minDiff = Infinity;
+
                         Array.from(children).forEach((child, index) => {
                             const childCenter = child.offsetLeft + child.offsetWidth / 2;
                             const diff = Math.abs(center - childCenter);
-                            if (diff < minDiff) { minDiff = diff; closestId = MARK_ALBUMS_DATA[index].id; }
+                            
+                            if (diff < minDiff) {
+                                minDiff = diff;
+                                closestId = MARK_ALBUMS_DATA[index].id;
+                            }
                         });
-                        if (closestId && closestId !== currentAlbumId) { setCurrentAlbumId(closestId); }
+
+                        if (closestId && closestId !== currentAlbumId) {
+                            setCurrentAlbumId(closestId);
+                        }
                     };
 
-                    // Level 2: 앨범 목록 (구경 모드 - browsingAlbum 사용)
+                    // Level 2: 앨범 목록 (Cover Flow) - [공간 최대 확보로 잘림 해결]
                     if (menuLevel === 2) {
                         return (
                             <div className="absolute inset-0 flex flex-col z-10 animate-fade-in bg-black/20 backdrop-blur-sm rounded-2xl overflow-hidden">
-                                <div className="text-[10px] font-bold text-white/60 text-center pt-2 shrink-0">Albums</div>
-                                <div className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-6 px-[38%] hide-scrollbar py-4" onScroll={handleAlbumScroll}>
+                                {/* [수정] 상단 여백 최소화: pt-2로 줄여서 사진 공간 확보 */}
+                                <div className="text-[10px] font-bold text-white/60 text-center pt-2 shrink-0">
+                                    Albums
+                                </div>
+                                
+                                {/* [수정] 앨범 리스트: py-4 (위아래 여백을 적절히 주되, 전체 높이 안에서 사진이 다 나오도록 함) */}
+                                <div 
+                                    className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-6 px-[38%] hide-scrollbar py-4"
+                                    onScroll={handleAlbumScroll}
+                                >
                                     {MARK_ALBUMS_DATA.map((album) => (
                                         <button
                                             key={album.id}
@@ -1566,38 +1570,65 @@ return (
                                                 document.getElementById(`album-${album.id}`).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                                             }}
                                             id={`album-${album.id}`}
-                                            className={`flex-shrink-0 relative transition-all duration-500 ease-out snap-center focus:outline-none ${album.id === currentAlbumId ? 'w-20 h-20 scale-110 z-20 opacity-100' : 'w-16 h-16 scale-90 z-0 opacity-50 grayscale-[50%]'}`}
+                                            className={`flex-shrink-0 relative transition-all duration-500 ease-out snap-center focus:outline-none ${
+                                                album.id === currentAlbumId 
+                                                    ? 'w-20 h-20 scale-110 z-20 opacity-100' // 선택됨 (확대)
+                                                    : 'w-16 h-16 scale-90 z-0 opacity-50 grayscale-[50%]' // 선택 안됨
+                                            }`}
                                         >
-                                            <img src={album.cover} alt={album.title} className={`w-full h-full object-cover rounded-2xl shadow-[0_5px_15px_rgba(0,0,0,0.5)] ${album.id === currentAlbumId ? 'shadow-[0_10px_25px_rgba(0,0,0,0.6)]' : ''}`} onError={(e) => { e.target.src='https://via.placeholder.com/100x100/333333/FFFFFF?text=Album'; }} />
-                                            {album.id === currentAlbumId && <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>}
+                                            <img 
+                                                src={album.cover} 
+                                                alt={album.title} 
+                                                className={`w-full h-full object-cover rounded-2xl shadow-[0_5px_15px_rgba(0,0,0,0.5)] ${
+                                                    album.id === currentAlbumId ? 'shadow-[0_10px_25px_rgba(0,0,0,0.6)]' : ''
+                                                }`}
+                                                onError={(e) => { e.target.src='https://via.placeholder.com/100x100/333333/FFFFFF?text=Album'; }}
+                                            />
+                                            {/* 반사 효과 */}
+                                            {album.id === currentAlbumId && (
+                                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
+                                            )}
                                         </button>
                                     ))}
                                 </div>
+                                
+                                {/* [수정] 하단 텍스트 영역: h-10으로 높이를 줄여서 사진 공간 침범 방지 */}
                                 <div className="shrink-0 pb-2 text-center px-4 h-10 flex flex-col justify-center">
-                                    <div className="text-[10px] font-bold text-white tracking-wide drop-shadow-md animate-fade-in transition-all duration-300 line-clamp-1 leading-tight">{browsingAlbum.title}</div>
-                                    <div className="text-[8px] text-white/60 mt-0.5 truncate">{browsingAlbum.artist}</div>
+                                    <div className="text-[10px] font-bold text-white tracking-wide drop-shadow-md animate-fade-in transition-all duration-300 line-clamp-1 leading-tight">
+                                        {currentAlbum.title}
+                                    </div>
+                                    <div className="text-[8px] text-white/60 mt-0.5 truncate">
+                                        {currentAlbum.artist}
+                                    </div>
                                 </div>
                             </div>
                         );
                     }
                     
-                    // Level 1: 트랙 리스트 (구경 모드 - browsingAlbum 사용)
+                    // Level 1: 트랙 리스트 (변경 없음)
                     if (menuLevel === 1) {
                         return (
                             <div className="absolute inset-0 p-3 flex flex-col z-10 animate-fade-in">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <img src={browsingAlbum.cover} alt="Album Cover" className="w-8 h-8 object-cover rounded-lg shadow-md" onError={(e) => { e.target.src='https://via.placeholder.com/32x32/333333/FFFFFF?text=A'; }}/>
-                                    <div className="text-xs font-bold text-white/90 truncate">{browsingAlbum.title}</div>
+                                    <img 
+                                        src={currentAlbum.cover} 
+                                        alt="Album Cover" 
+                                        className="w-8 h-8 object-cover rounded-lg shadow-md"
+                                        onError={(e) => { e.target.src='https://via.placeholder.com/32x32/333333/FFFFFF?text=A'; }}
+                                    />
+                                    <div className="text-xs font-bold text-white/90 truncate">{currentAlbum.title}</div>
                                 </div>
                                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                    {browsingAlbum.tracks.map((track, index) => (
+                                    {currentAlbum.tracks.map((track, index) => (
                                         <button
                                             key={track.id}
                                             onClick={() => selectTrackFromList(index)}
-                                            className="w-full text-left text-xs py-1.5 px-2 rounded-md transition-colors truncate mb-0.5 text-white/60 hover:bg-white/10"
+                                            className={`w-full text-left text-xs py-1.5 px-2 rounded-md transition-colors truncate mb-0.5
+                                                ${index === currentTrackIndex ? 'bg-white/20 text-white font-bold' : 'text-white/60 hover:bg-white/10'}`}
                                         >
                                             <div className="flex justify-between items-center">
                                                 <span>{track.title}</span>
+                                                {index === currentTrackIndex && <Play size={8} fill="currentColor" />}
                                             </div>
                                         </button>
                                     ))}
@@ -1606,76 +1637,112 @@ return (
                         );
                     }
                     
-                    // Level 0: Now Playing (재생 모드 - playingAlbum, playingTrack 사용)
-                    return (
-                        <div className="h-full w-full absolute inset-0 flex flex-col">
-                            <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3 shrink-0">
-                                <span className="text-[9px] font-bold text-white/50">Now Playing</span>
-                                <div className="flex gap-0.5"><div className="w-2 h-1 bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.5)]"></div><div className="w-0.5 h-1 bg-white/20"></div></div>
-                            </div>
-                            <div className={`flex-1 flex flex-row items-center px-5 gap-4 overflow-hidden ${albumAnimation}`}>
-                                <div className="relative shrink-0">
-                                    <img src={playingAlbum.cover} alt="Album" className="w-20 h-20 aspect-square shadow-2xl object-cover rounded-xl" onError={(e) => { e.target.src='https://via.placeholder.com/80x80/333333/FFFFFF?text=A'; }} />
-                                </div>
-                                <div className="flex-1 min-w-0 flex flex-col justify-center gap-1 overflow-hidden">
-                                    <div className="w-full overflow-hidden relative h-[18px]">
-                                        {playingTrack.title.length >= 13 ? (
-                                            <div className="animate-marquee" style={{ animationDuration: `${Math.max(4, playingTrack.title.length * 0.3)}s` }}>
-                                                <a href={`https://www.youtube.com/watch?v=${playingTrack.videoId}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8" onClick={() => playSound('click')}>{playingTrack.title}</a>
-                                                <a href={`https://www.youtube.com/watch?v=${playingTrack.videoId}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8" onClick={() => playSound('click')}>{playingTrack.title}</a>
-                                            </div>
-                                        ) : (
-                                            <a href={`https://www.youtube.com/watch?v=${playingTrack.videoId}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md block truncate" onClick={() => playSound('click')}>{playingTrack.title}</a>
-                                        )}
-                                    </div>
-                                    <div className="text-[11px] text-white/80 truncate leading-tight font-medium">{playingAlbum.artist}</div>
-                                    <div className="text-[10px] text-white/50 truncate leading-tight">{playingAlbum.title}</div>
-                                </div>
-                            </div>
+                    // Level 0: Now Playing (기능 유지 + 애니메이션 수정)
+return (
+    <div className="h-full w-full absolute inset-0 flex flex-col">
+        {/* 헤더 (고정) */}
+        <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3 shrink-0">
+            <span className="text-[9px] font-bold text-white/50">Now Playing</span>
+            <div className="flex gap-0.5">
+                <div className="w-2 h-1 bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.5)]"></div>
+                <div className="w-0.5 h-1 bg-white/20"></div>
+            </div>
+        </div>
+        
+        {/* 내용물 (트랙 전환 시 슬라이드 애니메이션 적용) */}
+        <div className={`flex-1 flex flex-row items-center px-5 gap-4 overflow-hidden ${albumAnimation}`}>
+            <div className="relative shrink-0">
+                <img 
+                    src={currentAlbum.cover} 
+                    alt="Album" 
+                    className="w-20 h-20 aspect-square shadow-2xl object-cover rounded-xl" 
+                    onError={(e) => { e.target.src='https://via.placeholder.com/80x80/333333/FFFFFF?text=A'; }}
+                />
+            </div>
+
+            <div className="flex-1 min-w-0 flex flex-col justify-center gap-1 overflow-hidden">
+                {/* [수정] 13자 이상(>=13)일 때 흐르도록 변경 */}
+                <div className="w-full overflow-hidden relative h-[18px]">
+                    {currentTrack.title.length >= 13 ? (
+                        <div 
+                            className="animate-marquee" 
+                            // [수정] 속도 조절: * 0.3으로 줄여서 더 빠르게 (기존 0.4)
+                            style={{ animationDuration: `${Math.max(4, currentTrack.title.length * 0.3)}s` }}
+                        >
+                            <a 
+                                href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
+                                onClick={() => playSound('click')}
+                            >
+                                {currentTrack.title}
+                            </a>
+                            <a 
+                                href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
+                                onClick={() => playSound('click')}
+                            >
+                                {currentTrack.title}
+                            </a>
                         </div>
-                    );
+                    ) : (
+                        <a 
+                            href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md block truncate"
+                            onClick={() => playSound('click')}
+                        >
+                            {currentTrack.title}
+                        </a>
+                    )}
+                </div>
+                
+                <div className="text-[11px] text-white/80 truncate leading-tight font-medium">{currentAlbum.artist}</div>
+                <div className="text-[10px] text-white/50 truncate leading-tight">{currentAlbum.title}</div>
+            </div>
+        </div>
+    </div>
+);
                 })()}
             </div>
             {/* [수정 3] 휠: 버튼 로직 및 기능 연결 */}
             <div className="w-40 h-40 rounded-full bg-white/20 border border-white/20 mx-auto relative flex items-center justify-center shadow-lg backdrop-blur-sm">
                 
-                {/* MENU 버튼 (z-20 추가) */}
-                <button onClick={handleMenuClick} className="absolute top-4 text-[10px] font-bold text-white/60 p-2 -mt-2 -mx-2 hover:text-white transition z-20">MENU</button>
+                {/* MENU 버튼 */}
+                <button onClick={handleMenuClick} className="absolute top-4 text-[10px] font-bold text-white/60 p-2 -mt-2 -mx-2 hover:text-white transition">MENU</button>
                 
-                {/* 재생 버튼 (z-20 추가) */}
+                {/* 재생 버튼 */}
                 <button 
-                    onClick={() => { 
-                        if (menuLevel !== 0) return; 
-                        playSound('click'); 
-                        const pAlbum = MARK_ALBUMS_DATA.find(a => a.id === playingAlbumId) || MARK_ALBUMS_DATA[0];
-                        const pTrack = pAlbum.tracks[playingTrackIndex] || pAlbum.tracks[0];
-                        window.open(`https://www.youtube.com/watch?v=${pTrack.videoId}`, '_blank'); 
-                    }} 
-                    className={`absolute bottom-4 text-[10px] font-bold p-2 -mb-2 -mx-2 transition z-20 ${menuLevel === 0 ? 'text-white hover:text-green-300' : 'text-white/40'}`}
+                    onClick={() => { if (menuLevel !== 0) return; playSound('click'); const track = getTrackData(); window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank'); }} 
+                    className={`absolute bottom-4 text-[10px] font-bold p-2 -mb-2 -mx-2 transition ${menuLevel === 0 ? 'text-white hover:text-green-300' : 'text-white/40'}`}
                 >
                     <Play size={10} fill="currentColor"/>
                 </button>
                 
-                {/* 이전 버튼 (z-20 추가) */}
+                {/* 이전 버튼 */}
                 <button 
                     onClick={() => handleTrackChange('prev')} 
-                    className={`absolute left-4 text-[10px] font-bold p-2 -ml-2 -my-2 transition z-20 ${menuLevel === 0 || menuLevel === 2 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
+                    className={`absolute left-4 text-[10px] font-bold p-2 -ml-2 -my-2 transition ${menuLevel === 0 || menuLevel === 2 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
                 >
                     <ChevronLeft size={10} />
                 </button>
                 
-                {/* 다음 버튼 (z-20 추가) */}
+                {/* 다음 버튼 */}
                 <button 
                     onClick={() => handleTrackChange('next')} 
-                    className={`absolute right-4 text-[10px] font-bold p-2 -mr-2 -my-2 transition z-20 ${menuLevel === 0 || menuLevel === 2 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
+                    className={`absolute right-4 text-[10px] font-bold p-2 -mr-2 -my-2 transition ${menuLevel === 0 || menuLevel === 2 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
                 >
                     <ChevronLeft size={10} className="rotate-180" />
                 </button>
                 
-                {/* 가운데 버튼 (Enter) - z-10 및 relative 추가하여 클릭 영역 확보 */}
+                {/* [수정] 가운데 버튼 (Enter 기능 추가됨) */}
                 <button 
                     onClick={handleCenterClick}
-                    className="w-14 h-14 rounded-full bg-white/40 shadow-inner border border-white/20 active:scale-95 transition-transform hover:bg-white/50 z-10 relative cursor-pointer"
+                    className="w-14 h-14 rounded-full bg-white/40 shadow-inner border border-white/20 active:scale-95 transition-transform hover:bg-white/50"
                 ></button>
             </div>
         </div>
