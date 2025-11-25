@@ -1458,75 +1458,139 @@ return (
             {/* [수정 2] 화면: bg-black/40 -> bg-black/60 (본체가 밝아졌으므로 화면은 더 어둡게 대비) */}
             <div className="bg-black/60 h-40 rounded-lg mb-6 border border-white/10 overflow-hidden flex flex-col shadow-inner relative">
                 
-                {/* 4. 앨범 리스트 화면 (메뉴 버튼 클릭 시) */}
-                {isAlbumListOpen && (
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm p-3 flex flex-col z-10 animate-fade-in">
-                        <div className="text-xs font-bold text-white/90 border-b border-white/20 pb-2 mb-2">Albums</div>
-                        {/* 4. 앨범 목록 데이터 */}
-                        {[
-                          { title: "The Firstfruit - The 1st Album", color: "text-green-400" }, 
-                          { title: "200", color: "text-red-400" },
-                          { title: "Golden Hour - SM STATION : NCT LAB", color: "text-yellow-400" },
-                          { title: "Child - SM STATION : NCT LAB", color: "text-blue-400" }
-                        ].map((album, index) => (
-                            <div key={index} className={`text-xs font-medium text-white/80 py-1.5 truncate ${album.color} ${index === 0 ? 'bg-white/10 rounded-md px-1' : ''}`}>
-                                {album.title}
+                {/* 데이터 헬퍼 호출 */}
+                {(() => {
+                    const currentAlbum = getAlbumData();
+                    const currentTrack = getTrackData(currentAlbum);
+
+                    // Level 2: 앨범 목록 (Cover Flow 스타일) (1, 4번 요청)
+                    if (menuLevel === 2) {
+                        return (
+                            <div className="absolute inset-0 p-2 flex flex-col z-10 animate-fade-in">
+                                <div className="text-[10px] font-bold text-white/60 text-center mb-2">
+                                    {currentAlbum.title}
+                                </div>
+                                {/* 1. 아이팟 커버 플로우 스타일 메뉴 */}
+                                <div className="flex-1 w-full overflow-x-scroll snap-x snap-mandatory flex items-center space-x-4 pb-2 px-6 custom-scrollbar">
+                                    {MARK_ALBUMS_DATA.map((album) => (
+                                        <button
+                                            key={album.id}
+                                            onClick={() => selectAlbumFromMenu(album.id)}
+                                            className={`flex-shrink-0 w-24 h-24 rounded-lg shadow-xl relative transition-all duration-300 snap-center focus:outline-none ${
+                                                album.id === currentAlbumId ? 'scale-110 border-2 border-white/50' : 'scale-90 opacity-70'
+                                            }`}
+                                        >
+                                            <img 
+                                                src={album.cover} 
+                                                alt={album.title} 
+                                                className="w-full h-full object-cover rounded-lg"
+                                                onError={(e) => { e.target.src='https://via.placeholder.com/100x100/333333/FFFFFF?text=Album'; }}
+                                            />
+                                            {album.id === currentAlbumId && (
+                                                <div className="absolute inset-0 border-2 border-green-400 rounded-lg shadow-lg"></div>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="text-center text-[10px] font-bold text-white/80 mt-1 truncate">
+                                    {currentAlbum.title}
+                                </div>
                             </div>
-                        ))}
-                    </div>
-                )}
-                
-                {/* 현재 재생 화면 (2. 애니메이션 클래스 적용) */}
-                {/* isAlbumListOpen이 false일 때만 표시 */}
-                {!isAlbumListOpen && (
-                    <div className={`h-full w-full absolute inset-0 ${albumAnimation}`}>
-                        <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3">
-                            <span className="text-[9px] font-bold text-white/60">Now Playing</span>
-                            <div className="flex gap-0.5">
-                                <div className="w-2 h-1 bg-green-400"></div>
-                                <div className="w-0.5 h-1 bg-white/40"></div>
+                        );
+                    }
+                    
+                    // Level 1: 트랙 리스트 (4번 요청)
+                    if (menuLevel === 1) {
+                        return (
+                            <div className="absolute inset-0 p-3 flex flex-col z-10 animate-fade-in">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <img 
+                                        src={currentAlbum.cover} 
+                                        alt="Album Cover" 
+                                        className="w-8 h-8 object-cover rounded-md shadow-md"
+                                        onError={(e) => { e.target.src='https://via.placeholder.com/32x32/333333/FFFFFF?text=A'; }}
+                                    />
+                                    <div className="text-xs font-bold text-white/90 truncate">{currentAlbum.title}</div>
+                                </div>
+                                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                    {currentAlbum.tracks.map((track, index) => (
+                                        <button
+                                            key={track.id}
+                                            onClick={() => selectTrackFromList(index)}
+                                            className={`w-full text-left text-xs py-1.5 px-1 rounded-md transition-colors truncate 
+                                                ${index === currentTrackIndex ? 'bg-white/20 text-white font-bold' : 'text-white/70 hover:bg-white/10'}`}
+                                        >
+                                            {track.title}
+                                            {index === currentTrackIndex && (
+                                                <Play size={8} fill="currentColor" className="inline ml-2 -mt-0.5" />
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    }
+                    
+                    // Level 0: Now Playing (기본 재생 화면) (2번 요청)
+                    return (
+                        <div className={`h-full w-full absolute inset-0 ${albumAnimation}`}>
+                            <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3">
+                                <span className="text-[9px] font-bold text-white/60">Now Playing</span>
+                                <div className="flex gap-0.5">
+                                    <div className="w-2 h-1 bg-green-400"></div>
+                                    <div className="w-0.5 h-1 bg-white/40"></div>
+                                </div>
+                            </div>
+                            {/* 2. 재생 화면 중앙 정렬 */}
+                            <div className="flex-1 flex flex-col items-center justify-center p-4 h-[calc(100%-1.5rem)]">
+                                <img 
+                                    src={currentAlbum.cover} 
+                                    alt="Album" 
+                                    className="w-24 h-24 shadow-lg object-cover rounded-md mb-3" 
+                                    onError={(e) => { e.target.src='https://via.placeholder.com/100x100/333333/FFFFFF?text=A'; }}
+                                />
+                                <div className="flex-1 min-w-0 flex flex-col justify-center items-center">
+                                    {/* 노래 제목과 유튜브 링크 로직 (3번 요청) */}
+                                    <a 
+                                        href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-sm font-bold text-white truncate mb-0.5 hover:underline cursor-pointer text-center"
+                                        onClick={() => playSound('click')}
+                                    >
+                                        {currentTrack.title}
+                                    </a>
+                                    <div className="text-[10px] text-white/60 truncate">{currentAlbum.title}</div>
+                                    <div className="text-[10px] text-white/60 truncate">MARK</div>
+                                </div>
                             </div>
                         </div>
-                        <div className="flex-1 flex items-center p-4 gap-4">
-                            <img src={"https://i.scdn.co/image/ab67616d0000b273458a9f340084c41b7959205d"} alt="Album" className="w-20 h-20 shadow-lg object-cover rounded-md" />
-                            <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                {/* 노래 제목과 유튜브 링크 로직 */}
-                                <a 
-                                    href={`https://www.youtube.com/watch?v=${CHARACTER_DETAILS.mark.album.tracks[currentTrackIndex].videoId}`} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-xs font-bold text-white truncate mb-1 hover:underline cursor-pointer"
-                                    onClick={() => playSound('click')}
-                                >
-                                    {CHARACTER_DETAILS.mark.album.tracks[currentTrackIndex].title}
-                                </a>
-                                <div className="text-[10px] text-white/60 truncate">{CHARACTER_DETAILS.mark.album.title}</div>
-                                <div className="text-[10px] text-white/60 truncate">MARK</div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    );
+                })()}
+
             </div>
 
-            {/* [수정 3] 휠: 버튼 로직 및 기능 추가 */}
+            {/* [수정 3] 휠: 버튼 로직 및 기능 연결 */}
             <div className="w-40 h-40 rounded-full bg-white/20 border border-white/20 mx-auto relative flex items-center justify-center shadow-lg backdrop-blur-sm">
                 
-                {/* 4. 메뉴 버튼: isAlbumListOpen 상태 토글 */}
+                {/* 4. 메뉴 버튼: handleMenuClick 연결 */}
                 <button 
-                    onClick={() => { playSound('click'); setIsAlbumListOpen(prev => !prev); }}
+                    onClick={handleMenuClick}
                     className="absolute top-4 text-[10px] font-bold text-white/60 p-2 -mt-2 -mx-2 hover:text-white transition"
                 >
                     MENU
                 </button>
                 
-                {/* 3. 재생 버튼: 유튜브 링크로 이동 */}
+                {/* 3. 재생 버튼: 유튜브 링크로 이동 (Level 0에서만 작동) */}
                 <button
                     onClick={() => {
+                        if (menuLevel !== 0) return; // 메뉴 화면일 때는 재생 버튼 비활성화
                         playSound('click');
-                        const videoId = CHARACTER_DETAILS.mark.album.tracks[currentTrackIndex].videoId;
-                        window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+                        const track = getTrackData();
+                        window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank');
                     }}
-                    className="absolute bottom-4 text-[10px] font-bold text-white/60 p-2 -mb-2 -mx-2 hover:text-white transition"
+                    className={`absolute bottom-4 text-[10px] font-bold p-2 -mb-2 -mx-2 transition 
+                        ${menuLevel === 0 ? 'text-white hover:text-green-300' : 'text-white/40'}`}
                 >
                     <Play size={10} fill="currentColor"/>
                 </button>
@@ -1534,7 +1598,8 @@ return (
                 {/* 1. 이전 트랙 버튼: handleTrackChange('prev') 호출 */}
                 <button 
                     onClick={() => handleTrackChange('prev')}
-                    className="absolute left-4 text-[10px] font-bold text-white/60 p-2 -ml-2 -my-2 hover:text-white transition"
+                    className={`absolute left-4 text-[10px] font-bold p-2 -ml-2 -my-2 transition 
+                        ${menuLevel === 0 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
                 >
                     <ChevronLeft size={10} />
                 </button>
@@ -1542,7 +1607,8 @@ return (
                 {/* 2. 다음 트랙 버튼: handleTrackChange('next') 호출 */}
                 <button 
                     onClick={() => handleTrackChange('next')}
-                    className="absolute right-4 text-[10px] font-bold text-white/60 p-2 -mr-2 -my-2 hover:text-white transition"
+                    className={`absolute right-4 text-[10px] font-bold p-2 -mr-2 -my-2 transition 
+                        ${menuLevel === 0 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
                 >
                     <ChevronLeft size={10} className="rotate-180" />
                 </button>
