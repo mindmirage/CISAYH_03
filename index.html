@@ -699,7 +699,6 @@ function App() {
   const [scrollTop, setScrollTop] = useState(0); // [추가] 스크롤 위치 저장
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0); // 현재 재생 중인 트랙 인덱스
   const [albumAnimation, setAlbumAnimation] = useState(''); // 트랙 전환 애니메이션 상태
-  const [currentAlbumId, setCurrentAlbumId] = useState('firstfruit');
   
   // [재생용] 실제 듣고 있는 앨범/트랙 (플레이어 상태 기억)
   const [playingAlbumId, setPlayingAlbumId] = useState('firstfruit');
@@ -866,16 +865,31 @@ function App() {
   // 앨범/트랙 데이터 헬퍼
   const getAlbumData = () => MARK_ALBUMS_DATA.find(a => a.id === currentAlbumId) || MARK_ALBUMS_DATA[0];
   const getTrackData = (album = getAlbumData()) => album.tracks[currentTrackIndex] || album.tracks[0];
-  
-  // 휠 버튼 - 이전/다음 (트랙/앨범 변경 통합)
+
+  // [1] 앨범 목록(Level 2)에서 앨범 선택 -> 트랙 리스트(Level 1)로 이동
+  const selectAlbumFromMenu = (albumId) => {
+      playSound('click');
+      setCurrentAlbumId(albumId);
+      setMenuLevel(1);
+  };
+
+  // [2] 트랙 리스트(Level 1)에서 곡 선택 -> 재생 화면(Level 0)으로 이동 및 재생
+  const selectTrackFromList = (index) => {
+      playSound('click');
+      // ★ 핵심: 구경하던 앨범(current)을 재생 앨범(playing)으로 확정
+      setPlayingAlbumId(currentAlbumId);
+      setPlayingTrackIndex(index);
+      setMenuLevel(0); 
+  };
+
+  // [3] 휠 돌리기 (이전/다음)
   const handleTrackChange = (direction) => {
       if (menuLevel === 1) return; // 트랙 리스트에선 휠 좌우 이동 X
       
       playSound('click');
 
-      // [CASE 1] Now Playing (Level 0) -> "재생 중인 곡" 변경
+      // Now Playing (Level 0) -> "재생 중인 곡" 변경
       if (menuLevel === 0) {
-          // 재생 중인 앨범 정보 가져오기
           const playingAlbum = MARK_ALBUMS_DATA.find(a => a.id === playingAlbumId) || MARK_ALBUMS_DATA[0];
           const tracksLength = playingAlbum.tracks.length;
           
@@ -883,11 +897,9 @@ function App() {
 
           setTimeout(() => {
               setPlayingTrackIndex(prev => {
-                  let newIndex = prev;
                   const total = tracksLength;
-                  if (direction === 'next') newIndex = (prev + 1) % total;
-                  else if (direction === 'prev') newIndex = (prev - 1 + total) % total;
-                  return newIndex;
+                  if (direction === 'next') return (prev + 1) % total;
+                  else return (prev - 1 + total) % total;
               });
               setAlbumAnimation(direction === 'next' ? 'animate-fade-in-right' : 'animate-fade-in-left');
           }, 200); 
@@ -895,7 +907,7 @@ function App() {
           setTimeout(() => { setAlbumAnimation(''); }, 400); 
       }
       
-      // [CASE 2] Album List (Level 2) -> "구경 중인 앨범" 변경 (재생 끊김 없음)
+      // Album List (Level 2) -> "구경 중인 앨범" 변경
       else if (menuLevel === 2) {
           const albumCount = MARK_ALBUMS_DATA.length;
           const currentIndex = MARK_ALBUMS_DATA.findIndex(a => a.id === currentAlbumId);
@@ -905,7 +917,7 @@ function App() {
           else newIndex = (currentIndex - 1 + albumCount) % albumCount;
 
           const newAlbumId = MARK_ALBUMS_DATA[newIndex].id;
-          setCurrentAlbumId(newAlbumId); // 구경용 ID만 업데이트
+          setCurrentAlbumId(newAlbumId);
 
           const element = document.getElementById(`album-${newAlbumId}`);
           if (element) {
@@ -914,15 +926,15 @@ function App() {
       }
   };
 
-  // 휠 가운데 버튼 (Enter) 동작
+  // [4] 휠 가운데 버튼 (Enter) 동작
   const handleCenterClick = () => {
       playSound('click');
 
-      // [Level 2] 앨범 커버 플로우 -> 선택한 앨범의 트랙 리스트로 진입
+      // Level 2 (앨범 아트) -> Level 1 (트랙 리스트)로 진입
       if (menuLevel === 2) {
-          selectAlbumFromMenu(currentAlbumId);
+          setMenuLevel(1);
       } 
-      // [Level 0] 재생 화면 -> ★재생 중인 곡★ 유튜브 열기 (변수 수정됨)
+      // Level 0 (재생 화면) -> 유튜브 링크 열기
       else if (menuLevel === 0) {
           const playingAlbum = MARK_ALBUMS_DATA.find(a => a.id === playingAlbumId) || MARK_ALBUMS_DATA[0];
           const track = playingAlbum.tracks[playingTrackIndex] || playingAlbum.tracks[0];
@@ -930,30 +942,24 @@ function App() {
       }
   };
 
-  // 휠 버튼 - 메뉴 클릭 (뒤로 가기 및 동기화) - [수정됨]
+  // [5] 메뉴 버튼 (뒤로 가기)
   const handleMenuClick = () => {
       playSound('click');
       
-      // [CASE 1] Now Playing (0) -> Track List (1)
-      // ★ 핵심: 메뉴를 누르면 '현재 듣고 있는 앨범' 화면으로 이동합니다.
+      // Level 0 -> Level 1 (듣고 있던 앨범 화면으로 이동)
       if (menuLevel === 0) {
-          setCurrentAlbumId(playingAlbumId); // 화면을 재생 중인 앨범으로 강제 동기화
+          setCurrentAlbumId(playingAlbumId);
           setMenuLevel(1);
       }
-      
-      // [CASE 2] Track List (1) -> Album List (2)
+      // Level 1 -> Level 2
       else if (menuLevel === 1) {
           setMenuLevel(2);
-          // 화면 전환 후 해당 앨범이 가운데 오도록 스크롤 조정
           setTimeout(() => {
               const element = document.getElementById(`album-${currentAlbumId}`);
-              if (element) {
-                  element.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
-              }
+              if (element) element.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
           }, 0);
       }
-      
-      // [CASE 3] Album List (2) -> Now Playing (0)
+      // Level 2 -> Level 0
       else if (menuLevel === 2) {
           setMenuLevel(0);
       }
@@ -1602,7 +1608,7 @@ return (
                     
                     // Level 0: Now Playing (재생 모드 - playingAlbum, playingTrack 사용)
                     return (
-                        <div className={`h-full w-full absolute inset-0 flex flex-col ${albumAnimation}`}>
+                        <div className="h-full w-full absolute inset-0 flex flex-col">
                             <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3 shrink-0">
                                 <span className="text-[9px] font-bold text-white/50">Now Playing</span>
                                 <div className="flex gap-0.5"><div className="w-2 h-1 bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.5)]"></div><div className="w-0.5 h-1 bg-white/20"></div></div>
