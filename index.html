@@ -1598,73 +1598,76 @@ return (
                     }
                     
                     // Level 0: Now Playing (기능 유지)
-                    return (
-                        <div className={`h-full w-full absolute inset-0 flex flex-col ${albumAnimation}`}>
-                            {/* 헤더 */}
-                            <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3 shrink-0">
-                                <span className="text-[9px] font-bold text-white/50">Now Playing</span>
-                                <div className="flex gap-0.5">
-                                    <div className="w-2 h-1 bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.5)]"></div>
-                                    <div className="w-0.5 h-1 bg-white/20"></div>
-                                </div>
-                            </div>
-                            
-                            <div className="flex-1 flex flex-row items-center px-5 gap-4 overflow-hidden">
-                                <div className="relative shrink-0">
-                                    <img 
-                                        src={currentAlbum.cover} 
-                                        alt="Album" 
-                                        className="w-20 h-20 aspect-square shadow-2xl object-cover rounded-xl" 
-                                        onError={(e) => { e.target.src='https://via.placeholder.com/80x80/333333/FFFFFF?text=A'; }}
-                                    />
-                                </div>
+return (
+    // [수정] 부모 div에서 ${albumAnimation} 제거 -> 전체가 안 움직이게 고정
+    <div className="h-full w-full absolute inset-0 flex flex-col">
+        
+        {/* 헤더 (고정됨) */}
+        <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3 shrink-0">
+            <span className="text-[9px] font-bold text-white/50">Now Playing</span>
+            <div className="flex gap-0.5">
+                <div className="w-2 h-1 bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.5)]"></div>
+                <div className="w-0.5 h-1 bg-white/20"></div>
+            </div>
+        </div>
+        
+        {/* [수정] 내용물 div에만 ${albumAnimation} 적용 -> 앨범/텍스트만 슬라이드됨 */}
+        <div className={`flex-1 flex flex-row items-center px-5 gap-4 overflow-hidden ${albumAnimation}`}>
+            <div className="relative shrink-0">
+                <img 
+                    src={currentAlbum.cover} 
+                    alt="Album" 
+                    className="w-20 h-20 aspect-square shadow-2xl object-cover rounded-xl" 
+                    onError={(e) => { e.target.src='https://via.placeholder.com/80x80/333333/FFFFFF?text=A'; }}
+                />
+            </div>
 
-                                <div className="flex-1 min-w-0 flex flex-col justify-center gap-1 overflow-hidden">
-                                    {/* 15자 이상(>=15)일 때만 흐르도록 설정 */}
-                                    <div className="w-full overflow-hidden relative h-[18px]">
-                                        {currentTrack.title.length >= 15 ? (
-                                            <div 
-                                                className="animate-marquee" 
-                                                style={{ animationDuration: `${Math.max(5, currentTrack.title.length * 0.4)}s` }}
-                                            >
-                                                <a 
-                                                    href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer"
-                                                    className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
-                                                    onClick={() => playSound('click')}
-                                                >
-                                                    {currentTrack.title}
-                                                </a>
-                                                <a 
-                                                    href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer"
-                                                    className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
-                                                    onClick={() => playSound('click')}
-                                                >
-                                                    {currentTrack.title}
-                                                </a>
-                                            </div>
-                                        ) : (
-                                            <a 
-                                                href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer"
-                                                className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md block truncate"
-                                                onClick={() => playSound('click')}
-                                            >
-                                                {currentTrack.title}
-                                            </a>
-                                        )}
-                                    </div>
-                                    
-                                    <div className="text-[11px] text-white/80 truncate leading-tight font-medium">{currentAlbum.artist}</div>
-                                    <div className="text-[10px] text-white/50 truncate leading-tight">{currentAlbum.title}</div>
-                                </div>
-                            </div>
+            <div className="flex-1 min-w-0 flex flex-col justify-center gap-1 overflow-hidden">
+                {/* 15자 이상(>=15)일 때만 흐르도록 설정 */}
+                <div className="w-full overflow-hidden relative h-[18px]">
+                    {currentTrack.title.length >= 15 ? (
+                        <div 
+                            className="animate-marquee" 
+                            style={{ animationDuration: `${Math.max(5, currentTrack.title.length * 0.4)}s` }}
+                        >
+                            <a 
+                                href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
+                                onClick={() => playSound('click')}
+                            >
+                                {currentTrack.title}
+                            </a>
+                            <a 
+                                href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
+                                onClick={() => playSound('click')}
+                            >
+                                {currentTrack.title}
+                            </a>
                         </div>
-                    );
+                    ) : (
+                        <a 
+                            href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md block truncate"
+                            onClick={() => playSound('click')}
+                        >
+                            {currentTrack.title}
+                        </a>
+                    )}
+                </div>
+                
+                <div className="text-[11px] text-white/80 truncate leading-tight font-medium">{currentAlbum.artist}</div>
+                <div className="text-[10px] text-white/50 truncate leading-tight">{currentAlbum.title}</div>
+            </div>
+        </div>
+    </div>
+);
                 })()}
             </div>
             {/* [수정 3] 휠: 버튼 로직 및 기능 연결 */}
