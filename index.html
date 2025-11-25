@@ -85,13 +85,12 @@ html, body {
 /* [추가] 긴 텍스트 흐르는 효과 */
 @keyframes marquee {
   0% { transform: translateX(0); }
-  20% { transform: translateX(0); } /* 시작 전 잠시 대기 */
-  100% { transform: translateX(-100%); } /* 왼쪽으로 흘러감 */
+  100% { transform: translateX(-50%); } /* 텍스트 절반(원본+복사본) 길이만큼 이동 */
 }
 .animate-marquee {
-  display: inline-block;
+  display: flex;
   white-space: nowrap;
-  animation: marquee 8s linear infinite alternate; /* 왕복 이동 */
+  animation: marquee 10s linear infinite; /* 왕복(alternate) 제거 -> 무한 반복 */
 }
 
 /* [추가] 앨범 창 스크롤바 완벽 제거 */
@@ -1485,38 +1484,69 @@ return (
                     const currentAlbum = getAlbumData();
                     const currentTrack = getTrackData(currentAlbum);
 
-                    // Level 2: 앨범 목록 (Cover Flow 스타일) - [수정 완료]
+                    // [추가] 스크롤 시 중앙에 있는 앨범 감지하여 제목 변경하는 함수
+                    const handleAlbumScroll = (e) => {
+                        const container = e.target;
+                        const center = container.scrollLeft + container.clientWidth / 2;
+                        const children = container.children;
+                        
+                        let closestId = null;
+                        let minDiff = Infinity;
+
+                        // 현재 화면 중앙과 가장 가까운 앨범 찾기
+                        Array.from(children).forEach((child, index) => {
+                            const childCenter = child.offsetLeft + child.offsetWidth / 2;
+                            const diff = Math.abs(center - childCenter);
+                            
+                            if (diff < minDiff) {
+                                minDiff = diff;
+                                closestId = MARK_ALBUMS_DATA[index].id;
+                            }
+                        });
+
+                        // 찾은 앨범이 현재 앨범과 다르면 상태 업데이트 (제목 변경됨)
+                        if (closestId && closestId !== currentAlbumId) {
+                            setCurrentAlbumId(closestId);
+                        }
+                    };
+
+                    // Level 2: 앨범 목록 (Cover Flow) - [스크롤 동기화 & 디자인 복구]
                     if (menuLevel === 2) {
                         return (
-                            // [수정] overflow-hidden 추가하여 상하 스크롤 원천 차단
-                            <div className="absolute inset-0 flex flex-col z-10 animate-fade-in overflow-hidden bg-black/20 backdrop-blur-sm rounded-2xl">
+                            <div className="absolute inset-0 flex flex-col z-10 animate-fade-in bg-black/20 backdrop-blur-sm rounded-2xl overflow-hidden">
                                 <div className="text-[10px] font-bold text-white/60 text-center pt-4 shrink-0">
                                     Albums
                                 </div>
                                 
-                                {/* 1. 아이팟 커버 플로우 */}
-                                {/* items-center로 수직 중앙 정렬, py-0으로 변경 */}
-                                <div className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-6 px-[35%] hide-scrollbar">
+                                {/* onScroll 이벤트 추가: 스크롤할 때마다 제목 업데이트 */}
+                                <div 
+                                    className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-8 px-[38%] hide-scrollbar py-10"
+                                    onScroll={handleAlbumScroll}
+                                >
                                     {MARK_ALBUMS_DATA.map((album) => (
                                         <button
                                             key={album.id}
-                                            onClick={() => selectAlbumFromMenu(album.id)}
+                                            // 클릭 시에도 바로 이동
+                                            onClick={() => {
+                                                selectAlbumFromMenu(album.id);
+                                                // 클릭 시 해당 요소로 스크롤 이동 (부드럽게)
+                                                document.getElementById(`album-${album.id}`).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                                            }}
+                                            id={`album-${album.id}`}
                                             className={`flex-shrink-0 relative transition-all duration-500 ease-out snap-center focus:outline-none ${
                                                 album.id === currentAlbumId 
-                                                    ? 'w-36 h-36 scale-100 z-20 opacity-100' // 선택됨: 크고 선명하게 (w-36)
-                                                    : 'w-28 h-28 scale-95 z-0 opacity-50 grayscale-[30%]' // 선택 안됨: 조금만 작게 (w-28), 덜 흐리게
+                                                    ? 'w-28 h-28 scale-110 z-20 opacity-100' // 선택됨
+                                                    : 'w-20 h-20 scale-90 z-0 opacity-40 grayscale-[50%]' // 선택 안됨
                                             }`}
                                         >
                                             <img 
                                                 src={album.cover} 
                                                 alt={album.title} 
-                                                // 둥글기 조절 (rounded-3xl)
                                                 className={`w-full h-full object-cover rounded-3xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] ${
                                                     album.id === currentAlbumId ? 'shadow-[0_20px_40px_rgba(0,0,0,0.6)]' : ''
                                                 }`}
                                                 onError={(e) => { e.target.src='https://via.placeholder.com/100x100/333333/FFFFFF?text=Album'; }}
                                             />
-                                            {/* 반사 효과 */}
                                             {album.id === currentAlbumId && (
                                                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
                                             )}
@@ -1524,9 +1554,8 @@ return (
                                     ))}
                                 </div>
                                 
-                                {/* [수정] 앨범 제목 위치 조정: mt-auto로 바닥에 붙이지 않고 간격(mt-6)을 줌 */}
-                                <div className="shrink-0 pb-6 text-center px-6">
-                                    <div className="text-[11px] font-bold text-white tracking-wide drop-shadow-md animate-fade-in mt-2">
+                                <div className="shrink-0 pb-6 text-center px-6 h-14">
+                                    <div className="text-[11px] font-bold text-white tracking-wide drop-shadow-md animate-fade-in transition-all duration-300">
                                         {currentAlbum.title}
                                     </div>
                                     <div className="text-[9px] text-white/60 mt-1">
@@ -1569,10 +1598,9 @@ return (
                         );
                     }
                     
-                    // Level 0: Now Playing - [흐르는 텍스트 적용]
+                    // Level 0: Now Playing - [조건부 흐르는 텍스트 적용]
                     return (
                         <div className={`h-full w-full absolute inset-0 flex flex-col ${albumAnimation}`}>
-                            {/* 헤더 */}
                             <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3 shrink-0">
                                 <span className="text-[9px] font-bold text-white/50">Now Playing</span>
                                 <div className="flex gap-0.5">
@@ -1581,9 +1609,7 @@ return (
                                 </div>
                             </div>
                             
-                            {/* 컨텐츠 영역 */}
                             <div className="flex-1 flex flex-row items-center px-5 gap-4 overflow-hidden">
-                                {/* 앨범 아트 */}
                                 <div className="relative shrink-0">
                                     <img 
                                         src={currentAlbum.cover} 
@@ -1593,20 +1619,44 @@ return (
                                     />
                                 </div>
 
-                                {/* 텍스트 정보 */}
                                 <div className="flex-1 min-w-0 flex flex-col justify-center gap-1 overflow-hidden">
-                                    {/* [수정] 노래 제목: 흐르는 효과(marquee) 적용 */}
+                                    {/* [수정] 제목이 길면(15자 이상) 흐르고, 아니면 그냥 표시 */}
                                     <div className="w-full overflow-hidden relative h-[18px]">
-                                        <a 
-                                            href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            // animate-marquee 클래스 적용 (CSS에 추가된 애니메이션)
-                                            className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md absolute whitespace-nowrap animate-marquee"
-                                            onClick={() => playSound('click')}
-                                        >
-                                            {currentTrack.title} &nbsp;&nbsp;&nbsp; {currentTrack.title}
-                                        </a>
+                                        {currentTrack.title.length > 15 ? (
+                                            // 긴 제목: animate-marquee 적용 (한 방향 무한 루프)
+                                            <div className="animate-marquee">
+                                                <a 
+                                                    href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
+                                                    onClick={() => playSound('click')}
+                                                >
+                                                    {currentTrack.title}
+                                                </a>
+                                                {/* 자연스러운 루프를 위해 복제본 배치 */}
+                                                <a 
+                                                    href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
+                                                    onClick={() => playSound('click')}
+                                                >
+                                                    {currentTrack.title}
+                                                </a>
+                                            </div>
+                                        ) : (
+                                            // 짧은 제목: 정지 상태
+                                            <a 
+                                                href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md block truncate"
+                                                onClick={() => playSound('click')}
+                                            >
+                                                {currentTrack.title}
+                                            </a>
+                                        )}
                                     </div>
                                     
                                     <div className="text-[11px] text-white/80 truncate leading-tight font-medium">{currentAlbum.artist}</div>
