@@ -1508,7 +1508,7 @@ return (
                         }
                     };
 
-                    // Level 2: 앨범 목록 (Cover Flow)
+                    // Level 2: 앨범 목록 (Cover Flow) - [잘림 방지 적용됨: py-20]
                     if (menuLevel === 2) {
                         return (
                             <div className="absolute inset-0 flex flex-col z-10 animate-fade-in bg-black/20 backdrop-blur-sm rounded-2xl overflow-hidden">
@@ -1607,61 +1607,7 @@ return (
                             <div className="flex-1 flex flex-row items-center px-5 gap-4 overflow-hidden">
                                 <div className="relative shrink-0">
                                     <img 
-                                        src={currentAlbum.cover} 
-                                        alt="Album" 
-                                        className="w-20 h-20 aspect-square shadow-2xl object-cover rounded-xl" 
-                                        onError={(e) => { e.target.src='https://via.placeholder.com/80x80/333333/FFFFFF?text=A'; }}
-                                    />
-                                </div>
-
-                                <div className="flex-1 min-w-0 flex flex-col justify-center gap-1 overflow-hidden">
-                                    {/* [수정] 12자 이상(>=12)일 때만 흐르게 변경 */}
-                                    <div className="w-full overflow-hidden relative h-[18px]">
-                                        {currentTrack.title.length >= 12 ? (
-                                            <div 
-                                                className="animate-marquee" 
-                                                style={{ animationDuration: `${Math.max(5, currentTrack.title.length * 0.4)}s` }}
-                                            >
-                                                <a 
-                                                    href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer"
-                                                    className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
-                                                    onClick={() => playSound('click')}
-                                                >
-                                                    {currentTrack.title}
-                                                </a>
-                                                <a 
-                                                    href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer"
-                                                    className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
-                                                    onClick={() => playSound('click')}
-                                                >
-                                                    {currentTrack.title}
-                                                </a>
-                                            </div>
-                                        ) : (
-                                            <a 
-                                                href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer"
-                                                className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md block truncate"
-                                                onClick={() => playSound('click')}
-                                            >
-                                                {currentTrack.title}
-                                            </a>
-                                        )}
-                                    </div>
-                                    
-                                    <div className="text-[11px] text-white/80 truncate leading-tight font-medium">{currentAlbum.artist}</div>
-                                    <div className="text-[10px] text-white/50 truncate leading-tight">{currentAlbum.title}</div>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })()}
-            </div>
+                                        src={currentAlbum.
                                 {/* 재현: 필모그래피 & 라디오 (다크 모드 스타일) */}
                                 {selectedProfile.id === 'jaehyun' && (
                                     <div className="space-y-16 animate-fade-in-up pb-10">
