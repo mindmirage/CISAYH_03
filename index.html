@@ -862,35 +862,61 @@ function App() {
   const getAlbumData = () => MARK_ALBUMS_DATA.find(a => a.id === currentAlbumId) || MARK_ALBUMS_DATA[0];
   const getTrackData = (album = getAlbumData()) => album.tracks[currentTrackIndex] || album.tracks[0];
   
-  // 휠 버튼 - 이전/다음 트랙 변경 로직 (1, 2번 요청)
+  // 휠 버튼 - 이전/다음 (트랙/앨범 변경 통합)
   const handleTrackChange = (direction) => {
-      // 메뉴가 열려있을 때는 트랙 변경 금지
-      if (menuLevel !== 0) return;
+      // Level 1(트랙 리스트)에서는 좌우 버튼 동작 안 함
+      if (menuLevel === 1) return;
 
-      const currentAlbum = getAlbumData();
-      const tracksLength = currentAlbum.tracks.length;
-      if (tracksLength === 0) return;
-      
       playSound('click');
-      
-      setAlbumAnimation(direction === 'next' ? 'animate-fade-out-left' : 'animate-fade-out-right');
 
-      setTimeout(() => {
-          setCurrentTrackIndex(prev => {
-              let newIndex = prev;
-              if (direction === 'next') {
-                  newIndex = (prev + 1) % tracksLength;
-              } else if (direction === 'prev') {
-                  newIndex = (prev - 1 + tracksLength) % tracksLength;
-              }
-              return newIndex;
-          });
-          setAlbumAnimation(direction === 'next' ? 'animate-fade-in-right' : 'animate-fade-in-left');
-      }, 200); 
+      // [CASE 1] Now Playing (Level 0) -> 트랙 변경
+      if (menuLevel === 0) {
+          const currentAlbum = getAlbumData();
+          const tracksLength = currentAlbum.tracks.length;
+          if (tracksLength === 0) return;
+          
+          setAlbumAnimation(direction === 'next' ? 'animate-fade-out-left' : 'animate-fade-out-right');
+
+          setTimeout(() => {
+              setCurrentTrackIndex(prev => {
+                  let newIndex = prev;
+                  const total = tracksLength;
+                  if (direction === 'next') {
+                      newIndex = (prev + 1) % total;
+                  } else if (direction === 'prev') {
+                      newIndex = (prev - 1 + total) % total;
+                  }
+                  return newIndex;
+              });
+              setAlbumAnimation(direction === 'next' ? 'animate-fade-in-right' : 'animate-fade-in-left');
+          }, 200); 
+          
+          setTimeout(() => {
+              setAlbumAnimation('');
+          }, 400); 
+      }
       
-      setTimeout(() => {
-          setAlbumAnimation('');
-      }, 400); 
+      // [CASE 2] Album List (Level 2) -> 앨범 변경
+      else if (menuLevel === 2) {
+          const albumCount = MARK_ALBUMS_DATA.length;
+          const currentIndex = MARK_ALBUMS_DATA.findIndex(a => a.id === currentAlbumId);
+          let newIndex = currentIndex;
+
+          if (direction === 'next') {
+              newIndex = (currentIndex + 1) % albumCount;
+          } else {
+              newIndex = (currentIndex - 1 + albumCount) % albumCount;
+          }
+
+          const newAlbumId = MARK_ALBUMS_DATA[newIndex].id;
+          setCurrentAlbumId(newAlbumId);
+
+          // 앨범 카드로 스크롤 이동
+          const element = document.getElementById(`album-${newAlbumId}`);
+          if (element) {
+              element.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+          }
+      }
   };
   
   // 휠 버튼 - 메뉴 클릭 로직 (4번 요청)
@@ -1671,14 +1697,34 @@ return (
             </div>
             {/* [수정 3] 휠: 버튼 로직 및 기능 연결 */}
             <div className="w-40 h-40 rounded-full bg-white/20 border border-white/20 mx-auto relative flex items-center justify-center shadow-lg backdrop-blur-sm">
+                
                 {/* MENU 버튼 */}
                 <button onClick={handleMenuClick} className="absolute top-4 text-[10px] font-bold text-white/60 p-2 -mt-2 -mx-2 hover:text-white transition">MENU</button>
-                {/* 재생 버튼 */}
-                <button onClick={() => { if (menuLevel !== 0) return; playSound('click'); const track = getTrackData(); window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank'); }} className={`absolute bottom-4 text-[10px] font-bold p-2 -mb-2 -mx-2 transition ${menuLevel === 0 ? 'text-white hover:text-green-300' : 'text-white/40'}`}><Play size={10} fill="currentColor"/></button>
-                {/* 이전 곡 버튼 */}
-                <button onClick={() => handleTrackChange('prev')} className={`absolute left-4 text-[10px] font-bold p-2 -ml-2 -my-2 transition ${menuLevel === 0 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}><ChevronLeft size={10} /></button>
-                {/* 다음 곡 버튼 */}
-                <button onClick={() => handleTrackChange('next')} className={`absolute right-4 text-[10px] font-bold p-2 -mr-2 -my-2 transition ${menuLevel === 0 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}><ChevronLeft size={10} className="rotate-180" /></button>
+                
+                {/* 재생 버튼 (Level 0에서만 활성화 유지) */}
+                <button 
+                    onClick={() => { if (menuLevel !== 0) return; playSound('click'); const track = getTrackData(); window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank'); }} 
+                    className={`absolute bottom-4 text-[10px] font-bold p-2 -mb-2 -mx-2 transition ${menuLevel === 0 ? 'text-white hover:text-green-300' : 'text-white/40'}`}
+                >
+                    <Play size={10} fill="currentColor"/>
+                </button>
+                
+                {/* 이전 버튼 (Level 0 또는 2에서 활성화) */}
+                <button 
+                    onClick={() => handleTrackChange('prev')} 
+                    className={`absolute left-4 text-[10px] font-bold p-2 -ml-2 -my-2 transition ${menuLevel === 0 || menuLevel === 2 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
+                >
+                    <ChevronLeft size={10} />
+                </button>
+                
+                {/* 다음 버튼 (Level 0 또는 2에서 활성화) */}
+                <button 
+                    onClick={() => handleTrackChange('next')} 
+                    className={`absolute right-4 text-[10px] font-bold p-2 -mr-2 -my-2 transition ${menuLevel === 0 || menuLevel === 2 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
+                >
+                    <ChevronLeft size={10} className="rotate-180" />
+                </button>
+                
                 {/* 가운데 버튼 */}
                 <div className="w-14 h-14 rounded-full bg-white/40 shadow-inner border border-white/20"></div>
             </div>
