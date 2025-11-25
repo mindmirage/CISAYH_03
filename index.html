@@ -1508,18 +1508,18 @@ return (
                         }
                     };
 
-                    // Level 2: 앨범 목록 (Cover Flow) - [여백 축소 및 텍스트 복구]
+                    // Level 2: 앨범 목록 (Cover Flow) - [여백 및 크기 최적화]
                     if (menuLevel === 2) {
                         return (
                             <div className="absolute inset-0 flex flex-col z-10 animate-fade-in bg-black/20 backdrop-blur-sm rounded-2xl overflow-hidden">
-                                {/* [수정] pt-4 -> pt-2 (상단 여백 줄임) */}
-                                <div className="text-[10px] font-bold text-white/60 text-center pt-2 shrink-0">
+                                {/* 상단 여백 살짝 확보 */}
+                                <div className="text-[10px] font-bold text-white/60 text-center pt-3 shrink-0">
                                     Albums
                                 </div>
                                 
-                                {/* [수정] py-12 -> py-5 (앨범 위아래 여백 대폭 줄임 -> 텍스트 공간 확보) */}
+                                {/* 앨범 리스트: 앨범 크기를 w-20으로 줄여 위아래 여유 공간 자동 확보 */}
                                 <div 
-                                    className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-8 px-[38%] hide-scrollbar py-5"
+                                    className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-6 px-[38%] hide-scrollbar py-2"
                                     onScroll={handleAlbumScroll}
                                 >
                                     {MARK_ALBUMS_DATA.map((album) => (
@@ -1532,32 +1532,32 @@ return (
                                             id={`album-${album.id}`}
                                             className={`flex-shrink-0 relative transition-all duration-500 ease-out snap-center focus:outline-none ${
                                                 album.id === currentAlbumId 
-                                                    ? 'w-24 h-24 scale-110 z-20 opacity-100' // 선택됨
-                                                    : 'w-20 h-20 scale-90 z-0 opacity-40 grayscale-[50%]' // 선택 안됨 (크기 유지)
+                                                    ? 'w-20 h-20 scale-110 z-20 opacity-100' // [수정] 선택됨: w-20 (80px) - 화면에 딱 맞는 크기
+                                                    : 'w-16 h-16 scale-90 z-0 opacity-50 grayscale-[50%]' // [수정] 선택 안됨: w-16 (64px) - 너무 작지 않게
                                             }`}
                                         >
                                             <img 
                                                 src={album.cover} 
                                                 alt={album.title} 
-                                                className={`w-full h-full object-cover rounded-3xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] ${
-                                                    album.id === currentAlbumId ? 'shadow-[0_20px_40px_rgba(0,0,0,0.6)]' : ''
+                                                className={`w-full h-full object-cover rounded-2xl shadow-[0_5px_15px_rgba(0,0,0,0.5)] ${
+                                                    album.id === currentAlbumId ? 'shadow-[0_10px_25px_rgba(0,0,0,0.6)]' : ''
                                                 }`}
                                                 onError={(e) => { e.target.src='https://via.placeholder.com/100x100/333333/FFFFFF?text=Album'; }}
                                             />
                                             {/* 반사 효과 */}
                                             {album.id === currentAlbumId && (
-                                                <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
+                                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
                                             )}
                                         </button>
                                     ))}
                                 </div>
                                 
-                                {/* [수정] 하단 텍스트 영역 (h-16) 잘리지 않게 확보 */}
-                                <div className="shrink-0 pb-4 text-center px-4 h-16 flex flex-col justify-start">
-                                    <div className="text-[11px] font-bold text-white tracking-wide drop-shadow-md animate-fade-in transition-all duration-300 line-clamp-1 leading-tight">
+                                {/* 하단 텍스트 영역: 높이를 h-10으로 컴팩트하게 줄여 앨범 공간 확보 */}
+                                <div className="shrink-0 pb-3 text-center px-4 h-12 flex flex-col justify-center">
+                                    <div className="text-[10px] font-bold text-white tracking-wide drop-shadow-md animate-fade-in transition-all duration-300 line-clamp-1 leading-tight">
                                         {currentAlbum.title}
                                     </div>
-                                    <div className="text-[9px] text-white/60 mt-0.5 truncate">
+                                    <div className="text-[8px] text-white/60 mt-0.5 truncate">
                                         {currentAlbum.artist}
                                     </div>
                                 </div>
@@ -1565,7 +1565,7 @@ return (
                         );
                     }
                     
-                    // Level 1: 트랙 리스트
+                    // Level 1: 트랙 리스트 (변경 없음)
                     if (menuLevel === 1) {
                         return (
                             <div className="absolute inset-0 p-3 flex flex-col z-10 animate-fade-in">
@@ -1597,10 +1597,9 @@ return (
                         );
                     }
                     
-                    // Level 0: Now Playing
+                    // Level 0: Now Playing (15자 이상 흐르기 유지)
                     return (
                         <div className={`h-full w-full absolute inset-0 flex flex-col ${albumAnimation}`}>
-                            {/* 헤더 */}
                             <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3 shrink-0">
                                 <span className="text-[9px] font-bold text-white/50">Now Playing</span>
                                 <div className="flex gap-0.5">
