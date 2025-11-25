@@ -1575,7 +1575,7 @@ return (
                                         
                                         {/* 1. LP 앨범 전시 선반 (DISCOGRAPHY) */}
                                         <div className="mb-8 px-2">
-                                            {/* 타이틀 */}
+                                            {/* 타이틀 (위치는 유지) */}
                                             <div className="flex items-center gap-2 mb-6 pl-2">
                                                 <div className="w-1 h-4 bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
                                                 <div className="text-xs font-bold text-green-100 tracking-[0.2em] drop-shadow-md">
@@ -1584,13 +1584,12 @@ return (
                                             </div>
 
                                             {/* 앨범 리스트 (2x2 그리드) */}
-                                            <div className="grid grid-cols-2 gap-x-12 gap-y-10 px-2 pb-4">
+                                            {/* [수정] -translate-x-4 추가: 전체적으로 왼쪽으로 16px 이동하여 시각적 균형 맞춤 */}
+                                            <div className="grid grid-cols-2 gap-x-12 gap-y-10 px-2 pb-4 -translate-x-4">
                                                 {MARK_ALBUMS_DATA.map((album) => (
                                                     <div key={album.id} className="group relative flex flex-col items-center cursor-pointer" onClick={() => {
-                                                        // LP 클릭 시 해당 앨범을 아이팟 재생 목록으로 선택
                                                         if (typeof selectAlbumFromMenu === 'function') {
                                                             selectAlbumFromMenu(album.id);
-                                                            // 부드러운 스크롤 이동
                                                             setTimeout(() => {
                                                                 const ipodElement = document.getElementById('mark-ipod');
                                                                 if(ipodElement) ipodElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1620,9 +1619,8 @@ return (
                                                             </div>
                                                         </div>
 
-                                                        {/* 앨범 제목 (전체 표시 수정됨) */}
+                                                        {/* 앨범 제목 (줄바꿈 허용, 전체 표시) */}
                                                         <div className="mt-3 text-center w-32 z-20 flex flex-col items-center">
-                                                            {/* truncate 제거, break-words 및 leading-tight 적용 */}
                                                             <div className="text-[10px] font-bold text-white/95 leading-tight drop-shadow-md break-words w-full">{album.title}</div>
                                                             <div className="text-[9px] text-white/70 mt-1">{album.type}</div>
                                                         </div>
@@ -1631,7 +1629,7 @@ return (
                                             </div>
                                         </div>
 
-                                        {/* 2. 아이팟 섹션 (PLAY 타이틀 포함) */}
+                                        {/* 2. 아이팟 섹션 */}
                                         <div className="mb-16 px-2">
                                             <div className="flex items-center gap-2 mb-6 pl-2">
                                                 <div className="w-1 h-4 bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
