@@ -78,7 +78,6 @@ html, body {
   to { opacity: 1; transform: translateX(0); }
 }
 </style>
-</style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden">
 <div id="root"></div>
@@ -167,23 +166,22 @@ const MARK_ALBUMS_DATA = [
   { 
       id: 'firstfruit', 
       title: "The Firstfruit - The 1st Album", 
-      // ▼▼▼ 여기에 요청하신 앨범 아트 링크를 반영합니다. ▼▼▼
-      cover: "https://i.scdn.co/image/ab67616d0000b273458a9f340084c41b7959205d",
+      cover: "https://i.scdn.co/image/ab67616d0000b273458a9f340084c41b7959205d", // 요청하신 앨범 아트 링크로 수정
       artist: 'MARK',
       tracks: [
-        { id: 1, title: "1. Toronto's Window", videoId: "9qE_U-X5t9A" }, 
-        { id: 2, title: "2. 1999", videoId: "b8y1r6kH67A" },
-        { id: 3, title: "3. Flight to NYC", videoId: "4pS1_vL6e5g" },
-        { id: 4, title: "4. Righteous", videoId: "5j7wW8j8r4Y" },
-        { id: 5, title: "5. Fraktsiya", videoId: "P7D5n0t0o9g" },
-        { id: 6, title: "6. Raincouver", videoId: "zXQ3o8u6x5K" },
-        { id: 7, title: "7. Loser", videoId: "a2Z3x4w5y6L" },
-        { id: 8, title: "8. Watching TV", videoId: "o5L4i3k2j1H" },
-        { id: 9, title: "9. +82 Pressin'", videoId: "e9C8v7b6n5M" },
-        { id: 10, title: "10. 200", videoId: "q4A3z2y1x0V" },
-        { id: 11, title: "11. Journey Mercies", videoId: "b2N1m0l9k8J" },
-        { id: 12, title: "12. Mom's Interlude", videoId: "y8H7g6f5e4D" },
-        { id: 13, title: "13. Too Much", videoId: "d1C0b9a8s7F" }
+        { id: 1, title: "Toronto's Window", videoId: "9qE_U-X5t9A" }, 
+        { id: 2, title: "1999", videoId: "b8y1r6kH67A" },
+        { id: 3, title: "Flight to NYC", videoId: "4pS1_vL6e5g" },
+        { id: 4, title: "Righteous", videoId: "5j7wW8j8r4Y" },
+        { id: 5, title: "Fraktsiya", videoId: "P7D5n0t0o9g" },
+        { id: 6, title: "Raincouver", videoId: "zXQ3o8u6x5K" },
+        { id: 7, title: "Loser", videoId: "a2Z3x4w5y6L" },
+        { id: 8, title: "Watching TV", videoId: "o5L4i3k2j1H" },
+        { id: 9, title: "+82 Pressin'", videoId: "e9C8v7b6n5M" },
+        { id: 10, title: "200", videoId: "q4A3z2y1x0V" },
+        { id: 11, title: "Journey Mercies", videoId: "b2N1m0l9k8J" },
+        { id: 12, title: "Mom's Interlude", videoId: "y8H7g6f5e4D" },
+        { id: 13, title: "Too Much", videoId: "d1C0b9a8s7F" }
       ],
       type: 'Album'
   },
@@ -677,6 +675,8 @@ function App() {
   const [scrollTop, setScrollTop] = useState(0); // [추가] 스크롤 위치 저장
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0); // 현재 재생 중인 트랙 인덱스
   const [albumAnimation, setAlbumAnimation] = useState(''); // 트랙 전환 애니메이션 상태
+  const [currentAlbumId, setCurrentAlbumId] = useState('firstfruit'); // 현재 재생/선택된 앨범 ID
+  const [menuLevel, setMenuLevel] = useState(0); // 0: Now Playing, 1: Track List, 2: Album List (Cover Flow)
   
   // ▼▼▼ 이 부분부터 handleChoice 함수 끝 이후까지 교체합니다. ▼▼▼
   const [currentAlbumId, setCurrentAlbumId] = useState('firstfruit'); // 현재 재생/선택된 앨범 ID
@@ -1464,12 +1464,12 @@ return (
                     const currentAlbum = getAlbumData();
                     const currentTrack = getTrackData(currentAlbum);
 
-                    // Level 2: 앨범 목록 (Cover Flow 스타일) (1, 4번 요청)
+                    // Level 2: 앨범 목록 (Cover Flow 스타일)
                     if (menuLevel === 2) {
                         return (
                             <div className="absolute inset-0 p-2 flex flex-col z-10 animate-fade-in">
                                 <div className="text-[10px] font-bold text-white/60 text-center mb-2">
-                                    {currentAlbum.title}
+                                    Albums
                                 </div>
                                 {/* 1. 아이팟 커버 플로우 스타일 메뉴 */}
                                 <div className="flex-1 w-full overflow-x-scroll snap-x snap-mandatory flex items-center space-x-4 pb-2 px-6 custom-scrollbar">
@@ -1500,7 +1500,7 @@ return (
                         );
                     }
                     
-                    // Level 1: 트랙 리스트 (4번 요청)
+                    // Level 1: 트랙 리스트
                     if (menuLevel === 1) {
                         return (
                             <div className="absolute inset-0 p-3 flex flex-col z-10 animate-fade-in">
@@ -1532,7 +1532,7 @@ return (
                         );
                     }
                     
-                    // Level 0: Now Playing (기본 재생 화면) (2번 요청)
+                    // Level 0: Now Playing (원본 디자인 유지)
                     return (
                         <div className={`h-full w-full absolute inset-0 ${albumAnimation}`}>
                             <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3">
@@ -1542,22 +1542,21 @@ return (
                                     <div className="w-0.5 h-1 bg-white/40"></div>
                                 </div>
                             </div>
-                            {/* 2. 재생 화면 중앙 정렬 (디자인 복구 및 중앙 배치) */}
-                            {/* flex-col justify-center items-center로 중앙 수직 정렬 */}
-                            <div className="flex-1 flex flex-col items-center justify-center p-4 h-[calc(100%-1.5rem)]">
+                            {/* 원본 디자인: flex-1 flex items-center p-4 gap-4 */}
+                            <div className="flex-1 flex items-center p-4 gap-4">
                                 <img 
                                     src={currentAlbum.cover} 
                                     alt="Album" 
-                                    className="w-24 h-24 shadow-lg object-cover rounded-md mb-3" 
-                                    onError={(e) => { e.target.src='https://via.placeholder.com/100x100/333333/FFFFFF?text=A'; }}
+                                    className="w-20 h-20 shadow-lg object-cover rounded-md" 
+                                    onError={(e) => { e.target.src='https://via.placeholder.com/80x80/333333/FFFFFF?text=A'; }}
                                 />
-                                <div className="min-w-0 flex flex-col justify-center items-center">
-                                    {/* 노래 제목과 유튜브 링크 로직 (3번 요청) */}
+                                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                    {/* 노래 제목과 유튜브 링크 */}
                                     <a 
                                         href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
-                                        className="text-sm font-bold text-white truncate mb-0.5 hover:underline cursor-pointer text-center"
+                                        className="text-xs font-bold text-white truncate mb-1 hover:underline cursor-pointer"
                                         onClick={() => playSound('click')}
                                     >
                                         {currentTrack.title}
