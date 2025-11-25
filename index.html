@@ -1508,7 +1508,7 @@ return (
                         }
                     };
 
-                    // Level 2: 앨범 목록 (Cover Flow) - [크기 축소 및 잘림 해결]
+                    // Level 2: 앨범 목록 (Cover Flow) - [선택 안 된 앨범 크기 복구]
                     if (menuLevel === 2) {
                         return (
                             <div className="absolute inset-0 flex flex-col z-10 animate-fade-in bg-black/20 backdrop-blur-sm rounded-2xl overflow-hidden">
@@ -1516,9 +1516,9 @@ return (
                                     Albums
                                 </div>
                                 
-                                {/* [수정] py-12로 여백 조정, flex-1로 공간 확보 */}
+                                {/* py-16: 앨범이 커졌으므로 위아래 여백을 더 확보 */}
                                 <div 
-                                    className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-8 px-[38%] hide-scrollbar py-12"
+                                    className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-8 px-[35%] hide-scrollbar py-16"
                                     onScroll={handleAlbumScroll}
                                 >
                                     {MARK_ALBUMS_DATA.map((album) => (
@@ -1531,8 +1531,8 @@ return (
                                             id={`album-${album.id}`}
                                             className={`flex-shrink-0 relative transition-all duration-500 ease-out snap-center focus:outline-none ${
                                                 album.id === currentAlbumId 
-                                                    ? 'w-24 h-24 scale-110 z-20 opacity-100' // [수정] 크기 줄임 (w-24)
-                                                    : 'w-16 h-16 scale-90 z-0 opacity-40 grayscale-[50%]' // [수정] 크기 줄임 (w-16)
+                                                    ? 'w-24 h-24 scale-110 z-20 opacity-100' // 선택됨: 적당한 크기
+                                                    : 'w-20 h-20 scale-90 z-0 opacity-40 grayscale-[50%]' // [수정] 선택 안됨: w-12 -> w-20으로 복구
                                             }`}
                                         >
                                             <img 
@@ -1551,7 +1551,7 @@ return (
                                     ))}
                                 </div>
                                 
-                                {/* [수정] 하단 텍스트 영역 확보 (h-20) 및 정렬 */}
+                                {/* 하단 텍스트 영역 */}
                                 <div className="shrink-0 pb-6 text-center px-6 h-20 flex flex-col justify-center">
                                     <div className="text-[11px] font-bold text-white tracking-wide drop-shadow-md animate-fade-in transition-all duration-300 line-clamp-2 leading-tight">
                                         {currentAlbum.title}
@@ -1564,7 +1564,7 @@ return (
                         );
                     }
                     
-                    // Level 1: 트랙 리스트 (변경 없음)
+                    // Level 1: 트랙 리스트
                     if (menuLevel === 1) {
                         return (
                             <div className="absolute inset-0 p-3 flex flex-col z-10 animate-fade-in">
@@ -1618,9 +1618,9 @@ return (
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col justify-center gap-1 overflow-hidden">
-                                    {/* [수정] 5자 이상(>=5)일 때 흐르도록 변경 */}
+                                    {/* 15자 이상(>=15)일 때만 흐르도록 설정 */}
                                     <div className="w-full overflow-hidden relative h-[18px]">
-                                        {currentTrack.title.length >= 5 ? (
+                                        {currentTrack.title.length >= 15 ? (
                                             <div 
                                                 className="animate-marquee" 
                                                 style={{ animationDuration: `${Math.max(5, currentTrack.title.length * 0.4)}s` }}
