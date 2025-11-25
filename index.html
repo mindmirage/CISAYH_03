@@ -167,7 +167,8 @@ const MARK_ALBUMS_DATA = [
   { 
       id: 'firstfruit', 
       title: "The Firstfruit - The 1st Album", 
-      cover: "https://i.pinimg.com/736x/2e/5b/e3/2e5be366099b999f999e5999b999f999.jpg",
+      // ▼▼▼ 여기에 요청하신 앨범 아트 링크를 반영합니다. ▼▼▼
+      cover: "https://i.scdn.co/image/ab67616d0000b273458a9f340084c41b7959205d",
       artist: 'MARK',
       tracks: [
         { id: 1, title: "1. Toronto's Window", videoId: "9qE_U-X5t9A" }, 
@@ -1541,7 +1542,8 @@ return (
                                     <div className="w-0.5 h-1 bg-white/40"></div>
                                 </div>
                             </div>
-                            {/* 2. 재생 화면 중앙 정렬 */}
+                            {/* 2. 재생 화면 중앙 정렬 (디자인 복구 및 중앙 배치) */}
+                            {/* flex-col justify-center items-center로 중앙 수직 정렬 */}
                             <div className="flex-1 flex flex-col items-center justify-center p-4 h-[calc(100%-1.5rem)]">
                                 <img 
                                     src={currentAlbum.cover} 
@@ -1549,7 +1551,7 @@ return (
                                     className="w-24 h-24 shadow-lg object-cover rounded-md mb-3" 
                                     onError={(e) => { e.target.src='https://via.placeholder.com/100x100/333333/FFFFFF?text=A'; }}
                                 />
-                                <div className="flex-1 min-w-0 flex flex-col justify-center items-center">
+                                <div className="min-w-0 flex flex-col justify-center items-center">
                                     {/* 노래 제목과 유튜브 링크 로직 (3번 요청) */}
                                     <a 
                                         href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
