@@ -1297,38 +1297,45 @@ return (
                                     {CHARACTER_DETAILS[selectedProfile.id].desc}
                                 </p>
 
-                                {/* 마크: 아이팟 클래식 스타일 앨범 정보 (다크 모드 스타일) */}
-                                {selectedProfile.id === 'mark' && CHARACTER_DETAILS.mark.album && (
-                                    <div className="mb-16 animate-fade-in-up flex justify-center">
-                                        <div className="w-64 bg-white/10 backdrop-blur-md rounded-[2rem] p-4 shadow-2xl border border-white/20 relative">
-                                            <div className="bg-black/40 h-40 rounded-lg mb-6 border border-white/10 overflow-hidden flex flex-col shadow-inner">
-                                                <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3">
-                                                    <span className="text-[9px] font-bold text-white/60">Now Playing</span>
-                                                    <div className="flex gap-0.5">
-                                                        <div className="w-2 h-1 bg-green-400"></div>
-                                                        <div className="w-0.5 h-1 bg-white/40"></div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 flex items-center p-4 gap-4">
-                                                    <img src={CHARACTER_DETAILS.mark.album.cover} alt="Album" className="w-20 h-20 shadow-lg object-cover rounded-md" />
-                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                        <div className="text-xs font-bold text-white truncate mb-1">{CHARACTER_DETAILS.mark.album.tracks[0]}</div>
-                                                        <div className="text-[10px] text-white/60 truncate">{CHARACTER_DETAILS.mark.album.title}</div>
-                                                        <div className="text-[10px] text-white/60 truncate">NCT MARK</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="w-40 h-40 rounded-full bg-black/20 border border-white/10 mx-auto relative flex items-center justify-center shadow-lg backdrop-blur-sm">
-                                                <div className="absolute top-4 text-[10px] font-bold text-white/50">MENU</div>
-                                                <div className="absolute bottom-4 text-[10px] font-bold text-white/50"><Play size={10} fill="currentColor"/></div>
-                                                <div className="absolute left-4 text-[10px] font-bold text-white/50"><ChevronLeft size={10} /></div>
-                                                <div className="absolute right-4 text-[10px] font-bold text-white/50"><ChevronLeft size={10} className="rotate-180" /></div>
-                                                <div className="w-14 h-14 rounded-full bg-white/10 shadow-inner border border-white/5"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+                                {/* 마크: 아이팟 클래식 스타일 앨범 정보 (수정됨: 화이트 글래스 스타일) */}
+{selectedProfile.id === 'mark' && CHARACTER_DETAILS.mark.album && (
+    <div className="mb-16 animate-fade-in-up flex justify-center">
+        {/* [수정 1] 본체: bg-white/10 -> bg-white/30 (더 하얗게), blur-md -> blur-xl (더 뽀얗게), 테두리 강화 */}
+        <div className="w-64 bg-white/30 backdrop-blur-xl rounded-[2rem] p-4 shadow-2xl border border-white/40 relative">
+            
+            {/* [수정 2] 화면: bg-black/40 -> bg-black/60 (본체가 밝아졌으므로 화면은 더 어둡게 대비) */}
+            <div className="bg-black/60 h-40 rounded-lg mb-6 border border-white/10 overflow-hidden flex flex-col shadow-inner">
+                <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3">
+                    <span className="text-[9px] font-bold text-white/60">Now Playing</span>
+                    <div className="flex gap-0.5">
+                        <div className="w-2 h-1 bg-green-400"></div>
+                        <div className="w-0.5 h-1 bg-white/40"></div>
+                    </div>
+                </div>
+                <div className="flex-1 flex items-center p-4 gap-4">
+                    <img src={CHARACTER_DETAILS.mark.album.cover} alt="Album" className="w-20 h-20 shadow-lg object-cover rounded-md" />
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <div className="text-xs font-bold text-white truncate mb-1">{CHARACTER_DETAILS.mark.album.tracks[0]}</div>
+                        <div className="text-[10px] text-white/60 truncate">{CHARACTER_DETAILS.mark.album.title}</div>
+                        <div className="text-[10px] text-white/60 truncate">NCT MARK</div>
+                    </div>
+                </div>
+            </div>
 
+            {/* [수정 3] 휠: bg-black/20 -> bg-white/20 (본체와 어울리는 은은한 흰색) */}
+            <div className="w-40 h-40 rounded-full bg-white/20 border border-white/20 mx-auto relative flex items-center justify-center shadow-lg backdrop-blur-sm">
+                {/* 텍스트 색상은 배경이 밝아져도 잘 보이도록 text-white/50 유지 혹은 필요시 text-white/70으로 변경 가능 */}
+                <div className="absolute top-4 text-[10px] font-bold text-white/60">MENU</div>
+                <div className="absolute bottom-4 text-[10px] font-bold text-white/60"><Play size={10} fill="currentColor"/></div>
+                <div className="absolute left-4 text-[10px] font-bold text-white/60"><ChevronLeft size={10} /></div>
+                <div className="absolute right-4 text-[10px] font-bold text-white/60"><ChevronLeft size={10} className="rotate-180" /></div>
+                
+                {/* [수정 4] 가운데 버튼: bg-white/10 -> bg-white/40 (더 또렷하게) */}
+                <div className="w-14 h-14 rounded-full bg-white/40 shadow-inner border border-white/20"></div>
+            </div>
+        </div>
+    </div>
+)}
                                 {/* 재현: 필모그래피 & 라디오 (다크 모드 스타일) */}
                                 {selectedProfile.id === 'jaehyun' && (
                                     <div className="space-y-16 animate-fade-in-up pb-10">
