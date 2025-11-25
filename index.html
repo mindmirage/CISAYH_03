@@ -1761,10 +1761,11 @@ return (
                 {/* [수정] 가운데 버튼 (Enter 기능 추가됨) */}
                 {/* 내부 버튼: 거의 불투명하게 처리 (/50 -> /95) 하여 배경 차단 */}
                 <button 
-                    onClick={handleCenterClick}
-                    className="w-14 h-14 rounded-full bg-gray-100/95 shadow-inner border border-gray-100/50 active:scale-95 transition-transform hover:bg-white"
-                ></button>
-            </div>
+                onClick={handleCenterClick}
+                className="w-14 h-14 rounded-full bg-gray-100/95 shadow-inner border border-gray-100/50 active:scale-95 transition-transform hover:bg-white"
+            ></button>
+        </div>
+    )}
                                 {/* 재현: 필모그래피 & 라디오 (다크 모드 스타일) */}
                                 {selectedProfile.id === 'jaehyun' && (
                                     <div className="space-y-16 animate-fade-in-up pb-10">
