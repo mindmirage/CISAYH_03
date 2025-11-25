@@ -865,7 +865,7 @@ function App() {
   const getAlbumData = () => MARK_ALBUMS_DATA.find(a => a.id === currentAlbumId) || MARK_ALBUMS_DATA[0];
   const getTrackData = (album = getAlbumData()) => album.tracks[currentTrackIndex] || album.tracks[0];
   
-  // [1] 휠 버튼 (이전/다음)
+  / [1] 휠 버튼 (이전/다음)
   const handleTrackChange = (direction) => {
       playSound('click');
 
@@ -892,9 +892,15 @@ function App() {
           
           setViewingTrackIndex(prev => {
               let newIndex = (direction === 'next') ? (prev + 1) % total : (prev - 1 + total) % total;
-              // 커서 이동 시 스크롤 따라가기
+              
+              // [수정] scrollIntoView 대신 scrollTop 계산하여 부모만 스크롤
               const element = document.getElementById(`track-${newIndex}`);
-              if (element) element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              if (element && element.offsetParent) {
+                  const container = element.offsetParent; // 스크롤되는 컨테이너
+                  // 요소가 화면 중앙에 오도록 계산
+                  const newScrollTop = element.offsetTop - (container.clientHeight / 2) + (element.clientHeight / 2);
+                  container.scrollTo({ top: newScrollTop, behavior: 'smooth' });
+              }
               return newIndex;
           });
       }
@@ -907,14 +913,17 @@ function App() {
           let newIndex = (direction === 'next') ? (currentIndex + 1) % total : (currentIndex - 1 + total) % total;
           const newId = MARK_ALBUMS_DATA[newIndex].id;
           
-          // 상태 업데이트 (스크롤은 useEffect나 렌더링 로직에서 처리됨)
           setViewingAlbumId(newId);
           
+          // [수정] scrollIntoView 대신 scrollLeft 계산
           const element = document.getElementById(`album-${newId}`);
-          if (element) element.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+          if (element && element.offsetParent) {
+              const container = element.offsetParent;
+              const newScrollLeft = element.offsetLeft - (container.clientWidth / 2) + (element.clientWidth / 2);
+              container.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
+          }
       }
   };
-
   // [2] 가운데 버튼 (Enter/Select)
   const handleCenterClick = () => {
       playSound('click');
@@ -938,33 +947,38 @@ function App() {
       }
   };
   
-  // [3] 메뉴 버튼 (Back/Up) - ★ 질문하신 로직의 핵심 ★
+  // [3] 메뉴 버튼 (Back/Up)
   const handleMenuClick = () => {
       playSound('click');
       
       setMenuLevel(prev => {
           const nextLevel = (prev + 1) % 3;
           
-          // [핵심] Player(0)에서 List(1)로 나갈 때:
-          // "현재 듣고 있는 곡"을 "구경할 대상"으로 초기화해줍니다.
-          // 이렇게 해야 200 듣다가 메뉴 누르면 200 리스트가 뜹니다.
+          // Player(0) -> List(1)
           if (prev === 0 && nextLevel === 1) {
               setViewingAlbumId(currentAlbumId);
               setViewingTrackIndex(currentTrackIndex);
               
-              // 스크롤 위치도 바로 잡아주기 위해 setTimeout 사용
+              // [수정] scrollIntoView 제거 -> scrollTop 직접 할당
               setTimeout(() => {
                   const trackEl = document.getElementById(`track-${currentTrackIndex}`);
-                  if (trackEl) trackEl.scrollIntoView({ block: 'center' });
+                  if (trackEl && trackEl.offsetParent) {
+                      const container = trackEl.offsetParent;
+                      // 즉시 이동 (behavior: 'auto')하여 메뉴 전환 시 버벅임 최소화
+                      container.scrollTop = trackEl.offsetTop - (container.clientHeight / 2) + (trackEl.clientHeight / 2);
+                  }
               }, 0);
           }
           
-          // List(1) -> Album(2)로 갈 때:
-          // 이미 viewingAlbumId가 설정되어 있으므로 스크롤만 맞춰줍니다.
+          // List(1) -> Album(2)
           if (prev === 1 && nextLevel === 2) {
+               // [수정] scrollIntoView 제거 -> scrollLeft 직접 할당
                setTimeout(() => {
                   const albumEl = document.getElementById(`album-${viewingAlbumId}`);
-                  if (albumEl) albumEl.scrollIntoView({ inline: 'center', behavior: 'smooth' });
+                  if (albumEl && albumEl.offsetParent) {
+                      const container = albumEl.offsetParent;
+                      container.scrollLeft = albumEl.offsetLeft - (container.clientWidth / 2) + (albumEl.clientWidth / 2);
+                  }
               }, 0);
           }
 
