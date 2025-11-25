@@ -1741,89 +1741,10 @@ return (
                                         </div>
                                     </div>
                                 )}
-                                {/* 재현: 필모그래피 & 라디오 (대본 모달 + 워크맨) */}
+                                {/* 재현: 필모그래피 & 라디오 (다크 모드 스타일) */}
                                 {selectedProfile.id === 'jaehyun' && (
                                     <div className="space-y-16 animate-fade-in-up pb-10">
-                                        
-                                        {/* 1. [새 창] 라디오 대본 스튜디오 (showRadioScript가 true일 때만 화면 전체 덮음) */}
-                                        {showRadioScript && (
-                                            <div className="fixed inset-0 z-[999] w-full h-full bg-black flex flex-col animate-fade-in">
-                                                
-                                                {/* 배경: 스튜디오 이미지 + 어두운 오버레이 */}
-                                                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-30 blur-sm"></div>
-                                                <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/90"></div>
-
-                                                {/* 상단 헤더 */}
-                                                <div className="relative z-10 px-6 pt-12 pb-4 flex justify-between items-center border-b border-white/10 bg-black/20 backdrop-blur-md shrink-0">
-                                                    <div>
-                                                        <div className="flex items-center gap-2 text-purple-400 mb-1">
-                                                            <Music size={16} />
-                                                            <span className="text-xs font-bold tracking-widest">ON AIR NOW</span>
-                                                        </div>
-                                                        <h2 className="text-xl font-black text-white tracking-tight">
-                                                            {CHARACTER_DETAILS.jaehyun.radio.title}
-                                                        </h2>
-                                                    </div>
-                                                    
-                                                    {/* 나가기 버튼 (X) */}
-                                                    <button 
-                                                        onClick={() => setShowRadioScript(false)}
-                                                        className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-                                                    >
-                                                        <X size={24} />
-                                                    </button>
-                                                </div>
-
-                                                {/* 메인 스크립트 영역 */}
-                                                <div className="relative z-10 flex-1 overflow-y-auto custom-scrollbar bg-black/20 p-6">
-                                                    <div className="max-w-lg mx-auto space-y-8">
-                                                        
-                                                        {/* ON AIR 램프 */}
-                                                        <div className="flex justify-center">
-                                                            <div className="px-6 py-2 border-2 border-red-500 rounded-full bg-red-600/10 shadow-[0_0_20px_rgba(220,38,38,0.4)] animate-pulse">
-                                                                <span className="text-sm font-black text-red-500 tracking-[0.3em] drop-shadow-[0_0_5px_rgba(239,68,68,1)]">ON AIR</span>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* 대본 모니터 */}
-                                                        <div className="bg-black/40 backdrop-blur-xl rounded-3xl border border-white/10 p-6 sm:p-8 shadow-2xl">
-                                                            <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-4">
-                                                                <img src={jaehyunProfileImage} alt="DJ" className="w-12 h-12 rounded-full object-cover border-2 border-white/20" onError={(e) => {e.target.src='https://via.placeholder.com/48?text=DJ'}} />
-                                                                <div>
-                                                                    <span className="block text-xs text-gray-400 font-bold mb-0.5">DJ</span>
-                                                                    <span className="block text-base text-white font-bold">재현</span>
-                                                                </div>
-                                                                <div className="ml-auto text-right">
-                                                                    <span className="block text-[10px] text-gray-500 font-mono uppercase tracking-wider">Time</span>
-                                                                    <span className="block text-xs text-gray-300 font-mono">{timeStr}</span>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="text-[15px] text-gray-100 leading-loose whitespace-pre-wrap font-light tracking-wide text-justify">
-                                                                {CHARACTER_DETAILS.jaehyun.radio.script}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* 하단 컨트롤 바 */}
-                                                <div className="relative z-10 px-6 py-6 border-t border-white/10 bg-black/80 backdrop-blur-md flex justify-between items-center shrink-0">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">Station</span>
-                                                        <span className="text-xs text-gray-300 font-medium">{CHARACTER_DETAILS.jaehyun.radio.station}</span>
-                                                    </div>
-                                                    
-                                                    <button 
-                                                        onClick={() => setShowRadioScript(false)}
-                                                        className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-full tracking-widest transition-colors shadow-lg"
-                                                    >
-                                                        EXIT STUDIO
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* 2. [기본 화면] 필모그래피 */}
+                                        {/* 필모그래피 */}
                                         <div>
                                             <div className="flex items-center gap-2 mb-4">
                                                 <div className="w-1 h-4 bg-sky-400"></div>
@@ -1844,93 +1765,50 @@ return (
                                             </button>
                                         </div>
 
-                                        {/* 3. [기본 화면] 라디오 (빈티지 블루 메탈 워크맨) */}
+                                        {/* 라디오 */}
                                         <div>
                                             <div className="flex items-center gap-2 mb-4">
-                                                <div className="w-1 h-4 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-                                                <div className="text-xs font-bold text-blue-300 tracking-widest">RADIO DJ</div>
+                                                <div className="w-1 h-4 bg-purple-400"></div>
+                                                <div className="text-xs font-bold text-purple-200 tracking-widest">RADIO DJ</div>
                                             </div>
-                                            
-                                            {/* 워크맨 본체 */}
-                                            <div className="relative bg-gradient-to-br from-[#2E4C6D] via-[#233b55] to-[#1a2b3c] rounded-3xl p-6 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.7),inset_0_1px_2px_rgba(255,255,255,0.3)] border-t border-white/10 overflow-hidden ring-1 ring-black/40 group">
+                                            <div className="bg-white/5 backdrop-blur-md p-6 border border-white/10 shadow-xl relative overflow-hidden rounded-2xl">
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 rounded-bl-full -mr-8 -mt-8 z-0 blur-2xl"></div>
                                                 
-                                                {/* 금속 질감 */}
-                                                <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')] pointer-events-none mix-blend-overlay"></div>
-                                                
-                                                {/* 상단: SONY 로고 & 상태 LED */}
-                                                <div className="flex justify-between items-start mb-5 relative z-10">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-black text-gray-200 tracking-[0.2em] drop-shadow-md font-sans italic">SONY</span>
-                                                        <span className="text-[9px] font-bold text-blue-200/80 tracking-[0.3em] mt-0.5">WALKMAN</span>
+                                                <div className="relative z-10">
+                                                    <div className="flex justify-between items-start mb-8">
+                                                        <div>
+                                                            <div className="font-black text-2xl text-white mb-1">{CHARACTER_DETAILS.jaehyun.radio.title}</div>
+                                                            <div className="text-xs font-medium text-white/50">{CHARACTER_DETAILS.jaehyun.radio.station}</div>
+                                                        </div>
+                                                        <div className="bg-white/10 p-3 rounded-full text-white shadow-inner border border-white/10">
+                                                            <Music size={20} />
+                                                        </div>
                                                     </div>
                                                     
-                                                    <div className="flex gap-3 items-center">
-                                                        {/* BATT/OPR LED */}
-                                                        <div className="flex flex-col items-center gap-1">
-                                                            <div className="w-2.5 h-2.5 rounded-full border border-gray-600 shadow-inner bg-red-900/50"></div>
-                                                            <span className="text-[6px] font-bold text-gray-400 tracking-wider">OPR</span>
-                                                        </div>
-                                                        {/* 스테레오 로고 */}
-                                                        <div className="px-1.5 py-0.5 border border-gray-500/50 rounded-[2px]">
-                                                            <span className="text-[6px] font-bold text-gray-400 tracking-widest">STEREO</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                    <button 
+                                                        onClick={() => setShowRadioScript(!showRadioScript)}
+                                                        className="w-full py-3 bg-white text-black text-xs font-bold hover:bg-gray-200 transition flex items-center justify-center gap-2 rounded-lg shadow-lg"
+                                                    >
+                                                        {showRadioScript ? "대본 닫기" : "들으러 가기"}
+                                                        <Play size={10} fill="currentColor" className={`ml-1 ${showRadioScript ? 'hidden' : ''}`} />
+                                                    </button>
 
-                                                {/* 중단: 카세트 데크 */}
-                                                <div className="bg-[#111827] rounded-lg p-1.5 shadow-[inset_0_4px_8px_rgba(0,0,0,0.8)] border-b border-white/5 relative mb-6 ring-1 ring-white/5">
-                                                    <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-transparent rounded-lg pointer-events-none z-30"></div>
-                                                    
-                                                    {/* 카세트 테이프 */}
-                                                    <div className="bg-[#e5e7eb] rounded-sm h-32 relative overflow-hidden shadow-inner flex flex-col items-center justify-center z-20">
-                                                        <div className="absolute top-2 left-2 right-2 h-8 bg-gradient-to-r from-blue-700 to-indigo-800 flex items-center justify-between px-3 rounded-sm shadow-sm">
-                                                            <span className="text-[9px] font-black text-white tracking-widest drop-shadow-sm">JAEHYUN'S MIX</span>
-                                                            <span className="text-[8px] font-bold text-blue-200">A</span>
+                                                    {showRadioScript && (
+                                                        <div className="mt-6 p-4 bg-black/30 rounded-xl text-[12px] text-gray-300 leading-loose whitespace-pre-wrap h-56 overflow-y-auto custom-scrollbar border border-white/5 shadow-inner">
+                                                            {CHARACTER_DETAILS.jaehyun.radio.script}
                                                         </div>
-                                                        
-                                                        <div className="flex gap-7 mt-6">
-                                                            {[0, 1].map((i) => (
-                                                                <div key={i} className="w-11 h-11 rounded-full border-[4px] border-white/90 bg-[#1f2937] relative shadow-md">
-                                                                    <div className="absolute inset-0 rounded-full border border-white/20"></div>
-                                                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-2.5 bg-white"></div>
-                                                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-2.5 bg-white"></div>
-                                                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2.5 h-1 bg-white"></div>
-                                                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-1 bg-white"></div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-
-                                                        <div className="absolute bottom-3 left-6 right-6 h-5 bg-[#9ca3af] rounded-sm shadow-inner flex justify-center items-center">
-                                                            <div className="w-16 h-3 bg-[#4b5563] rounded-sm"></div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* 하단: 물리 버튼 컨트롤 (EJECT 클릭 시 showRadioScript=true 설정) */}
-                                                <div className="grid grid-cols-4 gap-2 px-1 relative z-10">
-                                                    {[
-                                                        { label: 'PLAY', icon: <Play size={12} className="fill-black/70 text-black/70 ml-0.5" />, action: null },
-                                                        { label: 'STOP', icon: <div className="w-2.5 h-2.5 bg-black/70 rounded-[1px]"></div>, action: null },
-                                                        { label: 'REW', icon: <div className="flex"><ChevronLeft size={12} className="fill-black/70 text-black/70 -mr-1" /><ChevronLeft size={12} className="fill-black/70 text-black/70" /></div>, action: null },
-                                                        { label: 'EJECT', icon: <BookOpen size={12} className="text-black/70 stroke-[2.5]" />, action: () => { playSound('click'); setShowRadioScript(true); } }
-                                                    ].map((btn, idx) => (
-                                                        <button 
-                                                            key={idx}
-                                                            onClick={btn.action}
-                                                            className="group flex flex-col items-center gap-1.5"
-                                                        >
-                                                            <div className={`w-full h-12 rounded-t-sm rounded-b-md bg-gradient-to-b from-gray-200 via-gray-300 to-gray-400 ring-1 ring-white/20 shadow-[0_4px_0_#1f2937,0_6px_5px_rgba(0,0,0,0.5)] active:shadow-[0_1px_0_#1f2937,0_2px_2px_rgba(0,0,0,0.5)] active:translate-y-[3px] transition-all flex items-center justify-center border-t border-white/80 relative overflow-hidden ${btn.label === 'EJECT' ? 'bg-gradient-to-b from-amber-100 to-amber-200' : ''}`}>
-                                                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/60 to-transparent pointer-events-none"></div>
-                                                                {btn.icon}
-                                                            </div>
-                                                            <span className="text-[7px] font-bold text-gray-400 tracking-widest drop-shadow-sm group-active:text-blue-300 transition-colors">{btn.label}</span>
-                                                        </button>
-                                                    ))}
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 )}
+                            </div>
+                        </div>
+                    </>
+                 )}
+            </div>
+        )}
         {/* 채팅 화면 */}
         {currentView === 'chat' && (
           <>
