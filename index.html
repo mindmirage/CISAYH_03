@@ -1721,10 +1721,10 @@ return (
                 <button onClick={() => handleTrackChange('next')} className={`absolute right-4 text-[10px] font-bold p-2 -mr-2 -my-2 transition ${menuLevel !== 1 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}><ChevronLeft size={10} className="rotate-180" /></button>
                 
                 {/* [수정] 가운데 버튼: div -> button 변경 및 핸들러 연결 */}
-               <button onClick={handleCenterClick} className="w-14 h-14 rounded-full bg-white/40 shadow-inner border border-white/20 active:bg-white/60 transition"></button>
-            </div> {/* 1. 휠 버튼 영역 닫기 */}
-        </div> {/* 2. [누락됨] 아이팟 하얀 본체(w-64) 닫기 */}
-    </div> {/* 3. [누락됨] 전체 정렬 래퍼 닫기 */}
+                <button onClick={handleCenterClick} className="w-14 h-14 rounded-full bg-white/40 shadow-inner border border-white/20 active:bg-white/60 transition"></button>
+            </div>
+        </div> {/* [중요] 아이팟 본체 닫기 */}
+    </div> {/* [중요] 아이팟 전체 래퍼 닫기 */}
 )}
                                 {/* 재현: 필모그래피 & 라디오 (다크 모드 스타일) */}
                                 {selectedProfile.id === 'jaehyun' && (
