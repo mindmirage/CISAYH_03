@@ -1300,13 +1300,15 @@ return (
                                 {/* 마크: 아이팟 클래식 스타일 앨범 정보 (수정됨: 화이트 글래스 스타일) */}
 {selectedProfile.id === 'mark' && CHARACTER_DETAILS.mark.album && (
     <div className="mb-16 animate-fade-in-up flex justify-center">
-        {/* [재수정] 본체: bg-white/30 -> bg-white/80 (훨씬 더 하얗게), border-white/40 -> border-white/90 (선명도 높임) */}
+        {/* [재수정] 본체: bg-white/80 (훨씬 더 하얗게), border-white/90 (선명도 높임) */}
         <div className="w-64 bg-white/80 backdrop-blur-xl rounded-[2rem] p-4 shadow-2xl border border-white/90 relative">
             
-            {/* [수정] 화면 배경: bg-black/60 -> bg-gray-800 (약간 더 하얗게, 스크린 대비) */}
-            <div className="bg-gray-800 h-40 rounded-lg mb-6 border border-white/10 overflow-hidden flex flex-col shadow-inner">
-                <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3">
-                    <span className="text-[9px] font-bold text-white/60">Now Playing</span>
+            {/* [수정] 화면 배경: bg-gray-800 -> bg-gray-200 (클래식 아이팟 저대비 화면) */}
+            <div className="bg-gray-200 h-40 rounded-lg mb-6 border border-white/10 overflow-hidden flex flex-col shadow-inner">
+                {/* 상단바: 화면보다 약간 어둡게 */}
+                <div className="h-6 bg-gray-300 border-b border-white/10 flex items-center justify-between px-3">
+                    {/* 텍스트 색상: text-white/60 -> text-gray-600 */}
+                    <span className="text-[9px] font-bold text-gray-600">Now Playing</span>
                     <div className="flex gap-0.5">
                         <div className="w-2 h-1 bg-green-400"></div>
                         <div className="w-0.5 h-1 bg-white/40"></div>
@@ -1315,23 +1317,26 @@ return (
                 <div className="flex-1 flex items-center p-4 gap-4">
                     <img src={CHARACTER_DETAILS.mark.album.cover} alt="Album" className="w-20 h-20 shadow-lg object-cover rounded-md" />
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
-                        <div className="text-xs font-bold text-white truncate mb-1">{CHARACTER_DETAILS.mark.album.tracks[0]}</div>
-                        <div className="text-[10px] text-white/60 truncate">{CHARACTER_DETAILS.mark.album.title}</div>
-                        <div className="text-[10px] text-white/60 truncate">NCT MARK</div>
+                        {/* 텍스트 색상: text-white -> text-gray-900 */}
+                        <div className="text-xs font-bold text-gray-900 truncate mb-1">{CHARACTER_DETAILS.mark.album.tracks[0]}</div>
+                        {/* 텍스트 색상: text-white/60 -> text-gray-600 */}
+                        <div className="text-[10px] text-gray-600 truncate">{CHARACTER_DETAILS.mark.album.title}</div>
+                        {/* 텍스트 색상: text-white/60 -> text-gray-600 */}
+                        <div className="text-[10px] text-gray-600 truncate">NCT MARK</div>
                     </div>
                 </div>
             </div>
 
-            {/* [재수정] 휠: bg-white/20 -> bg-white/70 (더 하얗게), border-white/20 -> border-white/50 (대비 유지) */}
-            <div className="w-40 h-40 rounded-full bg-white/70 border border-white/50 mx-auto relative flex items-center justify-center shadow-lg backdrop-blur-sm">
-                {/* [수정] 글자 색상: text-white/60 -> text-gray-700 (대비 개선) */}
-                <div className="absolute top-4 text-[10px] font-bold text-gray-700">MENU</div>
-                <div className="absolute bottom-4 text-[10px] font-bold text-gray-700"><Play size={10} fill="currentColor"/></div>
-                <div className="absolute left-4 text-[10px] font-bold text-gray-700"><ChevronLeft size={10} /></div>
-                <div className="absolute right-4 text-[10px] font-bold text-gray-700"><ChevronLeft size={10} className="rotate-180" /></div>
+            {/* [수정] 휠 배경: bg-white/70 -> bg-gray-300/90 (밝은 회색/은색) */}
+            <div className="w-40 h-40 rounded-full bg-gray-300/90 border border-white/50 mx-auto relative flex items-center justify-center shadow-lg backdrop-blur-sm">
+                {/* [수정] 글자 색상: text-gray-700 -> text-gray-800 (대비 개선) */}
+                <div className="absolute top-4 text-[10px] font-bold text-gray-800">MENU</div>
+                <div className="absolute bottom-4 text-[10px] font-bold text-gray-800"><Play size={10} fill="currentColor"/></div>
+                <div className="absolute left-4 text-[10px] font-bold text-gray-800"><ChevronLeft size={10} /></div>
+                <div className="absolute right-4 text-[10px] font-bold text-gray-800"><ChevronLeft size={10} className="rotate-180" /></div>
                 
-                {/* [재수정] 가운데 버튼: bg-white/40 -> bg-white/90 (가장 선명하게) */}
-                <div className="w-14 h-14 rounded-full bg-white/90 shadow-inner border border-white/50"></div>
+                {/* [수정] 가운데 버튼: bg-white/90 -> bg-white (순백색) */}
+                <div className="w-14 h-14 rounded-full bg-white shadow-inner border border-white/50"></div>
             </div>
         </div>
     </div>
