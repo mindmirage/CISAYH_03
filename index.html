@@ -1727,8 +1727,8 @@ return (
     </div> {/* [중요] 아이팟 전체 래퍼 닫기 */}
 )}
                                 {/* 재현: 필모그래피 & 라디오 (다크 모드 스타일) */}
-                                {selectedProfile.id === 'jaehyun' && (
-                                    <div className="space-y-16 animate-fade-in-up pb-10">
+                                {selectedProfile && selectedProfile.id === 'jaehyun' && (
+        <div className="space-y-16 animate-fade-in-up pb-10">
                                         {/* 필모그래피 */}
                                         <div>
                                             <div className="flex items-center gap-2 mb-4">
