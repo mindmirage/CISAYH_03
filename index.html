@@ -1500,42 +1500,48 @@ return (
                             </button>
                         </div>
 
-                        {/* 2. 배경 이미지 (슬라이드 쇼 적용) */}
-                        <div className="absolute inset-0 z-0 bg-black">
+                        {/* 2. 배경 이미지 (슬라이드 쇼 - 부드러운 전환 적용) */}
+                        <div className="absolute inset-0 z-0 bg-black overflow-hidden">
                             {(() => {
                                 const details = CHARACTER_DETAILS[selectedProfile.id];
-                                let imgSrc = "";
+                                // 배열이 없으면 단일 이미지를 배열로 만듦, 둘 다 없으면 빈 배열
+                                const images = details.headerImages || (details.headerImage ? [details.headerImage] : []);
+                                const totalImages = images.length;
                                 
-                                // 배열(headerImages)이 있으면 순서대로, 없으면 기존 문자열(headerImage) 사용
-                                if (details.headerImages && details.headerImages.length > 0) {
-                                    imgSrc = details.headerImages[bgImageIndex % details.headerImages.length];
-                                } else if (details.headerImage) {
-                                    imgSrc = details.headerImage;
-                                }
-
-                                if (imgSrc) {
-                                    return (
-                                        <img 
-                                            key={imgSrc} // key가 바뀌면 페이드 효과(animate-fade-in)가 다시 실행됨
-                                            src={imgSrc} 
-                                            alt="header" 
-                                            className="w-full h-full object-cover absolute top-0 left-0 animate-fade-in"
-                                        />
-                                    );
+                                if (totalImages > 0) {
+                                    // [핵심] 모든 이미지를 겹쳐서 렌더링하고, 현재 인덱스만 opacity: 1로 설정
+                                    return images.map((imgSrc, index) => {
+                                        // 현재 보여야 할 이미지 인덱스 계산
+                                        const isActive = index === (bgImageIndex % totalImages);
+                                        
+                                        return (
+                                            <img 
+                                                key={imgSrc + index}
+                                                src={imgSrc} 
+                                                alt={`header-bg-${index}`}
+                                                // absolute로 위치 고정하여 겹치기
+                                                // transition-opacity duration-1000 ease-in-out: 1초 동안 부드럽게 투명도 변화
+                                                // isActive ? 'opacity-100 z-10' : 'opacity-0 z-0': 활성 이미지만 보이고 앞으로 나옴
+                                                className={`w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-1000 ease-in-out ${
+                                                    isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                                                }`}
+                                            />
+                                        );
+                                    });
                                 } else {
                                     // 이미지가 없는 캐릭터용 기본 배경
                                     return <div className={`w-full h-full absolute top-0 left-0 ${selectedProfile.id === 'mark' ? 'bg-green-200' : 'bg-sky-200'}`}></div>;
                                 }
                             })()}
                             
-                            {/* [핵심] 배경 디밍 오버레이 (스크롤 내릴수록 어두워짐) */}
+                            {/* 배경 디밍 오버레이 (스크롤 내릴수록 어두워짐) */}
                             <div 
-                                className="absolute inset-0 bg-black transition-opacity duration-0"
+                                className="absolute inset-0 bg-black transition-opacity duration-0 z-20 pointer-events-none"
                                 style={{ opacity: Math.min(0.85, scrollTop / 400) }} 
                             ></div>
                             
                             {/* 하단 그라데이션 (초기 텍스트 가독성용) */}
-                            <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                            <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-black/80 via-transparent to-transparent z-20 pointer-events-none"></div>
                         </div>
 
                         {/* 3. 스크롤 가능한 컨텐츠 영역 */}
