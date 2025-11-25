@@ -1479,13 +1479,12 @@ return (
             {/* [수정 2] 화면: bg-black/40 -> bg-black/60 (본체가 밝아졌으므로 화면은 더 어둡게 대비) */}
             <div className="bg-black/60 h-40 rounded-lg mb-6 border border-white/10 overflow-hidden flex flex-col shadow-inner relative">
                 
-                JavaScript
                 {/* 데이터 헬퍼 호출 */}
                 {(() => {
                     const currentAlbum = getAlbumData();
                     const currentTrack = getTrackData(currentAlbum);
 
-                    // [기능] 스크롤 시 중앙에 있는 앨범을 감지하여 제목을 변경하는 함수
+                    // [기능] 스크롤 시 중앙에 있는 앨범 감지
                     const handleAlbumScroll = (e) => {
                         const container = e.target;
                         const center = container.scrollLeft + container.clientWidth / 2;
@@ -1509,18 +1508,22 @@ return (
                         }
                     };
 
-                    // Level 2: 앨범 목록 (Cover Flow) - [잘림 해결 & 텍스트 하단 이동]
+                    // Level 2: 앨범 목록 (Cover Flow) - [자동 중앙 정렬로 잘림 해결]
                     if (menuLevel === 2) {
                         return (
                             <div className="absolute inset-0 flex flex-col z-10 animate-fade-in bg-black/20 backdrop-blur-sm rounded-2xl overflow-hidden">
-                                {/* [수정] mb-2 추가: 앨범을 아래로 살짝 밀어냄 */}
-                                <div className="text-[10px] font-bold text-white/60 text-center pt-4 pb-1 mb-2 shrink-0">
+                                {/* 상단 제목 */}
+                                <div className="text-[10px] font-bold text-white/60 text-center pt-4 shrink-0">
                                     Albums
                                 </div>
                                 
-                                {/* [수정] py-8: 앨범 위아래 공간 충분히 확보 (잘림 방지) */}
+                                {/* [핵심 수정] 
+                                    py- 수치를 제거하고 'items-center'를 통해 
+                                    앨범이 수직 방향(위아래) 정중앙에 오도록 강제함.
+                                    이제 절대 잘리지 않습니다.
+                                */}
                                 <div 
-                                    className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-6 px-[38%] hide-scrollbar py-8"
+                                    className="flex-1 w-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory flex items-center space-x-8 px-[38%] hide-scrollbar"
                                     onScroll={handleAlbumScroll}
                                 >
                                     {MARK_ALBUMS_DATA.map((album) => (
@@ -1533,8 +1536,8 @@ return (
                                             id={`album-${album.id}`}
                                             className={`flex-shrink-0 relative transition-all duration-500 ease-out snap-center focus:outline-none ${
                                                 album.id === currentAlbumId 
-                                                    ? 'w-20 h-20 scale-110 z-20 opacity-100' // 선택됨
-                                                    : 'w-16 h-16 scale-90 z-0 opacity-50 grayscale-[50%]' // 선택 안됨
+                                                    ? 'w-20 h-20 scale-110 z-20 opacity-100' // 선택됨: w-20 (적당한 크기)
+                                                    : 'w-14 h-14 scale-90 z-0 opacity-50 grayscale-[50%]' // 선택 안됨: w-14 (작게)
                                             }`}
                                         >
                                             <img 
@@ -1553,12 +1556,12 @@ return (
                                     ))}
                                 </div>
                                 
-                                {/* [수정] h-24, pt-4: 텍스트 영역을 키우고 위쪽 여백을 줘서 글씨를 바닥으로 내림 */}
-                                <div className="shrink-0 pb-4 pt-4 text-center px-4 h-24 flex flex-col justify-start">
+                                {/* 하단 텍스트 영역 */}
+                                <div className="shrink-0 pb-5 text-center px-4 h-16 flex flex-col justify-center">
                                     <div className="text-[10px] font-bold text-white tracking-wide drop-shadow-md animate-fade-in transition-all duration-300 line-clamp-1 leading-tight">
                                         {currentAlbum.title}
                                     </div>
-                                    <div className="text-[8px] text-white/60 mt-1 truncate">
+                                    <div className="text-[9px] text-white/60 mt-1 truncate">
                                         {currentAlbum.artist}
                                     </div>
                                 </div>
