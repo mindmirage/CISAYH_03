@@ -865,7 +865,7 @@ function App() {
   const getAlbumData = () => MARK_ALBUMS_DATA.find(a => a.id === currentAlbumId) || MARK_ALBUMS_DATA[0];
   const getTrackData = (album = getAlbumData()) => album.tracks[currentTrackIndex] || album.tracks[0];
   
-  / [1] 휠 버튼 (이전/다음)
+  // [1] 휠 버튼 (이전/다음)
   const handleTrackChange = (direction) => {
       playSound('click');
 
@@ -893,11 +893,10 @@ function App() {
           setViewingTrackIndex(prev => {
               let newIndex = (direction === 'next') ? (prev + 1) % total : (prev - 1 + total) % total;
               
-              // [수정] scrollIntoView 대신 scrollTop 계산하여 부모만 스크롤
+              // [수정] scrollIntoView 대신 scrollTop 계산하여 부모만 스크롤 (화면 튕김 방지)
               const element = document.getElementById(`track-${newIndex}`);
               if (element && element.offsetParent) {
-                  const container = element.offsetParent; // 스크롤되는 컨테이너
-                  // 요소가 화면 중앙에 오도록 계산
+                  const container = element.offsetParent;
                   const newScrollTop = element.offsetTop - (container.clientHeight / 2) + (element.clientHeight / 2);
                   container.scrollTo({ top: newScrollTop, behavior: 'smooth' });
               }
@@ -959,12 +958,11 @@ function App() {
               setViewingAlbumId(currentAlbumId);
               setViewingTrackIndex(currentTrackIndex);
               
-              // [수정] scrollIntoView 제거 -> scrollTop 직접 할당
+              // [수정] 스크롤 위치 즉시 조정
               setTimeout(() => {
                   const trackEl = document.getElementById(`track-${currentTrackIndex}`);
                   if (trackEl && trackEl.offsetParent) {
                       const container = trackEl.offsetParent;
-                      // 즉시 이동 (behavior: 'auto')하여 메뉴 전환 시 버벅임 최소화
                       container.scrollTop = trackEl.offsetTop - (container.clientHeight / 2) + (trackEl.clientHeight / 2);
                   }
               }, 0);
@@ -972,7 +970,7 @@ function App() {
           
           // List(1) -> Album(2)
           if (prev === 1 && nextLevel === 2) {
-               // [수정] scrollIntoView 제거 -> scrollLeft 직접 할당
+               // [수정] 스크롤 위치 즉시 조정
                setTimeout(() => {
                   const albumEl = document.getElementById(`album-${viewingAlbumId}`);
                   if (albumEl && albumEl.offsetParent) {
