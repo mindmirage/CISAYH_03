@@ -1584,57 +1584,84 @@ return (
                                         >
                                             <div className="flex justify-between items-center">
                                                 <span>{track.title}</span>
-                                                {index === currentTrackIndex && <Play size={8}
+                                                {index === currentTrackIndex && <Play size={8} fill="currentColor" />}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    }
+                    
+                    // Level 0: Now Playing
+                    return (
+                        <div className={`h-full w-full absolute inset-0 flex flex-col ${albumAnimation}`}>
+                            <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3 shrink-0">
+                                <span className="text-[9px] font-bold text-white/50">Now Playing</span>
+                                <div className="flex gap-0.5">
+                                    <div className="w-2 h-1 bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.5)]"></div>
+                                    <div className="w-0.5 h-1 bg-white/20"></div>
+                                </div>
+                            </div>
+                            
+                            <div className="flex-1 flex flex-row items-center px-5 gap-4 overflow-hidden">
+                                <div className="relative shrink-0">
+                                    <img 
+                                        src={currentAlbum.cover} 
+                                        alt="Album" 
+                                        className="w-20 h-20 aspect-square shadow-2xl object-cover rounded-xl" 
+                                        onError={(e) => { e.target.src='https://via.placeholder.com/80x80/333333/FFFFFF?text=A'; }}
+                                    />
+                                </div>
 
-            {/* [수정 3] 휠: 버튼 로직 및 기능 연결 */}
-            <div className="w-40 h-40 rounded-full bg-white/20 border border-white/20 mx-auto relative flex items-center justify-center shadow-lg backdrop-blur-sm">
-                
-                {/* 4. 메뉴 버튼: handleMenuClick 연결 */}
-                <button 
-                    onClick={handleMenuClick}
-                    className="absolute top-4 text-[10px] font-bold text-white/60 p-2 -mt-2 -mx-2 hover:text-white transition"
-                >
-                    MENU
-                </button>
-                
-                {/* 3. 재생 버튼: 유튜브 링크로 이동 (Level 0에서만 작동) */}
-                <button
-                    onClick={() => {
-                        if (menuLevel !== 0) return; // 메뉴 화면일 때는 재생 버튼 비활성화
-                        playSound('click');
-                        const track = getTrackData();
-                        window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank');
-                    }}
-                    className={`absolute bottom-4 text-[10px] font-bold p-2 -mb-2 -mx-2 transition 
-                        ${menuLevel === 0 ? 'text-white hover:text-green-300' : 'text-white/40'}`}
-                >
-                    <Play size={10} fill="currentColor"/>
-                </button>
-                
-                {/* 1. 이전 트랙 버튼: handleTrackChange('prev') 호출 */}
-                <button 
-                    onClick={() => handleTrackChange('prev')}
-                    className={`absolute left-4 text-[10px] font-bold p-2 -ml-2 -my-2 transition 
-                        ${menuLevel === 0 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
-                >
-                    <ChevronLeft size={10} />
-                </button>
-                
-                {/* 2. 다음 트랙 버튼: handleTrackChange('next') 호출 */}
-                <button 
-                    onClick={() => handleTrackChange('next')}
-                    className={`absolute right-4 text-[10px] font-bold p-2 -mr-2 -my-2 transition 
-                        ${menuLevel === 0 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
-                >
-                    <ChevronLeft size={10} className="rotate-180" />
-                </button>
-                
-                {/* 가운데 버튼 */}
-                <div className="w-14 h-14 rounded-full bg-white/40 shadow-inner border border-white/20"></div>
+                                <div className="flex-1 min-w-0 flex flex-col justify-center gap-1 overflow-hidden">
+                                    {/* [수정] 12자 이상(>=12)일 때만 흐르게 변경 */}
+                                    <div className="w-full overflow-hidden relative h-[18px]">
+                                        {currentTrack.title.length >= 12 ? (
+                                            <div 
+                                                className="animate-marquee" 
+                                                style={{ animationDuration: `${Math.max(5, currentTrack.title.length * 0.4)}s` }}
+                                            >
+                                                <a 
+                                                    href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
+                                                    onClick={() => playSound('click')}
+                                                >
+                                                    {currentTrack.title}
+                                                </a>
+                                                <a 
+                                                    href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md mr-8"
+                                                    onClick={() => playSound('click')}
+                                                >
+                                                    {currentTrack.title}
+                                                </a>
+                                            </div>
+                                        ) : (
+                                            <a 
+                                                href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="text-[13px] font-bold text-white hover:underline cursor-pointer leading-tight drop-shadow-md block truncate"
+                                                onClick={() => playSound('click')}
+                                            >
+                                                {currentTrack.title}
+                                            </a>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="text-[11px] text-white/80 truncate leading-tight font-medium">{currentAlbum.artist}</div>
+                                    <div className="text-[10px] text-white/50 truncate leading-tight">{currentAlbum.title}</div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
             </div>
-        </div>
-    </div>
-)}
                                 {/* 재현: 필모그래피 & 라디오 (다크 모드 스타일) */}
                                 {selectedProfile.id === 'jaehyun' && (
                                     <div className="space-y-16 animate-fade-in-up pb-10">
