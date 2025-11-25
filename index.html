@@ -79,6 +79,7 @@ const Play=(p)=><IconWrapper {...p}><polygon points="5 3 19 12 5 21 5 3"/></Icon
 const BookOpen=(p)=><IconWrapper {...p}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></IconWrapper>;
 const Feather=(p)=><IconWrapper {...p}><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" x2="2" y1="8" y2="22"/><line x1="17.5" x2="9" y1="15" y2="15"/></IconWrapper>;
 const Info=(p)=><IconWrapper {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></IconWrapper>;
+const [currentTrackIndex, setCurrentTrackIndex] = useState(0); // 현재 재생 중인 트랙 인덱스
 // --- 유틸리티 ---
 const getTime = () => { const now = new Date(); let h = now.getHours(), m = String(now.getMinutes()).padStart(2, '0'); return `${h >= 12 ? '오후' : '오전'} ${h % 12 || 12}:${m}`; };
 
@@ -159,13 +160,26 @@ const CHARACTER_DETAILS = {
     fullName: "마크",
     role: "NCT",
     roleColor: "text-green-600",
-    // [추가] 상단 헤더 이미지
     headerImage: "https://pbs.twimg.com/media/GnDgNOtbcAAHSdg?format=jpg&name=4096x4096",
     desc: "초연결 시대의 아이콘이자 무대 위에서 가장 빛나는 아티스트. 첫 솔로 앨범 활동을 성공적으로 마치고, 모든 연결을 끊어내는 낯선 여행길에 올랐다. 긍정적인 에너지로 아침을 밝히는 활력소.",
     album: {
       title: "The Firstfruit - The 1st Album",
       cover: "https://i.pinimg.com/736x/2e/5b/e3/2e5be366099b999f999e5999b999f999.jpg", 
-      tracks: ["1. Toronto's Window", "2. 1999", "3. Flight to NYC", "4. Righteous", "5. Fraktsiya", "6. Raincouver", "7. Loser", "8. Watching TV", "9. +82 Pressin'", "10. 200", "11. Journey Mercies", "12. Mom's Interlude", "13. Too Much"]
+      tracks: [
+        { title: "Toronto's Window", videoId: "9qE_U-X5t9A" }, // <-- 예시 ID로 대체
+        { title: "1999", videoId: "b8y1r6kH67A" },
+        { title: "Flight to NYC", videoId: "4pS1_vL6e5g" },
+        { title: "Righteous", videoId: "5j7wW8j8r4Y" },
+        { title: "Fraktsiya", videoId: "P7D5n0t0o9g" },
+        { title: "Raincouver", videoId: "zXQ3o8u6x5K" },
+        { title: "Loser", videoId: "a2Z3x4w5y6L" },
+        { title: "Watching TV", videoId: "o5L4i3k2j1H" },
+        { title: "+82 Pressin'", videoId: "e9C8v7b6n5M" },
+        { title: "200", videoId: "q4A3z2y1x0V" },
+        { title: "Journey Mercies", videoId: "b2N1m0l9k8J" },
+        { title: "Mom's Interlude", videoId: "y8H7g6f5e4D" },
+        { title: "Too Much", videoId: "d1C0b9a8s7F" }
+      ]
     }
   },
   jaehyun: {
@@ -1315,7 +1329,17 @@ return (
                 <div className="flex-1 flex items-center p-4 gap-4">
                     <img src={"https://i.scdn.co/image/ab67616d0000b273458a9f340084c41b7959205d"} alt="Album" className="w-20 h-20 shadow-lg object-cover rounded-md" />
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
-                        <div className="text-xs font-bold text-white truncate mb-1">{CHARACTER_DETAILS.mark.album.tracks[0]}</div>
+                        {/* ▼▼▼ [수정] 노래 제목과 유튜브 링크 로직 변경 ▼▼▼ */}
+                        <a 
+                            href={`https://www.youtube.com/watch?v=${CHARACTER_DETAILS.mark.album.tracks[currentTrackIndex].videoId}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-xs font-bold text-white truncate mb-1 hover:underline cursor-pointer"
+                            onClick={() => playSound('click')}
+                        >
+                            {CHARACTER_DETAILS.mark.album.tracks[currentTrackIndex].title}
+                        </a>
+                        {/* ▲▲▲ [수정] 노래 제목과 유튜브 링크 로직 변경 ▲▲▲ */}
                         <div className="text-[10px] text-white/60 truncate">{CHARACTER_DETAILS.mark.album.title}</div>
                         <div className="text-[10px] text-white/60 truncate">MARK</div>
                     </div>
@@ -1324,11 +1348,24 @@ return (
 
             {/* [수정 3] 휠: bg-black/20 -> bg-white/20 (본체와 어울리는 은은한 흰색) */}
             <div className="w-40 h-40 rounded-full bg-white/20 border border-white/20 mx-auto relative flex items-center justify-center shadow-lg backdrop-blur-sm">
-                {/* 텍스트 색상은 배경이 밝아져도 잘 보이도록 text-white/50 유지 혹은 필요시 text-white/70으로 변경 가능 */}
+                
                 <div className="absolute top-4 text-[10px] font-bold text-white/60">MENU</div>
                 <div className="absolute bottom-4 text-[10px] font-bold text-white/60"><Play size={10} fill="currentColor"/></div>
                 <div className="absolute left-4 text-[10px] font-bold text-white/60"><ChevronLeft size={10} /></div>
-                <div className="absolute right-4 text-[10px] font-bold text-white/60"><ChevronLeft size={10} className="rotate-180" /></div>
+                
+                {/* ▼▼▼ [수정] 다음 트랙 버튼 클릭 이벤트 로직 변경 ▼▼▼ */}
+                <button 
+                    onClick={() => {
+                        playSound('click');
+                        setCurrentTrackIndex(prev => 
+                            (prev + 1) % CHARACTER_DETAILS.mark.album.tracks.length
+                        );
+                    }}
+                    className="absolute right-4 text-[10px] font-bold text-white/60 p-2 -mr-2 -my-2"
+                >
+                    <ChevronLeft size={10} className="rotate-180" />
+                </button>
+                {/* ▲▲▲ [수정] 다음 트랙 버튼 클릭 이벤트 로직 변경 ▲▲▲ */}
                 
                 {/* [수정 4] 가운데 버튼: bg-white/10 -> bg-white/40 (더 또렷하게) */}
                 <div className="w-14 h-14 rounded-full bg-white/40 shadow-inner border border-white/20"></div>
