@@ -1597,12 +1597,10 @@ return (
                         );
                     }
                     
-                    // Level 0: Now Playing (기능 유지)
+                    // Level 0: Now Playing (기능 유지 + 애니메이션 수정)
 return (
-    // [수정] 부모 div에서 ${albumAnimation} 제거 -> 전체가 안 움직이게 고정
     <div className="h-full w-full absolute inset-0 flex flex-col">
-        
-        {/* 헤더 (고정됨) */}
+        {/* 헤더 (고정) */}
         <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3 shrink-0">
             <span className="text-[9px] font-bold text-white/50">Now Playing</span>
             <div className="flex gap-0.5">
@@ -1611,7 +1609,7 @@ return (
             </div>
         </div>
         
-        {/* [수정] 내용물 div에만 ${albumAnimation} 적용 -> 앨범/텍스트만 슬라이드됨 */}
+        {/* 내용물 (트랙 전환 시 슬라이드 애니메이션 적용) */}
         <div className={`flex-1 flex flex-row items-center px-5 gap-4 overflow-hidden ${albumAnimation}`}>
             <div className="relative shrink-0">
                 <img 
@@ -1623,12 +1621,13 @@ return (
             </div>
 
             <div className="flex-1 min-w-0 flex flex-col justify-center gap-1 overflow-hidden">
-                {/* 15자 이상(>=15)일 때만 흐르도록 설정 */}
+                {/* [수정] 13자 이상(>=13)일 때 흐르도록 변경 */}
                 <div className="w-full overflow-hidden relative h-[18px]">
-                    {currentTrack.title.length >= 15 ? (
+                    {currentTrack.title.length >= 13 ? (
                         <div 
                             className="animate-marquee" 
-                            style={{ animationDuration: `${Math.max(5, currentTrack.title.length * 0.4)}s` }}
+                            // [수정] 속도 조절: * 0.3으로 줄여서 더 빠르게 (기존 0.4)
+                            style={{ animationDuration: `${Math.max(4, currentTrack.title.length * 0.3)}s` }}
                         >
                             <a 
                                 href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
