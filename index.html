@@ -677,10 +677,6 @@ function App() {
   const [albumAnimation, setAlbumAnimation] = useState(''); // 트랙 전환 애니메이션 상태
   const [currentAlbumId, setCurrentAlbumId] = useState('firstfruit'); // 현재 재생/선택된 앨범 ID
   const [menuLevel, setMenuLevel] = useState(0); // 0: Now Playing, 1: Track List, 2: Album List (Cover Flow)
-  
-  // ▼▼▼ 이 부분부터 handleChoice 함수 끝 이후까지 교체합니다. ▼▼▼
-  const [currentAlbumId, setCurrentAlbumId] = useState('firstfruit'); // 현재 재생/선택된 앨범 ID
-  const [menuLevel, setMenuLevel] = useState(0); // 0: Now Playing, 1: Track List, 2: Album List (Cover Flow)
 
   // ▼▼▼ [추가] 새로운 선택지가 생기면 자동으로 펼치기 ▼▼▼
   useEffect(() => {
