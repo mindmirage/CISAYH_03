@@ -1728,15 +1728,16 @@ return (
                 })()}
             </div>
             {/* [수정 3] 휠: 버튼 로직 및 기능 연결 */}
-            <div className="w-40 h-40 rounded-full bg-white/20 border border-white/20 mx-auto relative flex items-center justify-center shadow-lg backdrop-blur-sm">
+            {/* 외부 휠: 크롬에서도 비치지 않도록 불투명도를 높임 (/30 -> /85) + 블러 강도 증가 */}
+            <div className="w-40 h-40 rounded-full bg-gray-200/85 border border-gray-200/50 mx-auto relative flex items-center justify-center shadow-xl backdrop-blur-xl">
                 
-                {/* MENU 버튼 */}
-                <button onClick={handleMenuClick} className="absolute top-4 text-[10px] font-bold text-white/60 p-2 -mt-2 -mx-2 hover:text-white transition">MENU</button>
+                {/* MENU 버튼: 배경이 진해졌으므로 글씨는 조금 더 밝게 (white/80) */}
+                <button onClick={handleMenuClick} className="absolute top-4 text-[10px] font-bold text-white/80 p-2 -mt-2 -mx-2 hover:text-white transition">MENU</button>
                 
                 {/* 재생 버튼 */}
                 <button 
                     onClick={() => { if (menuLevel !== 0) return; playSound('click'); const track = getTrackData(); window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank'); }} 
-                    className={`absolute bottom-4 text-[10px] font-bold p-2 -mb-2 -mx-2 transition ${menuLevel === 0 ? 'text-white hover:text-green-300' : 'text-white/40'}`}
+                    className={`absolute bottom-4 text-[10px] font-bold p-2 -mb-2 -mx-2 transition ${menuLevel === 0 ? 'text-white hover:text-green-300' : 'text-white/60'}`}
                 >
                     <Play size={10} fill="currentColor"/>
                 </button>
@@ -1744,7 +1745,7 @@ return (
                 {/* 이전 버튼 */}
                 <button 
                     onClick={() => handleTrackChange('prev')} 
-                    className={`absolute left-4 text-[10px] font-bold p-2 -ml-2 -my-2 transition ${menuLevel === 0 || menuLevel === 2 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
+                    className={`absolute left-4 text-[10px] font-bold p-2 -ml-2 -my-2 transition ${menuLevel === 0 || menuLevel === 2 ? 'text-white/80 hover:text-white' : 'text-white/60'}`}
                 >
                     <ChevronLeft size={10} />
                 </button>
@@ -1752,20 +1753,18 @@ return (
                 {/* 다음 버튼 */}
                 <button 
                     onClick={() => handleTrackChange('next')} 
-                    className={`absolute right-4 text-[10px] font-bold p-2 -mr-2 -my-2 transition ${menuLevel === 0 || menuLevel === 2 ? 'text-white hover:text-gray-200' : 'text-white/40'}`}
+                    className={`absolute right-4 text-[10px] font-bold p-2 -mr-2 -my-2 transition ${menuLevel === 0 || menuLevel === 2 ? 'text-white/80 hover:text-white' : 'text-white/60'}`}
                 >
                     <ChevronLeft size={10} className="rotate-180" />
                 </button>
                 
                 {/* [수정] 가운데 버튼 (Enter 기능 추가됨) */}
+                {/* 내부 버튼: 거의 불투명하게 처리 (/50 -> /95) 하여 배경 차단 */}
                 <button 
                     onClick={handleCenterClick}
-                    className="w-14 h-14 rounded-full bg-white/40 shadow-inner border border-white/20 active:scale-95 transition-transform hover:bg-white/50"
+                    className="w-14 h-14 rounded-full bg-gray-100/95 shadow-inner border border-gray-100/50 active:scale-95 transition-transform hover:bg-white"
                 ></button>
             </div>
-        </div>
-    </div>
-)}
                                 {/* 재현: 필모그래피 & 라디오 (다크 모드 스타일) */}
                                 {selectedProfile.id === 'jaehyun' && (
                                     <div className="space-y-16 animate-fade-in-up pb-10">
