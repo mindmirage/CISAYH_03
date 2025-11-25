@@ -26,6 +26,10 @@ html, body {
 /* 내부 스크롤바 숨김 */
 .custom-scrollbar::-webkit-scrollbar { width: 0px; }
 
+/* 아이팟 커버 플로우 스타일링 */
+.snap-mandatory { scroll-snap-type: x mandatory; }
+.snap-center { scroll-snap-align: center; }
+
 /* 애니메이션 */
 .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
 .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
@@ -159,6 +163,54 @@ const COLORS = {
   button: "bg-white border-2 border-[#E0E0E0] text-gray-700 transition-all duration-300 ease-out hover:border-transparent hover:text-gray-800 hover:shadow-md hover:bg-gradient-to-r hover:from-sky-100 hover:to-green-100",
 };
 const IMAGES = { jaehyun: "https://i.pinimg.com/736x/89/18/32/891832cf581c3b0e0feb85ae95e1ae52.jpg", mark: "https://i.pinimg.com/736x/80/b2/5e/80b25e83d5af4f18fa219fb6e62274bb.jpg" };
+const MARK_ALBUMS_DATA = [
+  { 
+      id: 'firstfruit', 
+      title: "The Firstfruit - The 1st Album", 
+      cover: "https://i.pinimg.com/736x/2e/5b/e3/2e5be366099b999f999e5999b999f999.jpg",
+      artist: 'MARK',
+      tracks: [
+        { id: 1, title: "1. Toronto's Window", videoId: "9qE_U-X5t9A" }, 
+        { id: 2, title: "2. 1999", videoId: "b8y1r6kH67A" },
+        { id: 3, title: "3. Flight to NYC", videoId: "4pS1_vL6e5g" },
+        { id: 4, title: "4. Righteous", videoId: "5j7wW8j8r4Y" },
+        { id: 5, title: "5. Fraktsiya", videoId: "P7D5n0t0o9g" },
+        { id: 6, title: "6. Raincouver", videoId: "zXQ3o8u6x5K" },
+        { id: 7, title: "7. Loser", videoId: "a2Z3x4w5y6L" },
+        { id: 8, title: "8. Watching TV", videoId: "o5L4i3k2j1H" },
+        { id: 9, title: "9. +82 Pressin'", videoId: "e9C8v7b6n5M" },
+        { id: 10, title: "10. 200", videoId: "q4A3z2y1x0V" },
+        { id: 11, title: "11. Journey Mercies", videoId: "b2N1m0l9k8J" },
+        { id: 12, title: "12. Mom's Interlude", videoId: "y8H7g6f5e4D" },
+        { id: 13, title: "13. Too Much", videoId: "d1C0b9a8s7F" }
+      ],
+      type: 'Album'
+  },
+  { 
+      id: '200', 
+      title: "200", 
+      cover: "https://i.scdn.co/image/ab67616d0000b273cfa6036e0da206a32722eaa0",
+      artist: 'MARK',
+      tracks: [{ id: 1, title: "200", videoId: "z1X9wV0tB8H" }],
+      type: 'Single'
+  },
+  { 
+      id: 'golden_hour', 
+      title: "Golden Hour - SM STATION : NCT LAB", 
+      cover: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/00/b6/75/00b6755d-0027-bfaa-b7e4-0f858d60aa23/STATION_NCT_LAB_MARK_Golden_Hour_Digital_Cover.jpg/1200x630bb.jpg",
+      artist: 'MARK',
+      tracks: [{ id: 1, title: "Golden Hour", videoId: "q5P0xG7dE4z" }],
+      type: 'Single'
+  },
+  { 
+      id: 'child', 
+      title: "Child - SM STATION : NCT LAB", 
+      cover: "https://i.scdn.co/image/ab67616d0000b273d23f42c2583356e3147da65b",
+      artist: 'MARK',
+      tracks: [{ id: 1, title: "Child", videoId: "X8C4v7u6n5M" }],
+      type: 'Single'
+  }
+];
 const CHAPTERS = [
   { id: 1, title: "반칙 써도 되지? 너한테", sceneId: 'start', desc: "주방에서의 미묘한 기류" },
   { id: 2, title: "원래 영향을 준 당사자는 잘 모르죠", sceneId: 'living1', desc: "비포 선라이즈와 낭만" },
@@ -622,10 +674,13 @@ function App() {
   const [isDetailView, setIsDetailView] = useState(false); // 상세 정보 뷰 상태
   const [showRadioScript, setShowRadioScript] = useState(false); // 라디오 대본 보기 상태
   const [scrollTop, setScrollTop] = useState(0); // [추가] 스크롤 위치 저장
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0)
-  const [isAlbumListOpen, setIsAlbumListOpen] = useState(false); // 앨범 목록 열림 상태 (4번 요청)
-  const [albumAnimation, setAlbumAnimation] = useState(''); // 트랙 전환 애니메이션 상태 (2번 요청)
-  // ▼▼▼ [추가] 새로운 선택지가 생기면 자동으로 펼치기 ▼▼▼
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0); // 현재 재생 중인 트랙 인덱스
+  const [albumAnimation, setAlbumAnimation] = useState(''); // 트랙 전환 애니메이션 상태
+  
+  // ▼▼▼ 이 부분부터 handleChoice 함수 끝 이후까지 교체합니다. ▼▼▼
+  const [currentAlbumId, setCurrentAlbumId] = useState('firstfruit'); // 현재 재생/선택된 앨범 ID
+  const [menuLevel, setMenuLevel] = useState(0); // 0: Now Playing, 1: Track List, 2: Album List (Cover Flow)
+
   // ▼▼▼ [추가] 새로운 선택지가 생기면 자동으로 펼치기 ▼▼▼
   useEffect(() => {
       if (choices.length > 0) {
@@ -781,13 +836,22 @@ function App() {
         loadScene(option.nextId); 
     }, 500); // duration-500과 시간 일치
   };
+
+  // 앨범/트랙 데이터 헬퍼
+  const getAlbumData = () => MARK_ALBUMS_DATA.find(a => a.id === currentAlbumId) || MARK_ALBUMS_DATA[0];
+  const getTrackData = (album = getAlbumData()) => album.tracks[currentTrackIndex] || album.tracks[0];
+  
+  // 휠 버튼 - 이전/다음 트랙 변경 로직 (1, 2번 요청)
   const handleTrackChange = (direction) => {
-      const tracksLength = CHARACTER_DETAILS.mark.album.tracks.length;
+      // 메뉴가 열려있을 때는 트랙 변경 금지
+      if (menuLevel !== 0) return;
+
+      const currentAlbum = getAlbumData();
+      const tracksLength = currentAlbum.tracks.length;
       if (tracksLength === 0) return;
       
-      playSound('click'); // 클릭 소리
+      playSound('click');
       
-      // 애니메이션 적용 (기존 화면 퇴장)
       setAlbumAnimation(direction === 'next' ? 'animate-fade-out-left' : 'animate-fade-out-right');
 
       setTimeout(() => {
@@ -796,19 +860,38 @@ function App() {
               if (direction === 'next') {
                   newIndex = (prev + 1) % tracksLength;
               } else if (direction === 'prev') {
-                  // 1. 이전 트랙 로직 추가: -1이 되지 않도록 트랙 길이(length)를 더해줍니다.
                   newIndex = (prev - 1 + tracksLength) % tracksLength;
               }
               return newIndex;
           });
-          // 새로운 화면 진입 애니메이션 적용
           setAlbumAnimation(direction === 'next' ? 'animate-fade-in-right' : 'animate-fade-in-left');
-      }, 200); // 모션 시간 (0.2초)
+      }, 200); 
       
-      // 최종 애니메이션 초기화 (애니메이션 클래스 제거)
       setTimeout(() => {
           setAlbumAnimation('');
       }, 400); 
+  };
+  
+  // 휠 버튼 - 메뉴 클릭 로직 (4번 요청)
+  const handleMenuClick = () => {
+      playSound('click');
+      // 0(Now Playing) -> 1(Track List) -> 2(Album List) -> 0(Now Playing) 순환
+      setMenuLevel(prev => (prev + 1) % 3);
+  };
+  
+  // 앨범 목록 (Level 2)에서 앨범 선택 (3번 요청)
+  const selectAlbumFromMenu = (albumId) => {
+      playSound('click');
+      setCurrentAlbumId(albumId);
+      setCurrentTrackIndex(0); // 트랙 초기화
+      setMenuLevel(1); // 트랙 리스트로 이동
+  };
+  
+  // 트랙 리스트 (Level 1)에서 트랙 선택 (3번 요청)
+  const selectTrackFromList = (index) => {
+      playSound('click');
+      setCurrentTrackIndex(index);
+      setMenuLevel(0); // Now Playing으로 이동
   };
   const getSenderInfo = (sender) => {
     if (sender === '재현') return { color: COLORS.jaehyun, isImage: true };
