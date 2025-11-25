@@ -918,33 +918,33 @@ function App() {
   const handleCenterClick = () => {
       playSound('click');
 
-      // [Level 2] 앨범 구경 -> 해당 앨범의 트랙 리스트 진입
+      // [Level 2] 앨범 커버 플로우 -> 선택한 앨범의 트랙 리스트로 진입
       if (menuLevel === 2) {
-          setMenuLevel(1);
+          selectAlbumFromMenu(currentAlbumId);
       } 
-      // [Level 0] 재생 화면 -> 현재 재생 중인 곡 유튜브 열기
+      // [Level 0] 재생 화면 -> ★재생 중인 곡★ 유튜브 열기 (변수 수정됨)
       else if (menuLevel === 0) {
-          // 재생 중인 앨범 정보 사용
           const playingAlbum = MARK_ALBUMS_DATA.find(a => a.id === playingAlbumId) || MARK_ALBUMS_DATA[0];
           const track = playingAlbum.tracks[playingTrackIndex] || playingAlbum.tracks[0];
           window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank');
       }
   };
-  // 휠 버튼 - 메뉴 클릭 로직 (4번 요청)
+
+  // 휠 버튼 - 메뉴 클릭 (뒤로 가기 및 동기화) - [수정됨]
   const handleMenuClick = () => {
       playSound('click');
       
-      // [CASE 1] Now Playing (0) -> Track List (1)로 갈 때
-      // ★ 핵심: 듣고 있던 노래의 앨범을 '구경 중인 앨범'으로 설정
+      // [CASE 1] Now Playing (0) -> Track List (1)
+      // ★ 핵심: 메뉴를 누르면 '현재 듣고 있는 앨범' 화면으로 이동합니다.
       if (menuLevel === 0) {
-          setCurrentAlbumId(playingAlbumId); // 재생 중인 앨범으로 화면 동기화
+          setCurrentAlbumId(playingAlbumId); // 화면을 재생 중인 앨범으로 강제 동기화
           setMenuLevel(1);
       }
       
-      // [CASE 2] Track List (1) -> Album List (2)로 갈 때
+      // [CASE 2] Track List (1) -> Album List (2)
       else if (menuLevel === 1) {
           setMenuLevel(2);
-          // 화면이 바뀌고 나서 해당 앨범 위치로 스크롤 이동
+          // 화면 전환 후 해당 앨범이 가운데 오도록 스크롤 조정
           setTimeout(() => {
               const element = document.getElementById(`album-${currentAlbumId}`);
               if (element) {
@@ -953,7 +953,7 @@ function App() {
           }, 0);
       }
       
-      // [CASE 3] Album List (2) -> Now Playing (0)으로 돌아갈 때
+      // [CASE 3] Album List (2) -> Now Playing (0)
       else if (menuLevel === 2) {
           setMenuLevel(0);
       }
@@ -1636,9 +1636,16 @@ return (
                 {/* MENU 버튼 */}
                 <button onClick={handleMenuClick} className="absolute top-4 text-[10px] font-bold text-white/60 p-2 -mt-2 -mx-2 hover:text-white transition">MENU</button>
                 
-                {/* 재생 버튼 */}
+                {/* 재생 버튼 (Level 0에서만 활성화) - ★수정됨: playingAlbumId 사용★ */}
                 <button 
-                    onClick={() => { if (menuLevel !== 0) return; playSound('click'); const track = getTrackData(); window.open(`https://www.youtube.com/watch?v=${track.videoId}`, '_blank'); }} 
+                    onClick={() => { 
+                        if (menuLevel !== 0) return; 
+                        playSound('click'); 
+                        // [수정] getTrackData() 대신 playing state를 직접 사용
+                        const pAlbum = MARK_ALBUMS_DATA.find(a => a.id === playingAlbumId) || MARK_ALBUMS_DATA[0];
+                        const pTrack = pAlbum.tracks[playingTrackIndex] || pAlbum.tracks[0];
+                        window.open(`https://www.youtube.com/watch?v=${pTrack.videoId}`, '_blank'); 
+                    }} 
                     className={`absolute bottom-4 text-[10px] font-bold p-2 -mb-2 -mx-2 transition ${menuLevel === 0 ? 'text-white hover:text-green-300' : 'text-white/40'}`}
                 >
                     <Play size={10} fill="currentColor"/>
@@ -1660,7 +1667,7 @@ return (
                     <ChevronLeft size={10} className="rotate-180" />
                 </button>
                 
-                {/* [수정] 가운데 버튼 (Enter 기능 추가됨) */}
+                {/* 가운데 버튼 (Enter) */}
                 <button 
                     onClick={handleCenterClick}
                     className="w-14 h-14 rounded-full bg-white/40 shadow-inner border border-white/20 active:scale-95 transition-transform hover:bg-white/50"
