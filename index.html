@@ -1460,7 +1460,7 @@ return (
                     const currentAlbum = getAlbumData();
                     const currentTrack = getTrackData(currentAlbum);
 
-                    // Level 2: 앨범 목록 (Cover Flow 스타일)
+                    // Level 2: 앨범 목록 (Cover Flow 스타일) - [수정됨]
                     if (menuLevel === 2) {
                         return (
                             <div className="absolute inset-0 p-2 flex flex-col z-10 animate-fade-in">
@@ -1473,19 +1473,19 @@ return (
                                         <button
                                             key={album.id}
                                             onClick={() => selectAlbumFromMenu(album.id)}
-                                            className={`flex-shrink-0 w-24 h-24 rounded-lg shadow-xl relative transition-all duration-300 snap-center focus:outline-none ${
-                                                album.id === currentAlbumId ? 'scale-110 border-2 border-white/50' : 'scale-90 opacity-70'
+                                            className={`flex-shrink-0 w-24 h-24 rounded-2xl shadow-xl relative transition-all duration-300 snap-center focus:outline-none ${
+                                                // [수정] scale-110 유지, 테두리 제거
+                                                album.id === currentAlbumId ? 'scale-110' : 'scale-90 opacity-70'
                                             }`}
                                         >
                                             <img 
                                                 src={album.cover} 
                                                 alt={album.title} 
-                                                className="w-full h-full object-cover rounded-lg"
+                                                // [수정] rounded-lg -> rounded-2xl (더 동글게)
+                                                className="w-full h-full object-cover rounded-2xl shadow-lg"
                                                 onError={(e) => { e.target.src='https://via.placeholder.com/100x100/333333/FFFFFF?text=Album'; }}
                                             />
-                                            {album.id === currentAlbumId && (
-                                                <div className="absolute inset-0 border-2 border-green-400 rounded-lg shadow-lg"></div>
-                                            )}
+                                            {/* [수정] 초록색 테두리 div 삭제됨 */}
                                         </button>
                                     ))}
                                 </div>
@@ -1496,7 +1496,7 @@ return (
                         );
                     }
                     
-                    // Level 1: 트랙 리스트
+                    // Level 1: 트랙 리스트 (변경 없음)
                     if (menuLevel === 1) {
                         return (
                             <div className="absolute inset-0 p-3 flex flex-col z-10 animate-fade-in">
@@ -1528,44 +1528,50 @@ return (
                         );
                     }
                     
-                    // Level 0: Now Playing (원본 디자인 유지)
+                    // Level 0: Now Playing - [수정됨]
                     return (
-                        <div className={`h-full w-full absolute inset-0 ${albumAnimation}`}>
-                            <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3">
+                        // [수정] flex flex-col 추가하여 수직 배치 제어
+                        <div className={`h-full w-full absolute inset-0 flex flex-col ${albumAnimation}`}>
+                            {/* 헤더는 고정 (shrink-0) */}
+                            <div className="h-6 bg-white/5 border-b border-white/10 flex items-center justify-between px-3 shrink-0">
                                 <span className="text-[9px] font-bold text-white/60">Now Playing</span>
                                 <div className="flex gap-0.5">
                                     <div className="w-2 h-1 bg-green-400"></div>
                                     <div className="w-0.5 h-1 bg-white/40"></div>
                                 </div>
                             </div>
-                            {/* 원본 디자인: flex-1 flex items-center p-4 gap-4 */}
-                            <div className="flex-1 flex items-center p-4 gap-4">
+                            
+                            {/* [수정] 컨텐츠 영역 정렬 개선 
+                                1. justify-center 추가: 수직 중앙 정렬
+                                2. items-center: 수평 중앙 정렬
+                                3. padding 조절
+                            */}
+                            <div className="flex-1 flex flex-row items-center justify-center px-6 gap-5 overflow-hidden">
                                 <img 
                                     src={currentAlbum.cover} 
                                     alt="Album" 
-                                    className="w-20 h-20 shadow-lg object-cover rounded-md" 
+                                    // [수정] 앨범 아트 크기 약간 키움 (w-20 -> w-22) 및 둥글게 처리
+                                    className="w-22 h-22 aspect-square shadow-xl object-cover rounded-lg" 
                                     onError={(e) => { e.target.src='https://via.placeholder.com/80x80/333333/FFFFFF?text=A'; }}
                                 />
-                                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
                                     {/* 노래 제목과 유튜브 링크 */}
                                     <a 
                                         href={`https://www.youtube.com/watch?v=${currentTrack.videoId}`} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
-                                        className="text-xs font-bold text-white truncate mb-1 hover:underline cursor-pointer"
+                                        className="text-xs font-bold text-white truncate hover:underline cursor-pointer leading-tight"
                                         onClick={() => playSound('click')}
                                     >
                                         {currentTrack.title}
                                     </a>
-                                    <div className="text-[10px] text-white/60 truncate">{currentAlbum.title}</div>
-                                    <div className="text-[10px] text-white/60 truncate">MARK</div>
+                                    <div className="text-[10px] text-white/60 truncate leading-tight">{currentAlbum.artist}</div>
+                                    <div className="text-[9px] text-white/40 truncate leading-tight">{currentAlbum.title}</div>
                                 </div>
                             </div>
                         </div>
                     );
                 })()}
-
-            </div>
 
             {/* [수정 3] 휠: 버튼 로직 및 기능 연결 */}
             <div className="w-40 h-40 rounded-full bg-white/20 border border-white/20 mx-auto relative flex items-center justify-center shadow-lg backdrop-blur-sm">
