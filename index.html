@@ -704,7 +704,7 @@ function App() {
   const [menuLevel, setMenuLevel] = useState(0); // 0: Now Playing, 1: Track List, 2: Album List
   const [albumAnimation, setAlbumAnimation] = useState(''); 
 
-  // 데이터 헬퍼
+  // [수정됨] 데이터 헬퍼
   const getAlbumData = (id) => MARK_ALBUMS_DATA.find(a => a.id === id) || MARK_ALBUMS_DATA[0];
   const getTrackData = (album, index) => album.tracks[index] || album.tracks[0];
 
@@ -774,7 +774,7 @@ function App() {
       }
   };
 
-  // 메뉴 버튼 핸들러
+  // [수정됨] 메뉴 버튼 핸들러
   const handleMenuClick = () => {
       playSound('click');
       // 순환 구조: Now Playing(0) -> Album List(2) -> Track List(1) -> Now Playing(0)
