@@ -726,7 +726,7 @@ function App() {
   const [showTicket, setShowTicket] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null); // [추가됨] 이미지 팝업 상태
   const [ticketBgIndex, setTicketBgIndex] = useState(0);
-    
+  const [openPopupId, setOpenPopupId] = useState(null);
   useEffect(() => {
     if (showTicket) {
       const interval = setInterval(() => {
@@ -1628,15 +1628,11 @@ return (
                                            {/* 앨범 리스트 (2x2 그리드) */}
                                             <div className="grid grid-cols-2 gap-x-12 gap-y-10 px-2 pb-4">
                                                 {MARK_ALBUMS_DATA.map((album) => (
-                                                    <div key={album.id} className="group relative flex flex-col items-center cursor-pointer" onClick={() => {
-                                                        if (typeof selectAlbumFromMenu === 'function') {
-                                                            selectAlbumFromMenu(album.id);
-                                                            setTimeout(() => {
-                                                                const ipodElement = document.getElementById('mark-ipod');
-                                                                if(ipodElement) ipodElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                            }, 100);
-                                                        }
-                                                    }}>
+                                                    <div 
+                                                        key={album.id} 
+                                                        className="group relative flex flex-col items-center cursor-pointer"
+                                                        onClick={() => setOpenPopupId(openPopupId === album.id ? null : album.id)}
+                                                    >
                                                         {/* 1. 기본 리스트 뷰 */}
                                                         <div className="relative w-28 h-28 z-10 perspective-500">
                                                             {/* 리스트상의 미니 LP */}
@@ -1661,25 +1657,59 @@ return (
                                                             </div>
                                                         </div>
 
-                                                        {/* 앨범 제목 및 타입 */}
-                                                        <div className="mt-3 text-center w-32 z-20 flex flex-col items-center">
-                                                            <div className="text-[10px] font-bold text-white/95 leading-tight drop-shadow-md break-words w-full">{album.title}</div>
+                                                        {/* 앨범 제목 및 재생 버튼 영역 */}
+                                                        <div className="mt-3 text-center w-36 z-20 flex flex-col items-center">
+                                                            <div className="flex items-center justify-center gap-2 w-full">
+                                                                <div className="text-[10px] font-bold text-white/95 leading-tight drop-shadow-md break-words max-w-[85px] text-right">{album.title}</div>
+                                                                
+                                                                {/* 재생 버튼 */}
+                                                                <button 
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation(); 
+                                                                        playSound('click');
+                                                                        if (typeof selectAlbumFromMenu === 'function') {
+                                                                            selectAlbumFromMenu(album.id);
+                                                                            setTimeout(() => {
+                                                                                const ipodElement = document.getElementById('mark-ipod');
+                                                                                if(ipodElement) ipodElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                                            }, 100);
+                                                                        }
+                                                                    }}
+                                                                    className="w-6 h-6 rounded-full bg-white/10 hover:bg-green-400 hover:text-white text-green-400 flex items-center justify-center transition-all shadow-sm backdrop-blur-sm border border-white/10 shrink-0 cursor-pointer active:scale-90"
+                                                                >
+                                                                    <Play size={8} fill="currentColor" />
+                                                                </button>
+                                                            </div>
                                                             <div className="text-[9px] text-white/70 mt-1">{album.type}</div>
                                                         </div>
 
-                                                        {/* 
-                                                          2. 화면 중앙 팝업 (Fixed + Center + No Dim)
-                                                        */}
-                                                        {/* 이 컨테이너는 중앙 정렬을 위해 w-full h-full flex items-center justify-center 속성을 유지합니다. */}
+                                                        {/* 2. 화면 중앙 팝업 */}
                                                         <div className="fixed inset-0 z-[9999] w-full h-full flex items-center justify-center pointer-events-none">
                                                             
-                                                            <div className="relative flex items-center justify-center w-full h-full opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-500 ease-out">
+                                                            <div className={`relative flex items-center justify-center w-full h-full transition-all duration-500 ease-out ${
+                                                                openPopupId === album.id 
+                                                                ? 'opacity-100 visible' 
+                                                                : 'opacity-0 invisible'
+                                                            }`}>
 
-                                                                {/* (배경 딤 제거됨: 뒤쪽 디스코그래피가 밝게 보임) */}
-
-                                                                {/* 중앙 팝업 카드 */}
-                                                                <div className="relative w-[340px] bg-[#1a1a1a]/95 backdrop-blur-3xl border border-white/20 rounded-[2rem] p-6 shadow-[0_0_80px_-10px_rgba(0,0,0,0.8),_0_50px_100px_-20px_rgba(0,0,0,1)] flex flex-col items-center overflow-hidden transform transition-all duration-700 cubic-bezier(0.175, 0.885, 0.32, 1.275) scale-90 translate-y-10 group-hover:scale-100 group-hover:translate-y-0">
+                                                                {/* 팝업 카드 */}
+                                                                <div className={`relative w-[340px] bg-[#1a1a1a]/95 backdrop-blur-3xl border border-white/20 rounded-[2rem] p-6 shadow-[0_0_80px_-10px_rgba(0,0,0,0.8),_0_50px_100px_-20px_rgba(0,0,0,1)] flex flex-col items-center overflow-hidden transform transition-all duration-700 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${
+                                                                    openPopupId === album.id 
+                                                                    ? 'scale-100 translate-y-0 pointer-events-auto' 
+                                                                    : 'scale-90 translate-y-[100%] pointer-events-none'
+                                                                }`}>
                                                                     
+                                                                    {/* 닫기(X) 버튼 */}
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setOpenPopupId(null);
+                                                                        }}
+                                                                        className="absolute top-4 right-4 p-2 text-white/50 hover:text-white transition z-50 bg-black/20 hover:bg-black/40 rounded-full backdrop-blur-md"
+                                                                    >
+                                                                        <X size={16} />
+                                                                    </button>
+
                                                                     {/* 앰비언트 라이트 배경 */}
                                                                     <div className="absolute inset-0 z-0">
                                                                         <div 
@@ -1689,14 +1719,15 @@ return (
                                                                         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent z-10"></div>
                                                                     </div>
 
-                                                                    {/* [애니메이션 영역] 
-                                                                        수정됨: '-translate-x-3' 클래스를 추가하여
-                                                                        전체 덩어리를 강제로 왼쪽으로 조금 더 이동시켰습니다.
-                                                                    */}
-                                                                    <div className="relative w-full h-[120px] flex items-center justify-center mb-6 mt-4 z-20 transition-transform duration-700 -translate-x-3">
+                                                                    {/* 애니메이션 영역 (수정됨: -translate-x-6 추가로 왼쪽 이동) */}
+                                                                    <div className={`relative w-full h-[120px] flex items-center justify-center mb-6 mt-4 z-20 transition-transform duration-1000 -translate-x-3 ${
+                                                                        openPopupId === album.id ? '-translate-x-6' : ''
+                                                                    }`}>
                                                                         
-                                                                        {/* 1. LP (오른쪽으로 이동) - 기존 벌어짐 유지 */}
-                                                                        <div className="absolute top-1/2 left-1/2 w-[100px] h-[100px] -translate-y-1/2 -translate-x-1/2 transition-transform duration-1000 cubic-bezier(0.34, 1.56, 0.64, 1) group-hover:translate-x-4 z-0">
+                                                                        {/* 1. LP */}
+                                                                        <div className={`absolute top-1/2 left-1/2 w-[100px] h-[100px] -translate-y-1/2 -translate-x-1/2 transition-transform duration-1000 cubic-bezier(0.34, 1.56, 0.64, 1) z-0 ${
+                                                                            openPopupId === album.id ? 'translate-x-4' : ''
+                                                                        }`}>
                                                                             <div className="w-full h-full rounded-full bg-[#111] shadow-2xl flex items-center justify-center animate-[spin_4s_linear_infinite]">
                                                                                 <div className="absolute inset-0 rounded-full border border-gray-800 opacity-20"></div>
                                                                                 <div className="absolute inset-1.5 rounded-full border border-gray-700 opacity-30"></div>
@@ -1713,8 +1744,10 @@ return (
                                                                             </div>
                                                                         </div>
                                                                         
-                                                                        {/* 2. 메인 커버 (왼쪽으로 이동 & 기울기) - 기존 벌어짐 유지 */}
-                                                                        <div className="relative w-[105px] h-[105px] z-10 shadow-[0_20px_40px_rgba(0,0,0,0.5)] rounded-[2px] transition-all duration-1000 cubic-bezier(0.25, 1, 0.5, 1) group-hover:-translate-x-4 group-hover:-rotate-6">
+                                                                        {/* 2. 메인 커버 */}
+                                                                        <div className={`relative w-[105px] h-[105px] z-10 shadow-[0_20px_40px_rgba(0,0,0,0.5)] rounded-[2px] transition-all duration-1000 cubic-bezier(0.25, 1, 0.5, 1) ${
+                                                                            openPopupId === album.id ? '-translate-x-4 -rotate-6' : ''
+                                                                        }`}>
                                                                             <img src={album.cover} className="w-full h-full object-cover rounded-[2px]" alt="large-cover" />
                                                                             <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-60 pointer-events-none rounded-[2px]"></div>
                                                                         </div>
@@ -1741,9 +1774,9 @@ return (
                                                                         </p>
                                                                     </div>
 
-                                                                    {/* Hovering 힌트 */}
+                                                                    {/* 닫기 안내 */}
                                                                     <div className="absolute -bottom-6 left-0 w-full text-center text-[9px] text-white/30 tracking-[0.3em] uppercase animate-pulse">
-                                                                        Viewing Details
+                                                                        Tap to Close
                                                                     </div>
 
                                                                 </div>
@@ -1754,6 +1787,7 @@ return (
                                                 ))}
                                             </div>
                                         </div>
+
                                         {/* 2. 아이팟 섹션 */}
                                         <div className="mb-16 px-2">
                                             <div className="flex items-center gap-2 mb-6 pl-2">
