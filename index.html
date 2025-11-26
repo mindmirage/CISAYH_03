@@ -710,6 +710,7 @@ function App() {
   const [currentAlbumId, setCurrentAlbumId] = useState('firstfruit'); // 현재 재생/선택된 앨범 ID
   const [menuLevel, setMenuLevel] = useState(0); // 0: Now Playing, 1: Track List, 2: Album List (Cover Flow)
   const [bgImageIndex, setBgImageIndex] = useState(0);
+  const [showTicket, setShowTicket] = useState(false);
   // [추가] 상세 페이지(i 버튼) 진입 시 4초마다 배경 이미지 변경
   useEffect(() => {
     if (isDetailView) {
@@ -1741,10 +1742,11 @@ return (
                                         </div>
                                     </div>
                                 )}
-                                {/* 재현: 필모그래피 & 라디오 (다크 모드 스타일) */}
+                                {/* 재현: 필모그래피 & 라디오 */}
                                 {selectedProfile.id === 'jaehyun' && (
                                     <div className="space-y-16 animate-fade-in-up pb-10">
-                                        {/* 필모그래피 */}
+                                        
+                                        {/* [1] 필모그래피 (예매/예고편 버튼 & 티켓 기능 추가) */}
                                         <div>
                                             <div className="flex items-center gap-2 mb-4">
                                                 <div className="w-1 h-4 bg-sky-400"></div>
@@ -1752,6 +1754,7 @@ return (
                                             </div>
                                             <div className="text-2xl font-black text-white mb-6 tracking-tight drop-shadow-md">익명의 편지가 이국에서</div>
                                             
+                                            {/* 헥사 이미지 그리드 */}
                                             <div className="grid grid-cols-3 gap-2 mb-6">
                                                 {CHARACTER_DETAILS.jaehyun.hexImages.map((img, i) => (
                                                     <div key={i} className="aspect-[3/4] relative overflow-hidden rounded-sm shadow-lg transition-transform hover:scale-105 bg-white/5">
@@ -1760,26 +1763,107 @@ return (
                                                 ))}
                                             </div>
                                             
-                                            <button className="w-full py-4 bg-white/10 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:bg-white/20 transition flex items-center justify-center gap-2 tracking-wider rounded-lg">
-                                                인터뷰 보러 가기 <ChevronLeft size={12} className="rotate-180" />
-                                            </button>
+                                            {/* 버튼 그룹 */}
+                                            <div className="space-y-3">
+                                                {/* 기존 인터뷰 버튼 */}
+                                                <button className="w-full py-4 bg-white/10 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:bg-white/20 transition flex items-center justify-center gap-2 tracking-wider rounded-lg group">
+                                                    인터뷰 보러 가기 <ChevronLeft size={12} className="rotate-180 group-hover:translate-x-1 transition-transform" />
+                                                </button>
+
+                                                {/* [NEW] 예매하기 & 예고편 버튼 */}
+                                                <div className="flex gap-3">
+                                                    <button 
+                                                        onClick={() => { playSound('click'); setShowTicket(true); }}
+                                                        className="flex-1 py-4 bg-gradient-to-r from-rose-500/90 to-pink-600/90 backdrop-blur-md text-white text-xs font-bold border border-white/10 hover:brightness-110 transition flex items-center justify-center gap-1.5 tracking-wider rounded-lg shadow-lg active:scale-95 duration-200"
+                                                    >
+                                                        <div className="w-3 h-3 border-[1.5px] border-white rounded-sm flex items-center justify-center text-[7px] mr-0.5">✔</div>
+                                                        예매하기
+                                                    </button>
+                                                    
+                                                    <a 
+                                                        href="https://youtu.be/Sy8WjUPFnyU?si=RzmQU4L9YPnqSAAV" 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        onClick={() => playSound('click')}
+                                                        className="flex-1 py-4 bg-white/10 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:bg-white/20 transition flex items-center justify-center gap-1.5 tracking-wider rounded-lg active:scale-95 duration-200"
+                                                    >
+                                                        <Play size={10} fill="currentColor" />
+                                                        예고편
+                                                    </a>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                    
-                                     {/* 라디오 (가로형 프리미엄 워크맨 + 화면 전환 기능) */}
+                                        {/* [2] 영화 티켓 팝업 (Overlay) */}
+                                        {showTicket && (
+                                            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-6" onClick={() => setShowTicket(false)}>
+                                                {/* 티켓 디자인 */}
+                                                <div 
+                                                    className="w-full max-w-[320px] bg-[#fdfbf7] rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)] relative animate-fade-in-up transform transition-transform cursor-default"
+                                                    onClick={e => e.stopPropagation()}
+                                                >
+                                                    {/* 상단 포스터 영역 */}
+                                                    <div className="h-48 relative overflow-hidden bg-gray-800">
+                                                        <img src={CHARACTER_DETAILS.jaehyun.hexImages[0]} alt="Poster" className="w-full h-full object-cover opacity-60 mix-blend-overlay" />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-[#fdfbf7] to-transparent"></div>
+                                                        <div className="absolute bottom-5 left-6 right-6">
+                                                            <div className="text-[9px] font-bold tracking-[0.3em] text-gray-500 mb-1">CINEMA TICKET</div>
+                                                            <h2 className="text-2xl font-black text-gray-900 leading-tight tracking-tight break-keep">익명의 편지가<br/>이국에서</h2>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* 티켓 정보 */}
+                                                    <div className="px-8 py-4 relative">
+                                                        {/* 펀칭 구멍 효과 */}
+                                                        <div className="absolute top-[-12px] left-[-12px] w-6 h-6 bg-black/80 rounded-full"></div>
+                                                        <div className="absolute top-[-12px] right-[-12px] w-6 h-6 bg-black/80 rounded-full"></div>
+
+                                                        <div className="flex justify-between items-start mb-6">
+                                                            <div><div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">DATE</div><div className="text-lg font-bold text-gray-800 font-serif">FEB 14</div></div>
+                                                            <div><div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">TIME</div><div className="text-lg font-bold text-gray-800 font-serif">20:00</div></div>
+                                                            <div className="text-right"><div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">SEAT</div><div className="text-lg font-black text-rose-500 font-serif">J-14</div></div>
+                                                        </div>
+
+                                                        <div className="flex justify-between items-center bg-gray-100/80 border border-gray-200 rounded-lg p-3">
+                                                            <div><div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">THEATER</div><div className="text-xs font-bold text-gray-700 mt-0.5">LISBON ART HALL 2</div></div>
+                                                            <div className="w-px h-6 bg-gray-300"></div>
+                                                            <div><div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">CAST</div><div className="text-xs font-bold text-gray-700 mt-0.5">JAEHYUN</div></div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* 하단 절취선 및 바코드 */}
+                                                    <div className="relative pb-6">
+                                                        <div className="w-full border-t-2 border-dashed border-gray-300 relative my-2">
+                                                            <div className="absolute top-[-12px] left-[-12px] w-6 h-6 bg-black/80 rounded-full"></div>
+                                                            <div className="absolute top-[-12px] right-[-12px] w-6 h-6 bg-black/80 rounded-full"></div>
+                                                        </div>
+                                                        <div className="px-6 pt-3 flex flex-col items-center justify-center gap-2">
+                                                            {/* 바코드 패턴 */}
+                                                            <div className="h-10 w-full max-w-[200px] bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAABCAYAAAD5PA/NAAAAFklEQVR4AWP4z8DwHwwDGUwwBQA72gT/6/4A/wAAAABJRU5ErkJggg==')] bg-repeat-x bg-contain opacity-60 grayscale"></div>
+                                                            <div className="text-[9px] tracking-[0.5em] text-gray-400 font-mono">970214 0219</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* 닫기 버튼 */}
+                                                    <button onClick={() => setShowTicket(false)} className="absolute top-4 right-4 p-2 bg-white/50 hover:bg-white backdrop-blur rounded-full text-gray-800 transition shadow-sm"><X size={16} /></button>
+                                                </div>
+                                                
+                                                <div className="absolute bottom-10 text-white/50 text-xs tracking-wider animate-pulse pointer-events-none">화면을 터치하여 닫기</div>
+                                            </div>
+                                        )}
+
+                                        {/* [3] 라디오 섹션 (가로형 워크맨 + 화면 전환) */}
                                         <div>
                                             <div className="flex items-center gap-2 mb-4">
                                                 <div className="w-1 h-4 bg-purple-400"></div>
                                                 <div className="text-xs font-bold text-purple-200 tracking-widest">ON AIR</div>
                                             </div>
                                             
-                                            {/* 디바이스 컨테이너 */}
+                                            {/* 워크맨 디바이스 */}
                                             <div className="relative w-full max-w-[320px] mx-auto perspective-1000 group/player">
-                                                
-                                                {/* 워크맨 본체 */}
                                                 <div className="relative bg-gradient-to-b from-gray-700 to-gray-900 rounded-lg shadow-[0_20px_40px_-10px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.2)] border-t border-white/10 overflow-hidden transition-all duration-300 hover:translate-y-[-2px]">
                                                     
-                                                    {/* 상단 메탈 프레임 */}
+                                                    {/* 상단 메탈바 */}
                                                     <div className="h-12 bg-gradient-to-b from-[#dcdcdc] via-[#f0f0f0] to-[#bfbfbf] flex items-center justify-between px-5 border-b border-gray-600 shadow-md relative z-20">
                                                         <div className="font-serif font-black text-gray-800 tracking-widest text-[10px] opacity-70">PROFESSIONAL</div>
                                                         <div className="flex items-center gap-3">
@@ -1789,12 +1873,7 @@ return (
                                                             </div>
                                                             {/* 부스 입장 버튼 (화면 전환) */}
                                                             <button 
-                                                                onClick={() => { 
-                                                                    playSound('click'); 
-                                                                    setSelectedProfile(null); 
-                                                                    setIsDetailView(false); 
-                                                                    setCurrentView('radio'); 
-                                                                }}
+                                                                onClick={() => { playSound('click'); setSelectedProfile(null); setIsDetailView(false); setCurrentView('radio'); }}
                                                                 className="h-6 px-3 bg-gradient-to-b from-orange-400 to-orange-600 rounded-[2px] shadow-[0_2px_3px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.4)] active:scale-95 active:shadow-inner transition-transform flex items-center justify-center group"
                                                             >
                                                                 <span className="text-[8px] font-bold text-white drop-shadow-sm tracking-tighter group-hover:animate-pulse">ENTER BOOTH</span>
@@ -1804,14 +1883,8 @@ return (
 
                                                     {/* 메인 바디 */}
                                                     <div className="p-5 relative flex gap-5">
-                                                        {/* 카세트 데크 (클릭 시 이동) */}
                                                         <div 
-                                                            onClick={() => { 
-                                                                playSound('click'); 
-                                                                setSelectedProfile(null); 
-                                                                setIsDetailView(false); 
-                                                                setCurrentView('radio'); 
-                                                            }}
+                                                            onClick={() => { playSound('click'); setSelectedProfile(null); setIsDetailView(false); setCurrentView('radio'); }}
                                                             className="flex-1 h-36 bg-[#151515] rounded-sm border-[3px] border-[#333] shadow-[inset_0_0_15px_rgba(0,0,0,1)] relative overflow-hidden group cursor-pointer"
                                                         >
                                                             <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent z-30 pointer-events-none border-b border-white/5"></div>
@@ -1832,33 +1905,20 @@ return (
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                <div className="absolute bottom-4 w-32 h-6 bg-[#4a2c2c] opacity-80 rounded-sm border border-gray-600/50 flex items-center justify-center">
-                                                                     <span className="text-[8px] text-white/50 animate-pulse">TAP TO LISTEN</span>
-                                                                </div>
+                                                                <div className="absolute bottom-4 w-32 h-6 bg-[#4a2c2c] opacity-80 rounded-sm border border-gray-600/50 flex items-center justify-center"><span className="text-[8px] text-white/50 animate-pulse">TAP TO LISTEN</span></div>
                                                             </div>
                                                         </div>
 
-                                                        {/* 컨트롤 패널 */}
                                                         <div className="w-16 flex flex-col justify-between items-center py-1">
                                                             <div className="text-center">
                                                                 <div className="font-serif font-black text-white/90 text-sm tracking-widest drop-shadow-md">SONY</div>
                                                                 <div className="text-[6px] font-medium text-gray-400 tracking-wider mt-0.5">WALKMAN</div>
                                                             </div>
                                                             <div className="flex flex-col gap-2 w-full items-center">
-                                                                <button 
-                                                                    onClick={() => { 
-                                                                        playSound('click'); 
-                                                                        setSelectedProfile(null); 
-                                                                        setIsDetailView(false); 
-                                                                        setCurrentView('radio'); 
-                                                                    }}
-                                                                    className="w-10 h-10 rounded-full bg-gradient-to-br from-[#e0e0e0] to-[#a0a0a0] shadow-[3px_3px_5px_rgba(0,0,0,0.5),inset_1px_1px_1px_rgba(255,255,255,0.8)] flex items-center justify-center active:translate-y-0.5 active:shadow-inner transition-all group/btn"
-                                                                >
+                                                                <button onClick={() => { playSound('click'); setSelectedProfile(null); setIsDetailView(false); setCurrentView('radio'); }} className="w-10 h-10 rounded-full bg-gradient-to-br from-[#e0e0e0] to-[#a0a0a0] shadow-[3px_3px_5px_rgba(0,0,0,0.5),inset_1px_1px_1px_rgba(255,255,255,0.8)] flex items-center justify-center active:translate-y-0.5 active:shadow-inner transition-all group/btn">
                                                                     <Play size={14} className="fill-gray-700 text-gray-700 ml-0.5 group-hover/btn:fill-black" />
                                                                 </button>
-                                                                <button className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4b5563] to-[#1f2937] shadow-[2px_2px_4px_rgba(0,0,0,0.5),inset_1px_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center active:translate-y-0.5 active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] transition-all">
-                                                                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-[1px]"></div>
-                                                                </button>
+                                                                <button className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4b5563] to-[#1f2937] shadow-[2px_2px_4px_rgba(0,0,0,0.5),inset_1px_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center active:translate-y-0.5 active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] transition-all"><div className="w-2.5 h-2.5 bg-gray-400 rounded-[1px]"></div></button>
                                                             </div>
                                                             <div className="text-[8px] font-bold text-gray-500 border border-gray-600 px-1 rounded-sm">WM-D6C</div>
                                                         </div>
@@ -1867,7 +1927,8 @@ return (
                                             </div>
                                         </div>
                                     </div>
-                                )}
+                                )} 
+
                             </div>
                         </div>
                     </>
@@ -1875,9 +1936,9 @@ return (
             </div>
         )}
 
-        {/* =================================================================================
-           [NEW] 라디오 부스 화면 (완전히 새로운 뷰)
-           ================================================================================= */}
+        {/* ============================================================
+           [새로 추가되는 화면] 라디오 부스 채팅방
+           ============================================================ */}
         {currentView === 'radio' && (
             <div className="flex flex-col h-full bg-gray-900 animate-fade-in relative overflow-hidden">
                 
@@ -1895,13 +1956,11 @@ return (
                             </div>
                         </div>
                     </div>
-                    {/* 상단 프로필 이미지 */}
                     <img src={jaehyunProfileImage} alt="DJ" className="w-9 h-9 rounded-full border-2 border-purple-500/50 object-cover shadow-[0_0_15px_rgba(168,85,247,0.3)]" />
                 </div>
 
-                {/* 채팅 영역 (대본 스트림) */}
+                {/* 채팅 영역 */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-5 bg-[#0f0f0f] custom-scrollbar">
-                    {/* 오프닝 배너 */}
                     <div className="flex justify-center my-6 opacity-90 animate-fade-in-up">
                         <div className="bg-gray-800/80 backdrop-blur border border-purple-500/30 px-5 py-2 rounded-full flex items-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
                             <Music size={12} className="text-purple-400 animate-bounce" />
@@ -1909,12 +1968,11 @@ return (
                         </div>
                     </div>
 
-                    {/* 스크립트 파싱 및 렌더링 */}
+                    {/* 스크립트 파싱 */}
                     {CHARACTER_DETAILS.jaehyun.radio.script.split('\n').map((line, idx) => {
                         const text = line.trim();
                         if (!text) return null;
                         
-                        // [대괄호]로 감싸진 텍스트는 시스템 메시지/섹션 구분
                         if (text.startsWith('[') && text.endsWith(']')) {
                             return (
                                 <div key={idx} className="flex justify-center my-8 animate-fade-in">
@@ -1925,7 +1983,6 @@ return (
                             );
                         }
 
-                        // 그 외는 DJ 채팅 버블
                         return (
                             <div key={idx} className="flex gap-3 items-start animate-fade-in-up group" style={{ animationDelay: `${idx * 150}ms` }}>
                                 <div className="shrink-0 flex flex-col items-center gap-1">
@@ -1943,12 +2000,10 @@ return (
                             </div>
                         );
                     })}
-                    
-                    {/* 하단 여백 */}
                     <div className="h-10"></div>
                 </div>
 
-                {/* 하단 입력창 (데코레이션) */}
+                {/* 하단 입력창 */}
                 <div className="p-4 bg-gray-800/90 backdrop-blur-md border-t border-gray-700 shrink-0 z-20 pb-8">
                     <div className="flex items-center gap-3 bg-gray-900/50 rounded-full px-5 py-3 border border-gray-600/50 shadow-inner">
                         <div className="bg-purple-500/20 p-1.5 rounded-full cursor-not-allowed"><Plus size={16} className="text-purple-400"/></div>
