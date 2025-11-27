@@ -833,39 +833,41 @@ function App() {
     }
   }, [showKintsugiTicket]);
 
-  // ▼▼▼ [추가] 라디오 대본 자동 재생 엔진 ▼▼▼
+ // ▼▼▼ [수정] 라디오 대본 자동 재생 엔진 (속도 2배 향상) ▼▼▼
   useEffect(() => {
     if (currentView !== 'radio') return;
 
-    // 큐에 대본이 남아있고, 현재 타이핑 중이 아니라면 다음 대화 실행
     if (radioQueue.length > 0 && !isRadioTyping) {
       const nextLine = radioQueue[0];
       
-      // (1) 특수 지문 (음악, 코너, 서술 등) - 타이핑 없이 바로 출력
-      if (nextLine.type === 'narrative' || nextLine.type === 'music') {
+      // (1) 특수 지문 (음악, 코너 등)
+      if (nextLine.type === 'narrative' || nextLine.type === 'music' || nextLine.type === 'movie' || nextLine.type === 'transition') {
         setIsRadioTyping(true);
-        // 읽는 시간(길이) 계산 (너무 빠르지 않게)
-        const readingTime = Math.min(2000, nextLine.text.length * 50 + 1000); 
+        const readingTime = 1000; // 특수 지문은 1초만 대기
         
         setTimeout(() => {
-           playSound('narrative'); // 효과음
-           setRadioMessages(prev => [...prev, nextLine]); // 메시지 추가
-           setRadioQueue(prev => prev.slice(1)); // 큐에서 제거
+           if(nextLine.type !== 'transition') playSound('narrative');
+           setRadioMessages(prev => [...prev, nextLine]); 
+           setRadioQueue(prev => prev.slice(1)); 
            setIsRadioTyping(false);
-           scrollToBottom(); // 스크롤 내리기
-        }, 1000);
+           scrollToBottom(); 
+        }, readingTime);
       } 
-      // (2) 대화 (재현, 누리) - 타이핑 효과 후 출력
+      // (2) 대화 (재현, 누리) - 속도 빠르게 수정됨
       else {
         setIsRadioTyping(true);
-        // 타이핑 시간 (1.5초)
+        
+        // [수정 포인트] 최소 대기 1초 + 글자당 30ms (기존보다 2배 이상 빠름)
+        // 최대 대기 시간도 3초로 제한
+        const typingDuration = Math.min(3000, 1000 + (nextLine.text.length * 30));
+
         setTimeout(() => {
-           playSound('message'); // 띠링 효과음
-           setRadioMessages(prev => [...prev, nextLine]); // 메시지 추가
-           setRadioQueue(prev => prev.slice(1)); // 큐에서 제거
+           playSound('message'); 
+           setRadioMessages(prev => [...prev, nextLine]); 
+           setRadioQueue(prev => prev.slice(1)); 
            setIsRadioTyping(false);
-           scrollToBottom(); // 스크롤 내리기
-        }, 1500); 
+           scrollToBottom(); 
+        }, typingDuration); 
       }
     }
   }, [radioQueue, isRadioTyping, currentView]);
@@ -894,9 +896,24 @@ function App() {
   const [dateStr, setDateStr] = useState("");
   const scrollRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const isAtBottomRef = useRef(true);
 
   const scrollToBottom = () => { if (scrollRef.current) { scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); } };
-  useEffect(() => { scrollToBottom(); }, [messages, isTyping, isTypingNarrative, choices, isNarrating]);
+  // [수정] 스크롤 자동 이동 (강제 이동 방지 완벽 해결)
+  useEffect(() => {
+      // 1. 라디오 뷰일 때
+      if (currentView === 'radio') {
+          // 사용자가 바닥에 붙어있던 상태(true)라면 -> 새 메시지 왔을 때 같이 내려감
+          // 사용자가 위를 보고 있던 상태(false)라면 -> 안 내려감 (고정)
+          if (isAtBottomRef.current) {
+              scrollToBottom();
+          }
+      } 
+      // 2. 일반 채팅방일 때: 무조건 이동
+      else {
+          scrollToBottom();
+      }
+  }, [messages, isTyping, isTypingNarrative, choices, isNarrating, radioMessages, isRadioTyping, currentView]);
   useEffect(() => {
     const now = new Date(); setDateStr(`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`);
     const interval = setInterval(() => { const t = new Date(); setTimeStr(`${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`); }, 1000);
@@ -2418,33 +2435,96 @@ return (
         playSound('click'); 
         if (profileDetailRef.current) setSavedScrollTop(profileDetailRef.current.scrollTop);
         
-        // ▼▼▼ [수정] 라디오 진입 시 대본 파싱하여 큐에 넣기 ▼▼▼
+        // ▼▼▼ [수정] 150자씩 꽉 채워서 보내는 로직 ▼▼▼
         const scriptLines = CHARACTER_DETAILS.jaehyun.radio.script.split('\n');
-        const parsedQueue = scriptLines.map((line, idx) => {
-            const text = line.trim();
-            if (!text) return null;
-            
-            // 특수 지문 처리 ([서술], [곡명] 등)
+        let parsedQueue = [];
+
+        scriptLines.forEach((line, idx) => {
+            let text = line.trim();
+            if (!text) return;
+
+            // [연출 1] 코너 진입 전 '잠시 후...'
+            if (text.includes('코너: 스크린의 재현') || text.includes('코너: 클로징')) {
+                parsedQueue.push({ id: `trans-${idx}`, type: 'transition', text: '잠시 후...' });
+                parsedQueue.push({ id: idx, type: 'narrative', text: text.replace(/[\[\]]/g, '') });
+                return;
+            }
+
+            // [연출 2] 영화 <그녀> 정보 카드
+            if (text.includes('네 맞아요. <그녀>는 인공지능')) {
+                parsedQueue.push({ 
+                    id: `movie-${idx}`, 
+                    type: 'movie', 
+                    title: '그녀 (Her)',
+                    poster: 'https://ih1.redbubble.net/image.3143898462.4368/flat,750x,075,f-pad,750x1000,f8f8f8.u1.webp',
+                    desc: "‘테오도르’(와킨 피닉스)는 다른 사람들의 편지를 대신 써주는 대필 작가로, 아내(루니 마라)와 별거 중이다. 타인의 마음을 전해주는 일을 하고 있지만, 정작 자신은 너무 외롭고 공허한 삶을 살고 있다. 그러던 어느 날, 스스로 생각하고 느끼는 인공 지능 운영체제인 ‘사만다’(스칼렛 요한슨)를 만나게 된다. 자신의 말에 귀 기울이고, 이해해주는 ‘사만다’로 인해 조금씩 행복을 되찾기 시작한 ‘테오도르’는 점점 그녀에게 사랑을 느끼게 되는데..."
+                });
+            }
+
+            // [연출 3] 서술 지문 편집
+            if (text.includes('[서술:')) {
+                if (text.includes('고개를 끄덕이며') || text.includes('까맣게 물든') || text.includes('잠시 생각하다') || text.includes('뭔가를 눈치챘다는 듯')) {
+                    return; 
+                }
+                if (text.includes('잠시 침묵') || text.includes('멋쩍은 웃음을')) {
+                    const narrativeText = text.replace(/\[서술:(.*?)\]/, '$1').trim();
+                    parsedQueue.push({ id: idx, type: 'narrative', text: narrativeText });
+                    return;
+                }
+                parsedQueue.push({ id: idx, type: 'narrative', text: text.replace(/\[서술:(.*?)\]/, '$1').trim() });
+                return;
+            }
+
+            // [연출 4] 추가 서술
+            if (text.includes('아름다웠나요?')) {
+                parsedQueue.push({ id: `new-narr-${idx}`, type: 'narrative', text: '누리, 뭔가를 눈치챈 듯하다.' });
+            }
+
+            // [기본] 특수 지문
             if (text.startsWith('[') || text.endsWith(']')) {
                 let type = 'narrative';
-                if (text.includes('곡:')) type = 'music';
-                return { id: idx, type, text, sender: 'system' };
+                if (text.includes('곡:') || text.includes('곡명:')) type = 'music';
+                parsedQueue.push({ id: idx, type, text, sender: 'system' });
+                return;
             }
             
-            // 대화 처리 (화자:내용)
+            // [핵심 수정] 대화 처리 (문장을 모아서 150자가 넘을 때 보냄)
             const parts = text.split(':');
             if (parts.length >= 2) {
                 const sender = parts[0].trim();
                 const content = parts.slice(1).join(':').trim();
-                return { id: idx, type: 'talk', text: content, sender };
-            }
-            return null;
-        }).filter(Boolean); // null 제거
 
-        setRadioQueue(parsedQueue); // 큐에 저장
-        setRadioMessages([]);       // 기존 메시지 초기화
-        setIsRadioTyping(false);    // 타이핑 상태 초기화
-        // ▲▲▲ [여기까지 수정] ▲▲▲
+                // 150자 이상일 때만 분할 로직 가동
+                if (content.length >= 150) {
+                    // 문장 단위로 쪼갬
+                    const sentences = content.match(/[^.?!]+[.?!]+["']?|[^.?!]+$/g) || [content];
+                    let currentChunk = "";
+                    let chunkCount = 0;
+
+                    sentences.forEach((sent) => {
+                        currentChunk += sent;
+                        // [중요] 모인 글자가 150자를 넘으면 그때 큐에 넣고 비움
+                        if (currentChunk.length >= 150) {
+                            parsedQueue.push({ id: `${idx}-${chunkCount}`, type: 'talk', text: currentChunk.trim(), sender });
+                            currentChunk = "";
+                            chunkCount++;
+                        }
+                    });
+
+                    // 남은 자투리 문장이 있으면 마저 넣음
+                    if (currentChunk.trim().length > 0) {
+                        parsedQueue.push({ id: `${idx}-${chunkCount}`, type: 'talk', text: currentChunk.trim(), sender });
+                    }
+                } else {
+                    // 150자 미만은 그냥 통으로 보냄
+                    parsedQueue.push({ id: idx, type: 'talk', text: content, sender });
+                }
+            }
+        });
+
+        setRadioQueue(parsedQueue); 
+        setRadioMessages([]);       
+        setIsRadioTyping(false);    
 
         setSelectedProfile(null); 
         setIsDetailView(false); 
@@ -2574,118 +2654,167 @@ return (
                     <img src={jaehyunProfileImage} alt="DJ" className="w-9 h-9 rounded-full border-2 border-purple-500/50 object-cover shadow-[0_0_15px_rgba(168,85,247,0.3)]" />
                 </div>
                 {/* 채팅 영역 */}
-<div 
-    ref={scrollRef} // [중요] 자동 스크롤을 위해 ref 연결
-    className="flex-1 overflow-y-auto p-4 space-y-5 bg-[#0f0f0f] custom-scrollbar"
->
-    <div className="flex justify-center my-6 opacity-90 animate-fade-in-up">
-        <div className="bg-gray-800/80 backdrop-blur border border-purple-500/30 px-5 py-2 rounded-full flex items-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
-            <Music size={12} className="text-purple-400 animate-bounce" />
-            <span className="text-[11px] text-purple-200 font-bold tracking-widest">ON AIR : JAEHYUN's RADIO</span>
-        </div>
-    </div>
-
-    {/* ▼▼▼ [수정] 실시간 채팅 렌더링 (radioMessages 매핑) ▼▼▼ */}
-    {radioMessages.map((msg) => {
-        // 1. 특수 지문 (음악/서술)
-        if (msg.type === 'narrative' || msg.type === 'music') {
-            let contentStyle = "text-xs text-gray-500 bg-[#1a1a1a] px-4 py-1.5 rounded-full border border-gray-800 tracking-wider";
-            let icon = null;
-            let displayText = msg.text.replace(/[\[\]]/g, '');
-
-            // [서술] 스타일
-            if (msg.text.includes('서술:')) {
-                contentStyle = "text-xs text-purple-200/50 bg-purple-900/40 backdrop-blur px-5 py-2.5 rounded-xl border border-purple-800/50 text-justify leading-6 break-keep max-w-[90%]";
-                displayText = msg.text.replace(/\[서술:(.*?)\]/, '$1').trim();
-            }
-            // [음악] 스타일
-            else if (msg.type === 'music') {
-                contentStyle = "bg-purple-900/60 backdrop-blur border border-purple-700/50 px-5 py-3 rounded-full flex items-center gap-3 shadow-[0_4px_15px_rgba(124,58,237,0.3)] text-white font-bold text-sm";
-                icon = <Music size={14} className="text-purple-400" />;
-                // 음악 링크 찾기
-                const match = msg.text.match(/\[(?:오프닝곡|클로징곡|곡명):\s*(.*?)\]/);
-                const songName = match ? match[1].trim() : "";
-                const link = RADIO_MUSIC_LINKS[songName];
-                
-                return (
-                    <div key={msg.id} className="flex justify-center my-8 animate-fade-in-up">
-                        <a href={link || '#'} target="_blank" rel="noopener noreferrer" onClick={(e) => link ? playSound('click') : e.preventDefault()} className={contentStyle}>
-                            {icon}
-                            <div className="flex flex-col items-start">
-                                <span className="text-[10px] font-bold text-purple-300 tracking-wider uppercase leading-none">NOW PLAYING</span>
-                                <span className="mt-0.5">{songName || displayText}</span>
-                            </div>
-                        </a>
-                    </div>
-                );
-            }
-
-            return (
-                <div key={msg.id} className="flex justify-center my-8 animate-fade-in-up">
-                    <span className={contentStyle}>{displayText}</span>
-                </div>
-            );
-        }
-
-        // 2. 대화 (재현 vs 누리)
-        const isJaehyun = msg.sender === '재현';
-        
-        // 스타일 설정 (재현:왼쪽/보라, 누리:오른쪽/회색)
-        const alignClass = isJaehyun ? "justify-start" : "justify-end";
-        const rowClass = isJaehyun ? "flex-row" : "flex-row-reverse";
-        const bubbleClass = isJaehyun 
-            ? "bg-[#2d2d2d] text-gray-200 border-gray-700 rounded-tl-none" 
-            : "bg-gray-200 text-gray-900 border-gray-300 rounded-tr-none";
-        const avatarClass = isJaehyun ? "border-purple-500/50" : "border-gray-400 bg-gray-300";
-        
-        return (
-            <div key={msg.id} className={`flex w-full ${alignClass} mb-4 animate-fade-in-up`}>
-                <div className={`flex ${rowClass} items-start max-w-[85%] gap-2`}>
-                    {/* 아바타 */}
-                    <div className={`w-10 h-10 rounded-[16px] flex-shrink-0 border flex items-center justify-center overflow-hidden shadow-md ${avatarClass}`}>
-                        {isJaehyun ? (
-                            <img src={jaehyunProfileImage} alt="Jaehyun" className="w-full h-full object-cover" />
-                        ) : (
-                            <User size={20} className="text-white drop-shadow-md" />
-                        )}
-                    </div>
-                    
-                    {/* 이름 & 말풍선 */}
-                    <div className={`flex flex-col ${isJaehyun ? "items-start" : "items-end"}`}>
-                        <span className="text-[10px] font-bold text-gray-500 mb-1 mx-1 opacity-80">{msg.sender}</span>
-                        <div className={`px-4 py-3 text-[13px] leading-relaxed rounded-2xl border shadow-sm ${bubbleClass}`}>
-                            {msg.text}
+                <div 
+                    ref={scrollRef} 
+                    // ▼▼▼ [수정] 스크롤 위치 감지 센서 부착 ▼▼▼
+                    onScroll={(e) => {
+                        const { scrollTop, scrollHeight, clientHeight } = e.target;
+                        // 바닥과의 거리가 100px 이내면 "바닥에 있다(true)"고 판단
+                        // 100px 이상 위로 올리면 "위에 있다(false)"고 판단 -> 자동 스크롤 멈춤
+                        if (scrollHeight - scrollTop - clientHeight < 100) {
+                            isAtBottomRef.current = true;
+                        } else {
+                            isAtBottomRef.current = false;
+                        }
+                    }}
+                    className="flex-1 overflow-y-auto p-4 space-y-5 bg-[#0f0f0f] custom-scrollbar"
+                >
+                    <div className="flex justify-center my-6 opacity-90 animate-fade-in-up">
+                        <div className="bg-gray-800/80 backdrop-blur border border-purple-500/30 px-5 py-2 rounded-full flex items-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
+                            <Music size={12} className="text-purple-400 animate-bounce" />
+                            <span className="text-[11px] text-purple-200 font-bold tracking-widest">ON AIR : JAEHYUN's RADIO</span>
                         </div>
                     </div>
-                </div>
-            </div>
-        );
-    })}
 
-    {/* 타이핑 인디케이터 (대기 중일 때 표시) */}
-    {isRadioTyping && radioQueue.length > 0 && (
-            <div className={`flex w-full ${radioQueue[0].sender === '재현' ? 'justify-start' : (radioQueue[0].type === 'narrative' ? 'hidden' : 'justify-end')} mb-4 animate-fade-in`}>
-            <div className={`flex ${radioQueue[0].sender === '재현' ? 'flex-row' : 'flex-row-reverse'} items-start max-w-[85%] gap-2`}>
-                {/* 아바타 */}
-                <div className={`w-10 h-10 rounded-[16px] flex-shrink-0 border flex items-center justify-center overflow-hidden shadow-md ${radioQueue[0].sender === '재현' ? "border-purple-500/50" : "border-gray-400 bg-gray-300"}`}>
-                        {radioQueue[0].sender === '재현' ? (
-                        <img src={jaehyunProfileImage} alt="Jaehyun" className="w-full h-full object-cover" />
-                        ) : (
-                        <User size={20} className="text-white drop-shadow-md" />
-                        )}
+                    {/* ▼▼▼ [수정] 실시간 채팅 렌더링 (속도 UP, 카드뉴스 수정) ▼▼▼ */}
+                    {radioMessages.map((msg) => {
+                        // 0. 전환 효과
+                        if (msg.type === 'transition') {
+                            return (
+                                <div key={msg.id} className="flex justify-center my-8 animate-fade-in">
+                                    <span className="text-xs font-bold text-gray-500 tracking-widest animate-pulse border-b border-gray-700 pb-1">
+                                        {msg.text}
+                                    </span>
+                                </div>
+                            );
+                        }
+
+                        // [NEW] 1. 영화 정보 카드 (썸네일 길쭉하게 수정됨 h-[28rem])
+                        if (msg.type === 'movie') {
+                            return (
+                                <div key={msg.id} className="flex justify-center my-8 animate-fade-in-up w-full px-4">
+                                    <div className="flex flex-col bg-gray-900 rounded-2xl overflow-hidden border border-gray-700 shadow-xl max-w-sm w-full">
+                                        {/* 상단 이미지 영역: 높이를 h-[28rem]으로 늘려 포스터 전체가 보이게 함 */}
+                                        <div className="relative w-full h-[28rem] bg-gray-900 shrink-0">
+                                            <img src={msg.poster} alt="Poster" className="w-full h-full object-cover opacity-90" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent"></div>
+                                            <div className="absolute bottom-4 left-5">
+                                                <span className="text-[10px] text-sky-400 font-bold tracking-widest mb-1 uppercase bg-black/50 backdrop-blur px-2 py-0.5 rounded-full border border-sky-500/30">Movie Info</span>
+                                                <h3 className="text-white font-black text-2xl leading-tight drop-shadow-md mt-1">{msg.title}</h3>
+                                            </div>
+                                        </div>
+                                        {/* 하단 텍스트 영역 */}
+                                        <div className="p-5 pt-2 bg-[#1a1a1a]">
+                                            <p className="text-[13px] text-gray-300 leading-relaxed text-justify break-keep font-light">
+                                                {msg.desc}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        // 2. 특수 지문 (음악/서술)
+                        if (msg.type === 'narrative' || msg.type === 'music') {
+                            let contentStyle = "text-xs text-gray-500 bg-[#1a1a1a] px-4 py-1.5 rounded-full border border-gray-800 tracking-wider";
+                            let icon = null;
+                            let displayText = msg.text.replace(/[\[\]]/g, '');
+
+                            if (!msg.text.startsWith('[') && !msg.text.includes('곡:')) { 
+                                contentStyle = "text-xs text-purple-200/50 bg-purple-900/40 backdrop-blur px-5 py-2.5 rounded-xl border border-purple-800/50 text-justify leading-6 break-keep max-w-[90%]";
+                                displayText = msg.text;
+                            }
+                            else if (msg.type === 'music') {
+                                contentStyle = "bg-purple-900/60 backdrop-blur border border-purple-700/50 px-5 py-3 rounded-full flex items-center gap-3 shadow-[0_4px_15px_rgba(124,58,237,0.3)] text-white font-bold text-sm cursor-pointer hover:bg-purple-800/60 transition-colors";
+                                icon = <Music size={14} className="text-purple-400" />;
+                                const match = msg.text.match(/\[(?:오프닝곡|클로징곡|곡명):\s*(.*?)\]/);
+                                const songName = match ? match[1].trim() : "";
+                                const link = RADIO_MUSIC_LINKS[songName];
+                                
+                                return (
+                                    <div key={msg.id} className="flex justify-center my-8 animate-fade-in-up">
+                                        <a href={link || '#'} target="_blank" rel="noopener noreferrer" onClick={(e) => link ? playSound('click') : e.preventDefault()} className={contentStyle}>
+                                            {icon}
+                                            <div className="flex flex-col items-start">
+                                                <span className="text-[10px] font-bold text-purple-300 tracking-wider uppercase leading-none">NOW PLAYING</span>
+                                                <span className="mt-0.5">{songName || displayText}</span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div key={msg.id} className="flex justify-center my-8 animate-fade-in-up">
+                                    <span className={contentStyle}>{displayText}</span>
+                                </div>
+                            );
+                        }
+
+                        // 3. 대화 (재현 vs 누리) - 일반 채팅방 로직과 100% 동일하게 구성
+                        const isJaehyun = msg.sender === '재현';
+                        const alignClass = isJaehyun ? "justify-end" : "justify-start";
+                        const rowClass = isJaehyun ? "flex-row-reverse" : "flex-row";
+                        const itemsAlign = isJaehyun ? "items-end" : "items-start";
+                        
+                        const bubbleClass = isJaehyun 
+                            ? "bg-[#2d2d2d] text-gray-200 border-gray-700 rounded-tr-none" 
+                            : "bg-gray-200 text-gray-900 border-gray-300 rounded-tl-none";
+                        
+                        const avatarClass = isJaehyun ? "border-purple-500/50" : "border-gray-400 bg-gray-300";
+                        
+                        return (
+                            <div key={msg.id} className={`flex w-full ${alignClass} mb-4 animate-fade-in-up`}>
+                                <div className={`flex ${rowClass} items-start max-w-[85%] gap-2`}>
+                                    <div className={`w-10 h-10 rounded-[16px] flex-shrink-0 border flex items-center justify-center overflow-hidden shadow-md ${avatarClass}`}>
+                                        {isJaehyun ? (
+                                            <img src={jaehyunProfileImage} alt="Jaehyun" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User size={20} className="text-white drop-shadow-md" />
+                                        )}
+                                    </div>
+                                    <div className={`flex flex-col ${itemsAlign}`}>
+                                        <span className="text-[10px] font-bold text-gray-500 mb-1 mx-1 opacity-80">{msg.sender}</span>
+                                        <div className={`px-4 py-3 text-[13px] leading-relaxed rounded-2xl border shadow-sm ${bubbleClass}`}>
+                                            {msg.text}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {/* ▼▼▼ [수정] 타이핑 인디케이터 (이름 표시 추가됨) ▼▼▼ */}
+                    {isRadioTyping && radioQueue.length > 0 && (
+                        <div className={`flex w-full ${radioQueue[0].sender === '재현' ? 'justify-end' : (radioQueue[0].type === 'narrative' ? 'hidden' : 'justify-start')} mb-4 animate-fade-in`}>
+                            <div className={`flex ${radioQueue[0].sender === '재현' ? 'flex-row-reverse' : 'flex-row'} items-start max-w-[85%] gap-2`}>
+                                {/* 아바타 */}
+                                <div className={`w-10 h-10 rounded-[16px] flex-shrink-0 border flex items-center justify-center overflow-hidden shadow-md ${radioQueue[0].sender === '재현' ? "border-purple-500/50" : "border-gray-400 bg-gray-300"}`}>
+                                    {radioQueue[0].sender === '재현' ? (
+                                        <img src={jaehyunProfileImage} alt="Jaehyun" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User size={20} className="text-white drop-shadow-md" />
+                                    )}
+                                </div>
+                                
+                                {/* 이름 & 타이핑 말풍선 */}
+                                <div className={`flex flex-col ${radioQueue[0].sender === '재현' ? 'items-end' : 'items-start'}`}>
+                                    {/* [수정] 타이핑 중에도 이름 표시 */}
+                                    <span className="text-[10px] font-bold text-gray-500 mb-1 mx-1 opacity-80">
+                                        {radioQueue[0].sender}
+                                    </span>
+                                    
+                                    <div className={`px-4 py-3 rounded-2xl border shadow-sm flex items-center gap-1 h-[42px] ${radioQueue[0].sender === '재현' ? "bg-[#2d2d2d] border-gray-700 rounded-tr-none" : "bg-gray-200 border-gray-300 rounded-tl-none"}`}>
+                                        <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${radioQueue[0].sender === '재현' ? 'bg-gray-500' : 'bg-gray-600'}`} style={{ animationDelay: '0ms' }}></div>
+                                        <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${radioQueue[0].sender === '재현' ? 'bg-gray-500' : 'bg-gray-600'}`} style={{ animationDelay: '150ms' }}></div>
+                                        <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${radioQueue[0].sender === '재현' ? 'bg-gray-500' : 'bg-gray-600'}`} style={{ animationDelay: '300ms' }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    
+                    <div className="h-10"></div>
                 </div>
-                {/* 타이핑 점 애니메이션 */}
-                <div className={`px-4 py-3 rounded-2xl border shadow-sm flex items-center gap-1 h-[42px] mt-5 ${radioQueue[0].sender === '재현' ? "bg-[#2d2d2d] border-gray-700 rounded-tl-none" : "bg-gray-200 border-gray-300 rounded-tr-none"}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${radioQueue[0].sender === '재현' ? 'bg-gray-500' : 'bg-gray-600'}`} style={{ animationDelay: '0ms' }}></div>
-                    <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${radioQueue[0].sender === '재현' ? 'bg-gray-500' : 'bg-gray-600'}`} style={{ animationDelay: '150ms' }}></div>
-                    <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${radioQueue[0].sender === '재현' ? 'bg-gray-500' : 'bg-gray-600'}`} style={{ animationDelay: '300ms' }}></div>
-                </div>
-            </div>
-            </div>
-    )}
-    
-    <div className="h-10"></div>
-</div>
                 {/* 하단 입력창 */}
                 <div className="p-4 bg-gray-800/90 backdrop-blur-md border-t border-gray-700 shrink-0 z-20 pb-8">
                     <div className="flex items-center gap-3 bg-gray-900/50 rounded-full px-5 py-3 border border-gray-600/50 shadow-inner">
