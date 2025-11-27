@@ -427,6 +427,13 @@ const CHARACTER_DETAILS = {
     role: "영화감독",
     roleColor: "text-[#8D6E63]",
     desc: "현장을 꿰뚫는 눈을 가진 베테랑 감독. 투덜대면서도 챙길 건 다 챙기는 츤데레 매력의 소유자. 류선우 작가와는 사제 지간이자 앙숙 케미를 보여준다."
+  },
+  // [추가] 마루모리 상세 정보
+  marumori: {
+    fullName: "maru mori",
+    role: "system",
+    roleColor: "text-gray-500",
+    desc: "정체불명의 관리자. 당신 집에서 잘 수있나요?를 기획했다."
   }
 };
 
@@ -703,6 +710,19 @@ mission_hug_1: [{ type: 'narrative', content: "마크가 더는 볼 것도 없�
     { type: 'text', sender: '연덕', content: "지금, 여기 아니면 안 되는 거 말이야. 많이 남겨 두도록 해." },
     { type: 'narrative', content: "연덕이 무심한 말투로 툭 던지더니 다시 활자 속으로 시선을 옮긴다. 책장 넘어가는 소리가 고요하게 울린다." },
     { type: 'end' }
+  ],
+  // [추가] 마루모리 채팅 시나리오 (링크 기능 포함)
+  marumori_talk: [
+    { type: 'text', sender: 'maru mori', content: "곳곳에 숨겨진 기능이 많으니 이것저것 눌러 보세요!" },
+    { type: 'text', sender: 'maru mori', content: "해당 링크는 널리널리 퍼뜨려 주세요 (｡◠‿◠｡) ෆ ( ͡σ̴̶̷̤. ͡σ̴̶̷̤.)" },
+    { 
+      type: 'choice', 
+      options: [
+        { text: "나는 어떤 유형의 여행자일까?", url: "https://mindmirage.github.io/canisleepatyourhouse/" },
+        { text: "공동 일기장 남기기", url: "https://www.postype.com/@mindmirage" },
+        { text: "나이트 메시지 남기기", url: "https://spin-spin.com/mindmirage" }
+      ] 
+    }
   ]
 };
 const NIGHT_MESSAGES = [
@@ -790,10 +810,10 @@ const PROFILE_BG_IMAGES = {
   eunjae: "https://i.pinimg.com/1200x/ff/3d/7b/ff3d7ba15d1380278846e57b05ee1e3e.jpg",
   yeondeok: "https://i.pinimg.com/736x/75/31/51/75315170761676676b4522d61b910d5a.jpg",
   jiwon: "https://i.pinimg.com/736x/ed/32/65/ed3265d84e80efa9f55b20c7ec9a8167.jpg",
-  // [추가] 재경, 선우, 니코 배경사진
   jaekyung: "https://i.pinimg.com/736x/2b/8a/57/2b8a57f7db9ff3e96f33bd7970b1a372.jpg",
   seonwoo: "https://i.pinimg.com/736x/52/e5/86/52e586224cfbbdccdda672a720fe764e.jpg",
-  niko: "https://i.pinimg.com/736x/14/5f/ce/145fce32f97bfba7d22d4f5815efbbd2.jpg"
+  niko: "https://i.pinimg.com/736x/14/5f/ce/145fce32f97bfba7d22d4f5815efbbd2.jpg", // [수정] 여기에 콤마(,)가 추가됨
+  marumori: "https://i.pinimg.com/736x/97/d0/d6/97d0d68e7e0b6629284c1bd3d25a337d.jpg"
 };
 // [수정됨] 절대 멈추지 않는 배경 컴포넌트
 const StaticRadioBackground = React.memo(function() {
@@ -1041,6 +1061,13 @@ function App() {
 
   const loadScene = (sceneId) => { if (!SCENARIO_SEQUENCE[sceneId]) return; setCurrentSequence(SCENARIO_SEQUENCE[sceneId]); setStepIndex(0); setChoices([]); setWrongChoiceIndex(null); };
   const handleChoice = (option, index) => {
+    // [추가] URL 링크가 있는 경우 새 창으로 열기 (마루모리 기능)
+    if (option.url) {
+        window.open(option.url, '_blank');
+        return;
+    }
+
+    // 기존 로직: nextId가 없으면 에러 처리
     if (!option.nextId) { 
         playSound('error'); 
         setWrongChoiceIndex(index); 
@@ -1055,7 +1082,7 @@ function App() {
     // 메시지 추가
     setMessages(prev => [...prev, { id: Date.now(), type: 'text', sender: 'Mark', text: option.text, time: getTime() }]);
     
-    // [핵심] 여백이 줄어드는 0.5초 동안 스크롤을 바닥에 계속 고정 (덜컥거림 방지)
+    // 스크롤 고정
     const scrollLock = setInterval(() => scrollToBottom(), 10);
     
     setTimeout(() => { 
@@ -1063,7 +1090,7 @@ function App() {
         setChoices([]); 
         setIsChoiceFading(false); 
         loadScene(option.nextId); 
-    }, 500); // duration-500과 시간 일치
+    }, 500); 
   };
 
   // 앨범/트랙 데이터 헬퍼
@@ -1643,9 +1670,46 @@ return (
                             ) : (
                               <div className="flex w-full gap-10 justify-center pb-4">
                                  {selectedProfile.id !== 'mark' && (
-                                  <button onClick={() => { playSound('click'); if (selectedProfile.id === 'jaehyun') { handleStartIntro(); } else { const id = selectedProfile.id; let sceneId = ''; if (id === 'eunjae') sceneId = 'eunjae_start'; else if (id === 'niko') sceneId = 'niko_start'; else if (id === 'jiwon') sceneId = 'jiwon_start'; else if (id === 'seonwoo') sceneId = 'seonwoo_talk'; else if (id === 'jaekyung') sceneId = 'jaekyung_talk'; else if (id === 'yeondeok') sceneId = 'yeondeok_talk'; if (sceneId) { setChatInfo({ name: selectedProfile.name, status: selectedProfile.status }); setSelectedProfile(null); setCurrentView('chat'); setMessages([]); setCurrentSequence([]); setStepIndex(0); setTimeout(() => { loadScene(sceneId); }, 500); } } }} className={`flex flex-col items-center gap-2 group ${['jaehyun', 'eunjae', 'niko', 'jiwon', 'seonwoo', 'jaekyung', 'yeondeok'].includes(selectedProfile.id) ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}>
+                                  <button 
+                                    onClick={() => { 
+                                      playSound('click'); 
+                                      if (selectedProfile.id === 'jaehyun') { 
+                                          handleStartIntro(); 
+                                      } else { 
+                                          const id = selectedProfile.id; 
+                                          let sceneId = ''; 
+                                          
+                                          if (id === 'eunjae') sceneId = 'eunjae_start'; 
+                                          else if (id === 'niko') sceneId = 'niko_start'; 
+                                          else if (id === 'jiwon') sceneId = 'jiwon_start'; 
+                                          else if (id === 'seonwoo') sceneId = 'seonwoo_talk'; 
+                                          else if (id === 'jaekyung') sceneId = 'jaekyung_talk'; 
+                                          else if (id === 'yeondeok') sceneId = 'yeondeok_talk'; 
+                                          else if (id === 'marumori') sceneId = 'marumori_talk'; // [추가] 마루모리
+
+                                          if (sceneId) { 
+                                              setChatInfo({ name: selectedProfile.name, status: selectedProfile.status }); 
+                                              setSelectedProfile(null); 
+                                              setCurrentView('chat'); 
+                                              setMessages([]); 
+                                              setCurrentSequence([]); 
+                                              setStepIndex(0); 
+                                              setTimeout(() => { loadScene(sceneId); }, 500); 
+                                          } 
+                                      } 
+                                    }} 
+                                    className={`flex flex-col items-center gap-2 group ${
+                                      ['jaehyun', 'eunjae', 'niko', 'jiwon', 'seonwoo', 'jaekyung', 'yeondeok', 'marumori'].includes(selectedProfile.id) 
+                                      ? 'cursor-pointer' 
+                                      : 'cursor-not-allowed opacity-40'
+                                    }`}
+                                  >
                                     <div className="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
-                                      <MessageCircle size={26} fill={['jaehyun', 'eunjae', 'niko', 'jiwon', 'seonwoo', 'jaekyung', 'yeondeok'].includes(selectedProfile.id) ? "currentColor" : "none"} strokeWidth={1.5} />
+                                      <MessageCircle 
+                                        size={26} 
+                                        fill={['jaehyun', 'eunjae', 'niko', 'jiwon', 'seonwoo', 'jaekyung', 'yeondeok', 'marumori'].includes(selectedProfile.id) ? "currentColor" : "none"} 
+                                        strokeWidth={1.5} 
+                                      />
                                     </div>
                                     <span className="text-[11px] font-medium text-white/90">1:1 채팅</span>
                                   </button>
