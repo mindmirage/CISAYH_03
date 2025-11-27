@@ -1440,11 +1440,15 @@ return (
                                 </button>
                             )}
                             <button 
-                                onClick={() => { setSelectedProfile(null); setIsEditingProfile(false); }} 
-                                className="p-2 text-white/80 hover:text-white transition"
-                            >
-                                <X size={24} dropShadow="0 2px 4px rgba(0,0,0,0.3)" />
-                            </button>
+    onClick={() => { 
+        setSelectedProfile(null); 
+        setIsEditingProfile(false); 
+        setSavedScrollTop(0); // 👈 이 줄을 추가합니다.
+    }} 
+    className="p-2 text-white/80 hover:text-white transition"
+>
+    <X size={24} dropShadow="0 2px 4px rgba(0,0,0,0.3)" />
+</button>
                         </div>
 
                         {/* 기본 프로필 컨텐츠 */}
@@ -1546,11 +1550,17 @@ return (
                                 <Info size={24} dropShadow="0 2px 4px rgba(0,0,0,0.5)" />
                             </button>
                             <button 
-                                onClick={() => { setSelectedProfile(null); setIsEditingProfile(false); setIsDetailView(false); setShowRadioScript(false); }} 
-                                className="p-2 text-white hover:text-gray-200 transition bg-transparent"
-                            >
-                                <X size={24} dropShadow="0 2px 4px rgba(0,0,0,0.5)" />
-                            </button>
+    onClick={() => { 
+        setSelectedProfile(null); 
+        setIsEditingProfile(false); 
+        setIsDetailView(false); 
+        setShowRadioScript(false);
+        setSavedScrollTop(0); // 👈 이 줄을 추가합니다.
+    }} 
+    className="p-2 text-white hover:text-gray-200 transition bg-transparent"
+>
+    <X size={24} dropShadow="0 2px 4px rgba(0,0,0,0.5)" />
+</button>
                         </div>
 
                         {/* 2. 배경 이미지 (슬라이드 쇼 - 부드러운 전환 적용) */}
