@@ -1789,11 +1789,11 @@ return (
                                                 </div>
                                             </div>
 
-                                           {/* 앨범 리스트 (2x2 그리드) - [수정] LP 쏠림 현상 보정 (-translate-x-3 추가) */}
-                                        <div className="grid grid-cols-2 gap-x-10 gap-y-10 px-2 pb-4 -translate-x-3">
-                                            {MARK_ALBUMS_DATA.map((album) => (
-                                                <div 
-                                                    key={album.id}
+                                           {/* 앨범 리스트 (2x2 그리드) - [수정] Portal 적용 및 마진으로 위치 보정 */}
+                                            <div className="grid grid-cols-2 gap-x-10 gap-y-10 px-2 pb-4 -ml-4">
+                                                {MARK_ALBUMS_DATA.map((album) => (
+                                                    <div 
+                                                        key={album.id} 
                                                         className="group relative flex flex-col items-center cursor-pointer"
                                                         onClick={() => setOpenPopupId(openPopupId === album.id ? null : album.id)}
                                                     >
@@ -1826,7 +1826,6 @@ return (
                                                             <div className="flex items-center justify-center gap-2 w-full">
                                                                 <div className="text-[10px] font-bold text-white/95 leading-tight drop-shadow-md break-words max-w-[85px] text-right">{album.title}</div>
                                                                 
-                                                                {/* 재생 버튼 */}
                                                                 <button 
                                                                     onClick={(e) => {
                                                                         e.stopPropagation(); 
@@ -1847,23 +1846,20 @@ return (
                                                             <div className="text-[9px] text-white/70 mt-1">{album.type}</div>
                                                         </div>
 
-                                                        {/* 2. 화면 중앙 팝업 */}
-                                                        <div className="fixed inset-0 z-[9999] w-full h-full flex items-center justify-center pointer-events-none">
-                                                            
-                                                            <div className={`relative flex items-center justify-center w-full h-full transition-all duration-500 ease-out ${
+                                                        {/* 2. 화면 중앙 팝업 (사이즈 재조정: w-[325px]로 확대) */}
+                                                        {ReactDOM.createPortal(
+                                                            <div className={`fixed inset-0 z-[9999] w-full h-full flex items-center justify-center pointer-events-none transition-all duration-500 ease-out ${
                                                                 openPopupId === album.id 
-                                                                ? 'opacity-100 visible' 
-                                                                : 'opacity-0 invisible'
+                                                                ? 'opacity-100 visible backdrop-blur-sm bg-black/30' 
+                                                                : 'opacity-0 invisible delay-200'
                                                             }`}>
 
-                                                                {/* 팝업 카드 */}
-                                                                <div className={`relative w-[340px] bg-[#1a1a1a]/95 backdrop-blur-3xl border border-white/20 rounded-[2rem] p-6 shadow-[0_0_80px_-10px_rgba(0,0,0,0.8),_0_50px_100px_-20px_rgba(0,0,0,1)] flex flex-col items-center overflow-hidden transform transition-all duration-700 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${
+                                                                <div className={`relative w-[325px] bg-[#1a1a1a]/95 backdrop-blur-3xl border border-white/20 rounded-[2rem] p-6 shadow-[0_0_80px_-10px_rgba(0,0,0,0.8),_0_50px_100px_-20px_rgba(0,0,0,1)] flex flex-col items-center overflow-hidden transform transition-all duration-700 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${
                                                                     openPopupId === album.id 
                                                                     ? 'scale-100 translate-y-0 pointer-events-auto' 
                                                                     : 'scale-90 translate-y-[100%] pointer-events-none'
                                                                 }`}>
                                                                     
-                                                                    {/* 닫기(X) 버튼 */}
                                                                     <button 
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
@@ -1871,10 +1867,9 @@ return (
                                                                         }}
                                                                         className="absolute top-4 right-4 p-2 text-white/50 hover:text-white transition z-50 bg-black/20 hover:bg-black/40 rounded-full backdrop-blur-md"
                                                                     >
-                                                                        <X size={16} />
+                                                                        <X size={15} />
                                                                     </button>
 
-                                                                    {/* 앰비언트 라이트 배경 */}
                                                                     <div className="absolute inset-0 z-0">
                                                                         <div 
                                                                             className="absolute inset-0 bg-cover bg-center blur-[50px] scale-150 opacity-40 saturate-150"
@@ -1883,45 +1878,38 @@ return (
                                                                         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent z-10"></div>
                                                                     </div>
 
-                                                                    {/* 애니메이션 영역 (수정됨: -translate-x-6 추가로 왼쪽 이동) */}
-                                                                    <div className={`relative w-full h-[120px] flex items-center justify-center mb-6 mt-4 z-20 transition-transform duration-1000 -translate-x-3 ${
+                                                                    <div className={`relative w-full h-[115px] flex items-center justify-center mb-6 mt-4 z-20 transition-transform duration-1000 -translate-x-3 ${
                                                                         openPopupId === album.id ? '-translate-x-6' : ''
                                                                     }`}>
-                                                                        
-                                                                        {/* 1. LP */}
-                                                                        <div className={`absolute top-1/2 left-1/2 w-[100px] h-[100px] -translate-y-1/2 -translate-x-1/2 transition-transform duration-1000 cubic-bezier(0.34, 1.56, 0.64, 1) z-0 ${
+                                                                        <div className={`absolute top-1/2 left-1/2 w-[94px] h-[94px] -translate-y-1/2 -translate-x-1/2 transition-transform duration-1000 cubic-bezier(0.34, 1.56, 0.64, 1) z-0 ${
                                                                             openPopupId === album.id ? 'translate-x-4' : ''
                                                                         }`}>
                                                                             <div className="w-full h-full rounded-full bg-[#111] shadow-2xl flex items-center justify-center animate-[spin_4s_linear_infinite]">
                                                                                 <div className="absolute inset-0 rounded-full border border-gray-800 opacity-20"></div>
                                                                                 <div className="absolute inset-1.5 rounded-full border border-gray-700 opacity-30"></div>
-                                                                                <div className="absolute inset-4 rounded-full border-[10px] border-[#181818]"></div>
-                                                                                <div className="absolute inset-[14px] rounded-full border border-gray-700/40"></div>
-                                                                                <div className="absolute inset-5 rounded-full border-[16px] border-[#202020]"></div>
-                                                                                
-                                                                                <div className="w-9 h-9 rounded-full bg-cover bg-center border border-gray-600 shadow-inner relative z-10" style={{ backgroundImage: `url(${album.cover})` }}>
+                                                                                <div className="absolute inset-3.5 rounded-full border-[9px] border-[#181818]"></div>
+                                                                                <div className="absolute inset-[12px] rounded-full border border-gray-700/40"></div>
+                                                                                <div className="absolute inset-[18px] rounded-full border-[14px] border-[#202020]"></div>
+                                                                                <div className="w-8 h-8 rounded-full bg-cover bg-center border border-gray-600 shadow-inner relative z-10" style={{ backgroundImage: `url(${album.cover})` }}>
                                                                                      <div className="absolute inset-0 bg-black/10 rounded-full"></div>
                                                                                      <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-black rounded-full -translate-x-1/2 -translate-y-1/2 shadow-sm ring-1 ring-gray-600"></div>
                                                                                 </div>
-                                                                                
                                                                                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none rotate-45"></div>
                                                                             </div>
                                                                         </div>
                                                                         
-                                                                        {/* 2. 메인 커버 */}
-                                                                        <div className={`relative w-[105px] h-[105px] z-10 shadow-[0_20px_40px_rgba(0,0,0,0.5)] rounded-[2px] transition-all duration-1000 cubic-bezier(0.25, 1, 0.5, 1) ${
+                                                                        <div className={`relative w-[98px] h-[98px] z-10 shadow-[0_20px_40px_rgba(0,0,0,0.5)] rounded-[2px] transition-all duration-1000 cubic-bezier(0.25, 1, 0.5, 1) ${
                                                                             openPopupId === album.id ? '-translate-x-4 -rotate-6' : ''
                                                                         }`}>
                                                                             <img src={album.cover} className="w-full h-full object-cover rounded-[2px]" alt="large-cover" />
                                                                             <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-60 pointer-events-none rounded-[2px]"></div>
                                                                         </div>
                                                                     </div>
-                                                                    {/* 타이포그래피 */}
+                                                                    
                                                                     <div className="z-20 flex flex-col items-center w-full px-2">
                                                                         <h3 className="text-white text-[16px] font-bold tracking-tight mb-2 drop-shadow-lg text-center leading-tight">
                                                                             {album.title}
                                                                         </h3>
-                                                                        
                                                                         <div className="flex items-center gap-2 mb-4">
                                                                             <span className="px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-[10px] text-white/70 font-medium backdrop-blur-md">
                                                                                 {album.type}
@@ -1930,22 +1918,19 @@ return (
                                                                                 {album.artist}
                                                                             </span>
                                                                         </div>
-
                                                                         <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-4"></div>
-
                                                                         <p className="text-[12px] text-gray-200/90 font-light leading-[1.6] text-center whitespace-pre-wrap tracking-wide drop-shadow-md break-keep w-full">
                                                                             {album.desc}
                                                                         </p>
                                                                     </div>
 
-                                                                    {/* 닫기 안내 */}
                                                                     <div className="absolute -bottom-6 left-0 w-full text-center text-[9px] text-white/30 tracking-[0.3em] uppercase animate-pulse">
                                                                         Tap to Close
                                                                     </div>
-
                                                                 </div>
-                                                            </div>
-                                                        </div>
+                                                            </div>,
+                                                            document.body
+                                                        )}
 
                                                     </div>
                                                 ))}
