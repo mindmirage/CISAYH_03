@@ -832,46 +832,6 @@ function App() {
       return () => clearInterval(interval);
     }
   }, [showKintsugiTicket]);
-
- // ▼▼▼ [수정] 라디오 대본 자동 재생 엔진 (속도 2배 향상) ▼▼▼
-  useEffect(() => {
-    if (currentView !== 'radio') return;
-
-    if (radioQueue.length > 0 && !isRadioTyping) {
-      const nextLine = radioQueue[0];
-      
-      // (1) 특수 지문 (음악, 코너 등)
-      if (nextLine.type === 'narrative' || nextLine.type === 'music' || nextLine.type === 'movie' || nextLine.type === 'transition') {
-        setIsRadioTyping(true);
-        const readingTime = 1000; // 특수 지문은 1초만 대기
-        
-        setTimeout(() => {
-           if(nextLine.type !== 'transition') playSound('narrative');
-           setRadioMessages(prev => [...prev, nextLine]); 
-           setRadioQueue(prev => prev.slice(1)); 
-           setIsRadioTyping(false);
-           scrollToBottom(); 
-        }, readingTime);
-      } 
-      // (2) 대화 (재현, 누리) - 속도 빠르게 수정됨
-      else {
-        setIsRadioTyping(true);
-        
-        // [수정 포인트] 최소 대기 1초 + 글자당 30ms (기존보다 2배 이상 빠름)
-        // 최대 대기 시간도 3초로 제한
-        const typingDuration = Math.min(3000, 1000 + (nextLine.text.length * 30));
-
-        setTimeout(() => {
-           playSound('message'); 
-           setRadioMessages(prev => [...prev, nextLine]); 
-           setRadioQueue(prev => prev.slice(1)); 
-           setIsRadioTyping(false);
-           scrollToBottom(); 
-        }, typingDuration); 
-      }
-    }
-  }, [radioQueue, isRadioTyping, currentView]);
-  // ▲▲▲ [여기까지] ▲▲▲
  const barcodePattern = React.useMemo(() => {
     return [...Array(40)].map(() => Math.random() > 0.5 ? '2px' : '4px');
   }, []);
@@ -2433,26 +2393,31 @@ return (
                                                             <button 
     onClick={() => { 
         playSound('click'); 
-        if (profileDetailRef.current) setSavedScrollTop(profileDetailRef.current.scrollTop);
         
-        // ▼▼▼ [수정] 150자씩 꽉 채워서 보내는 로직 ▼▼▼
         const scriptLines = CHARACTER_DETAILS.jaehyun.radio.script.split('\n');
-        let parsedQueue = [];
+        let fullList = []; 
 
         scriptLines.forEach((line, idx) => {
             let text = line.trim();
             if (!text) return;
 
-            // [연출 1] 코너 진입 전 '잠시 후...'
-            if (text.includes('코너: 스크린의 재현') || text.includes('코너: 클로징')) {
-                parsedQueue.push({ id: `trans-${idx}`, type: 'transition', text: '잠시 후...' });
-                parsedQueue.push({ id: idx, type: 'narrative', text: text.replace(/[\[\]]/g, '') });
+            // [1] 코너 제목 처리 (회색 서술로 통일)
+            if (text.includes('코너:') || text.includes('[코너:')) {
+                if (text.includes('스크린의 재현') || text.includes('클로징')) {
+                    fullList.push({ id: `trans-${idx}`, type: 'transition', text: '잠시 후...' });
+                }
+                fullList.push({ id: idx, type: 'narrative', text: text.replace(/[\[\]]/g, '') });
                 return;
             }
 
-            // [연출 2] 영화 <그녀> 정보 카드
+            // [2] 삭제할 서술들
+            if (text.includes('고개를 끄덕이며') || text.includes('까맣게 물든') || text.includes('잠시 생각하다') || text.includes('뭔가를 눈치챘다는 듯')) {
+                return;
+            }
+
+            // [3] 영화 정보 카드
             if (text.includes('네 맞아요. <그녀>는 인공지능')) {
-                parsedQueue.push({ 
+                fullList.push({ 
                     id: `movie-${idx}`, 
                     type: 'movie', 
                     title: '그녀 (Her)',
@@ -2461,74 +2426,173 @@ return (
                 });
             }
 
-            // [연출 3] 서술 지문 편집
-            if (text.includes('[서술:')) {
-                if (text.includes('고개를 끄덕이며') || text.includes('까맣게 물든') || text.includes('잠시 생각하다') || text.includes('뭔가를 눈치챘다는 듯')) {
-                    return; 
+            // [4] The Moon Song (노래 링크 -> 서술 순서)
+            if (text.includes('스튜디오의 낮은 기계음')) {
+                fullList.push({ 
+                    id: `music-moon-${idx}`, 
+                    type: 'music', 
+                    text: 'The Moon Song (Film Version)', 
+                    sender: 'system' 
+                });
+                fullList.push({ id: idx, type: 'narrative', text: text.replace(/\[서술:(.*?)\]/, '$1').trim() });
+                return;
+            }
+            if (text.includes('곡명:') && text.includes('The Moon Song')) return;
+
+
+            // [5] 강제 삽입 및 대사 변환 로직
+
+            // Case: "잠시 침묵..." (서술 분리 + 대사)
+            if (text.includes('잠시 침묵')) {
+                fullList.push({ id: `narr-silence-${idx}`, type: 'narrative', text: '잠시 침묵, 마이크 너머로 희미한 미소가 느껴진다.' });
+                if (text.includes('어··· 글쎄요')) {
+                    let dialog = text.substring(text.indexOf('어···')).trim();
+                    fullList.push({ id: idx, type: 'talk', sender: '재현', text: dialog });
                 }
-                if (text.includes('잠시 침묵') || text.includes('멋쩍은 웃음을')) {
-                    const narrativeText = text.replace(/\[서술:(.*?)\]/, '$1').trim();
-                    parsedQueue.push({ id: idx, type: 'narrative', text: narrativeText });
-                    return;
-                }
-                parsedQueue.push({ id: idx, type: 'narrative', text: text.replace(/\[서술:(.*?)\]/, '$1').trim() });
                 return;
             }
 
-            // [연출 4] 추가 서술
-            if (text.includes('아름다웠나요?')) {
-                parsedQueue.push({ id: `new-narr-${idx}`, type: 'narrative', text: '누리, 뭔가를 눈치챈 듯하다.' });
+            // [수정됨] Case: "멋쩍은 웃음..." 서술과 "네, 스칼렛..." 대사가 한 줄에 있을 때 분리 처리
+            if (text.includes('멋쩍은 웃음을 지은')) {
+                // 1. 서술 먼저 출력
+                fullList.push({ id: `narr-smile-${idx}`, type: 'narrative', text: '멋쩍은 웃음을 지은 재현이 아무렇게나 굴러다니고 있는 뚜껑을 찾아내고는 펜에 끼운다. 다시 이어지는 공상.' });
+                
+                // 2. [복구] 씹혔던 재현 대사 출력
+                if (text.includes('네, 스칼렛 요한슨과')) {
+                    let dialog = text.substring(text.indexOf('네, 스칼렛')).trim();
+                    fullList.push({ id: idx, type: 'talk', sender: '재현', text: dialog });
+                }
+                return;
             }
 
-            // [기본] 특수 지문
+            // Case: "후자에 가까운 것 같아요..." (빠진 대사 복구)
+            if (text.includes('정의할 수 없는 느낌인가요?')) {
+                fullList.push({ id: idx, type: 'talk', sender: '누리', text: text.replace('누리:', '').trim() });
+                fullList.push({ id: `missing-jaehyun-1-${idx}`, type: 'talk', sender: '재현', text: '후자에 가까운 것 같아요. 텅 비어있다기보다 오히려 너무 가득 차 있어서, 뭐가 뭔지 분간이 안 가는 느낌. 그런 모순된 감정들이 한꺼번에 제 안에 들어와 있는 거죠. 그래서 길을 잃는 기분이기도 하고요.' });
+                return;
+            }
+
+            // Case: "둘의 관점으로..." (빠진 대사 복구)
+            if (text.includes('그들만의 향유인 거죠')) {
+                fullList.push({ id: idx, type: 'talk', sender: '누리', text: text.replace('누리:', '').trim() });
+                fullList.push({ id: `missing-jaehyun-2-${idx}`, type: 'talk', sender: '재현', text: '둘의 관점으로 세계를 재구성한다··· 흥미롭네요. 하지만 그 둘만의 세계가 때로는 너무 견고해서 생기는 위험도 있지 않을까요?' });
+                return;
+            }
+
+            // Case: "지금은요?" 시퀀스 (서술+대사 추가)
+            if (text.includes('지금은요?')) {
+                fullList.push({ id: idx, type: 'talk', sender: '누리', text: '지금은요?' });
+                fullList.push({ id: `narr-think-${idx}`, type: 'narrative', text: '재현, 잠시 생각에 빠진다.' });
+                fullList.push({ id: `missing-jaehyun-3-${idx}`, type: 'talk', sender: '재현', text: '지금은··· 그게 사랑이 할 수 있는 가장 고통스럽고 또 가장 위대한 일일지도 모른다는 생각이 들어요. 내가 사랑하는 사람이 나로 인해 더 넓은 세계를 갖게 되고, 나 없이는 닿을 수 없었던 곳으로 나아가는 걸 지켜보는 것. 그리고··· 기꺼이 놓아주는 것 말이에요.' });
+                return;
+            }
+            if (text.includes('지금은··· 그게 사랑이 할 수 있는')) return;
+
+            // Case: "네, 그랬죠. 한 달이라는..." (예능 관련 대사)
+            if (text.includes('한 달이라는 시간 동안')) {
+                // 1. 재현 대사
+                let content = text.replace('재현:', '').trim();
+                if (content.includes('농담조로')) {
+                    content = content.replace(/\[서술:.*?\]/g, '(농담조로)').replace('저의 활약은', '저의 활약은');
+                }
+                fullList.push({ id: idx, type: 'talk', sender: '재현', text: content });
+
+                // 2. 누리 서술
+                fullList.push({ id: `narr-nuri-${idx}`, type: 'narrative', text: '누리, 뭔가를 눈치챘다는 듯 묻는다.' });
+                
+                // 3. 누리 대사
+                fullList.push({ id: `talk-nuri-${idx}`, type: 'talk', sender: '누리', text: '아름다웠나요?' });
+
+                // 4. 재현 서술
+                fullList.push({ id: `narr-jae-${idx}`, type: 'narrative', text: '재현, 잠시 묘한 표정을 짓고는 답한다.' });
+
+                // 5. 재현 대사
+                fullList.push({ id: `talk-jae-${idx}`, type: 'talk', sender: '재현', text: '아름다웠죠.' });
+                return;
+            }
+
+            // 위에서 처리한 "아름다웠나요", "아름다웠죠" 등 중복 방지
+            if (text.includes('아름다웠나요?') || text.includes('아름다웠죠') || (text.includes('그럼 됐죠') && !text.includes('누리'))) return;
+
+            // Case: "그럼 됐죠" (누리)
+            if (text.includes('그럼 됐죠')) {
+                 fullList.push({ id: idx, type: 'talk', sender: '누리', text: '그럼 됐죠.' });
+                 return;
+            }
+
+            // Case: "저도요. 누리 님 덕분에..."
+            if (text.includes('저도요. 누리 님 덕분에')) {
+                let cleanText = text.replace(/\[서술:.*?\]/g, '').replace('재현:', '').trim();
+                fullList.push({ id: idx, type: 'talk', sender: '재현', text: cleanText });
+                return;
+            }
+
+            // Case: 클로징 멘트
+            if (text.includes('결국 사랑이란 건')) {
+                let cleanText = text.replace(/\[서술:.*?\]/g, '').replace('누리:', '').trim();
+                fullList.push({ id: idx, type: 'talk', sender: '누리', text: cleanText });
+                return;
+            }
+
+
+            // [6] 기본 처리
+            
+            if (text.includes('[서술:')) {
+                let cleanNarrative = text.replace(/\[서술:(.*?)\]/, '$1').trim();
+                if(cleanNarrative.includes(':')) cleanNarrative = cleanNarrative.split(':')[1].trim();
+                fullList.push({ id: idx, type: 'narrative', text: cleanNarrative });
+                return;
+            }
+
             if (text.startsWith('[') || text.endsWith(']')) {
                 let type = 'narrative';
                 if (text.includes('곡:') || text.includes('곡명:')) type = 'music';
-                parsedQueue.push({ id: idx, type, text, sender: 'system' });
+                fullList.push({ id: idx, type, text, sender: 'system' });
                 return;
             }
             
-            // [핵심 수정] 대화 처리 (문장을 모아서 150자가 넘을 때 보냄)
+            // 일반 대화 (150자 분리)
             const parts = text.split(':');
             if (parts.length >= 2) {
                 const sender = parts[0].trim();
                 const content = parts.slice(1).join(':').trim();
 
-                // 150자 이상일 때만 분할 로직 가동
                 if (content.length >= 150) {
-                    // 문장 단위로 쪼갬
                     const sentences = content.match(/[^.?!]+[.?!]+["']?|[^.?!]+$/g) || [content];
                     let currentChunk = "";
                     let chunkCount = 0;
 
                     sentences.forEach((sent) => {
                         currentChunk += sent;
-                        // [중요] 모인 글자가 150자를 넘으면 그때 큐에 넣고 비움
                         if (currentChunk.length >= 150) {
-                            parsedQueue.push({ id: `${idx}-${chunkCount}`, type: 'talk', text: currentChunk.trim(), sender });
+                            fullList.push({ id: `${idx}-${chunkCount}`, type: 'talk', text: currentChunk.trim(), sender });
                             currentChunk = "";
                             chunkCount++;
                         }
                     });
-
-                    // 남은 자투리 문장이 있으면 마저 넣음
                     if (currentChunk.trim().length > 0) {
-                        parsedQueue.push({ id: `${idx}-${chunkCount}`, type: 'talk', text: currentChunk.trim(), sender });
+                        fullList.push({ id: `${idx}-${chunkCount}`, type: 'talk', text: currentChunk.trim(), sender });
                     }
                 } else {
-                    // 150자 미만은 그냥 통으로 보냄
-                    parsedQueue.push({ id: idx, type: 'talk', text: content, sender });
+                    fullList.push({ id: idx, type: 'talk', text: content, sender });
                 }
             }
         });
 
-        setRadioQueue(parsedQueue); 
-        setRadioMessages([]);       
+        // 결과 반영
+        setRadioMessages(fullList); 
+        setRadioQueue([]);       
         setIsRadioTyping(false);    
+
+        if (profileDetailRef.current) setSavedScrollTop(profileDetailRef.current.scrollTop);
 
         setSelectedProfile(null); 
         setIsDetailView(false); 
         setCurrentView('radio'); 
+        
+        setTimeout(() => {
+             if(scrollRef.current) scrollRef.current.scrollTop = 0;
+        }, 50);
     }}
                                                                 className="h-6 px-3 bg-gradient-to-b from-orange-400 to-orange-600 rounded-[2px] shadow-[0_2px_3px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.4)] active:scale-95 active:shadow-inner transition-transform flex items-center justify-center group"
                                                             >
