@@ -787,6 +787,20 @@ const PROFILE_BG_IMAGES = {
   yeondeok: "https://i.pinimg.com/736x/75/31/51/75315170761676676b4522d61b910d5a.jpg", // 변경됨
   jiwon: "https://i.pinimg.com/736x/ed/32/65/ed3265d84e80efa9f55b20c7ec9a8167.jpg"
 };
+// [수정됨] 절대 멈추지 않는 배경 컴포넌트 (App 바깥에 있어야 함)
+// 두 번째 인자 () => true는 "어떤 상황에서도 리렌더링 하지 마"라는 뜻입니다.
+const StaticRadioBackground = React.memo(function() {
+  return (
+    <div className="absolute inset-0 z-0 pointer-events-none">
+      <img 
+          src="https://i.pinimg.com/originals/6f/bc/f9/6fbcf93549ebfb8660953e347e3691f4.gif"
+          alt="radio-bg"
+          className="w-full h-full object-cover opacity-100"
+      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]"></div>
+    </div>
+  );
+}, () => true);
 function App() {
   const [currentView, setCurrentView] = useState('friendList');
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -2733,19 +2747,8 @@ return (
         {currentView === 'radio' && (
             <div className="flex flex-col h-full bg-gray-900 animate-fade-in relative overflow-hidden">
                 
-                {/* [NEW] 배경 GIF 레이어 (CSS Background 사용) */}
-                <div className="absolute inset-0 z-0 pointer-events-none">
-                    {/* 이미지 태그 대신 div 배경으로 처리하여 멈춤 현상 방지 */}
-                    <div 
-                        className="absolute inset-0 w-full h-full bg-cover bg-center opacity-100"
-                        style={{ 
-                            backgroundImage: "url('https://i.pinimg.com/originals/6f/bc/f9/6fbcf93549ebfb8660953e347e3691f4.gif')" 
-                        }}
-                    ></div>
-                    
-                    {/* 오버레이: bg-black/50 (더 어둡게) + 약한 블러 */}
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]"></div>
-                </div>
+                {/* [수정됨] 강력한 고정 배경 컴포넌트 */}
+                <StaticRadioBackground />
 
                 {/* 상단 헤더 */}
                 <div className="px-5 py-4 bg-gray-900/40 backdrop-blur-md flex items-center justify-between border-b border-white/10 shadow-lg shrink-0 z-20 relative">
