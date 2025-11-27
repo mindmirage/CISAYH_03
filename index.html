@@ -1224,8 +1224,9 @@ return (
       <div className={`w-full h-full sm:w-[390px] sm:h-[800px] sm:max-h-[90vh] sm:rounded-[3rem] sm:border-[8px] sm:border-gray-900 flex flex-col shadow-2xl overflow-hidden relative ${COLORS.bg}`}>
         
         {/* 노치: 웹에서만 보임 */}
-        <div className="hidden sm:block absolute top-0 left-1/2 transform -translate-x-1/2 w-[120px] h-[28px] bg-gray-900 rounded-b-[1rem] z-[999] pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-1 bg-gray-800 rounded-full opacity-60"></div>
+        {/* [수정] bg-gray-900(남색 톤) -> bg-black(완전 검정)으로 변경 */}
+        <div className="hidden sm:block absolute top-0 left-1/2 transform -translate-x-1/2 w-[120px] h-[28px] bg-black rounded-b-[1rem] z-[999] pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-1 bg-[#1a1a1a] rounded-full opacity-60"></div>
         </div>
 
         {/* 상단바 */}
