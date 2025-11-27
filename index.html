@@ -1548,6 +1548,7 @@ return (
                                         playSound('click'); 
                                         setIsDetailView(true); 
                                         setScrollTop(0); 
+                                        setBgImageIndex(0); // [핵심] 진입 즉시 첫 번째 사진(0번)으로 초기화
                                     }} 
                                     className="p-2 text-white/80 hover:text-white transition"
                                 >
@@ -1555,15 +1556,15 @@ return (
                                 </button>
                             )}
                             <button 
-    onClick={() => { 
-        setSelectedProfile(null); 
-        setIsEditingProfile(false); 
-        setSavedScrollTop(0); // 👈 이 줄을 추가합니다.
-    }} 
-    className="p-2 text-white/80 hover:text-white transition"
->
-    <X size={24} dropShadow="0 2px 4px rgba(0,0,0,0.3)" />
-</button>
+                                onClick={() => { 
+                                    setSelectedProfile(null); 
+                                    setIsEditingProfile(false); 
+                                    setSavedScrollTop(0);
+                                }} 
+                                className="p-2 text-white/80 hover:text-white transition"
+                            >
+                                <X size={24} dropShadow="0 2px 4px rgba(0,0,0,0.3)" />
+                            </button>
                         </div>
 
                         {/* 기본 프로필 컨텐츠 */}
