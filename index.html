@@ -1686,10 +1686,15 @@ return (
                                           else if (id === 'seonwoo') sceneId = 'seonwoo_talk'; 
                                           else if (id === 'jaekyung') sceneId = 'jaekyung_talk'; 
                                           else if (id === 'yeondeok') sceneId = 'yeondeok_talk'; 
-                                          else if (id === 'marumori') sceneId = 'marumori_talk'; // [추가] 마루모리
+                                          else if (id === 'marumori') sceneId = 'marumori_talk';
 
                                           if (sceneId) { 
-                                              setChatInfo({ name: selectedProfile.name, status: selectedProfile.status }); 
+                                              // [수정] 상태 메시지 뒤에 꼬리말(statusSuffix)이 있으면 붙여서 설정
+                                              setChatInfo({ 
+                                                  name: selectedProfile.name, 
+                                                  status: selectedProfile.status + (selectedProfile.statusSuffix || '') 
+                                              }); 
+                                              
                                               setSelectedProfile(null); 
                                               setCurrentView('chat'); 
                                               setMessages([]); 
@@ -2432,8 +2437,11 @@ return (
                 <div className="space-y-5">
                     <div>
                         <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">THEATER</div>
+                        {/* [수정] 링크 주소 업데이트 */}
                         <a 
-                            href="#" 
+                            href="https://www.postype.com/@mindmirage/post/19578368" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
                             className="text-sm font-bold text-gray-700 border-b border-gray-400 hover:text-sky-500 hover:border-sky-500 transition-colors pb-0.5"
                         >
                             MIND MIRAGE ↗
@@ -2489,12 +2497,18 @@ return (
                 </button>
             </div>
 
-            {/* 줄거리 내용 영역 (비워둠) */}
+            {/* 줄거리 내용 영역 */}
             <div className="p-6 overflow-y-auto custom-scrollbar text-white/80 text-[13px] leading-relaxed font-light whitespace-pre-line text-justify">
                 
-                <div className="w-full h-32 flex items-center justify-center text-white/20 text-xs italic border border-dashed border-white/10 rounded-xl">
-                    (줄거리가 업데이트 될 예정입니다.)
-                </div>
+                <p className="mb-4">
+                    19년 전 여름, 거장 이현로의 문하생으로 들어온 재현은 형제들에게 잊을 수 없는 계절을 선사한다.
+                </p>
+                <p className="mb-4">
+                    하지만 아버지의 어긋난 예술혼과 세 사람 사이의 비밀스러운 감정은 점차 위태로운 균열을 만들어낸다.
+                </p>
+                <p>
+                    긴 침묵을 깨고 드러나는 그날의 충격적 진실, 깨진 기억을 금으로 이어 붙이려는 한 남자의 애틋하고도 서늘한 고백이 시작된다.
+                </p>
 
             </div>
 
