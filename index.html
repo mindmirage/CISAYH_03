@@ -1509,6 +1509,15 @@ return (
         {selectedProfile && (
     <div className="absolute inset-0 z-50 flex items-center justify-center animate-fade-in bg-black sm:rounded-[2.5rem] overflow-hidden">
                  
+                 {/* ▼▼▼ [추가] 이미지 미리 로딩 (깜빡임 완벽 방지) ▼▼▼ */}
+                 <div className="absolute w-0 h-0 opacity-0 overflow-hidden pointer-events-none">
+                    {(() => {
+                        const details = CHARACTER_DETAILS[selectedProfile.id];
+                        const images = details?.headerImages || (details?.headerImage ? [details.headerImage] : []);
+                        return images.map(img => <img key={img} src={img} alt="preload" />);
+                    })()}
+                 </div>
+                 
                  {/* =================================================================================
                     [1] 기본 프로필 뷰 (기존과 동일)
                     ================================================================================= */}
@@ -1545,7 +1554,6 @@ return (
                                 <button 
                                     onClick={() => { 
                                         playSound('click'); 
-                                        setBgImageIndex(0); // [핵심] 화면 열기 전에 미리 0번으로 설정
                                         setScrollTop(0); 
                                         setIsDetailView(true); 
                                     }} 
