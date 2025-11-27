@@ -763,6 +763,11 @@ function App() {
   const [currentView, setCurrentView] = useState('friendList');
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [messages, setMessages] = useState([]); 
+  // ▼▼▼ [추가] 라디오 채팅용 상태 변수 ▼▼▼
+  const [radioMessages, setRadioMessages] = useState([]); // 화면에 보여질 메시지들
+  const [radioQueue, setRadioQueue] = useState([]);       // 대기 중인 대본 큐
+  const [isRadioTyping, setIsRadioTyping] = useState(false); // 타이핑 중 여부
+  // ▲▲▲ [여기까지] ▲▲▲
   const [currentSequence, setCurrentSequence] = useState([]); 
   const [stepIndex, setStepIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
@@ -827,6 +832,44 @@ function App() {
       return () => clearInterval(interval);
     }
   }, [showKintsugiTicket]);
+
+  // ▼▼▼ [추가] 라디오 대본 자동 재생 엔진 ▼▼▼
+  useEffect(() => {
+    if (currentView !== 'radio') return;
+
+    // 큐에 대본이 남아있고, 현재 타이핑 중이 아니라면 다음 대화 실행
+    if (radioQueue.length > 0 && !isRadioTyping) {
+      const nextLine = radioQueue[0];
+      
+      // (1) 특수 지문 (음악, 코너, 서술 등) - 타이핑 없이 바로 출력
+      if (nextLine.type === 'narrative' || nextLine.type === 'music') {
+        setIsRadioTyping(true);
+        // 읽는 시간(길이) 계산 (너무 빠르지 않게)
+        const readingTime = Math.min(2000, nextLine.text.length * 50 + 1000); 
+        
+        setTimeout(() => {
+           playSound('narrative'); // 효과음
+           setRadioMessages(prev => [...prev, nextLine]); // 메시지 추가
+           setRadioQueue(prev => prev.slice(1)); // 큐에서 제거
+           setIsRadioTyping(false);
+           scrollToBottom(); // 스크롤 내리기
+        }, 1000);
+      } 
+      // (2) 대화 (재현, 누리) - 타이핑 효과 후 출력
+      else {
+        setIsRadioTyping(true);
+        // 타이핑 시간 (1.5초)
+        setTimeout(() => {
+           playSound('message'); // 띠링 효과음
+           setRadioMessages(prev => [...prev, nextLine]); // 메시지 추가
+           setRadioQueue(prev => prev.slice(1)); // 큐에서 제거
+           setIsRadioTyping(false);
+           scrollToBottom(); // 스크롤 내리기
+        }, 1500); 
+      }
+    }
+  }, [radioQueue, isRadioTyping, currentView]);
+  // ▲▲▲ [여기까지] ▲▲▲
  const barcodePattern = React.useMemo(() => {
     return [...Array(40)].map(() => Math.random() > 0.5 ? '2px' : '4px');
   }, []);
@@ -2371,14 +2414,42 @@ return (
                                                                 <div className="w-1.5 h-1.5 rounded-full bg-red-900"></div>
                                                             </div>
                                                             <button 
-                                                                onClick={() => { 
-                                                                    playSound('click'); 
-                                                                    // ▼▼▼ 스크롤 저장 로직 추가 ▼▼▼
-                                                                    if (profileDetailRef.current) setSavedScrollTop(profileDetailRef.current.scrollTop);
-                                                                    setSelectedProfile(null); 
-                                                                    setIsDetailView(false); 
-                                                                    setCurrentView('radio'); 
-                                                                }} 
+    onClick={() => { 
+        playSound('click'); 
+        if (profileDetailRef.current) setSavedScrollTop(profileDetailRef.current.scrollTop);
+        
+        // ▼▼▼ [수정] 라디오 진입 시 대본 파싱하여 큐에 넣기 ▼▼▼
+        const scriptLines = CHARACTER_DETAILS.jaehyun.radio.script.split('\n');
+        const parsedQueue = scriptLines.map((line, idx) => {
+            const text = line.trim();
+            if (!text) return null;
+            
+            // 특수 지문 처리 ([서술], [곡명] 등)
+            if (text.startsWith('[') || text.endsWith(']')) {
+                let type = 'narrative';
+                if (text.includes('곡:')) type = 'music';
+                return { id: idx, type, text, sender: 'system' };
+            }
+            
+            // 대화 처리 (화자:내용)
+            const parts = text.split(':');
+            if (parts.length >= 2) {
+                const sender = parts[0].trim();
+                const content = parts.slice(1).join(':').trim();
+                return { id: idx, type: 'talk', text: content, sender };
+            }
+            return null;
+        }).filter(Boolean); // null 제거
+
+        setRadioQueue(parsedQueue); // 큐에 저장
+        setRadioMessages([]);       // 기존 메시지 초기화
+        setIsRadioTyping(false);    // 타이핑 상태 초기화
+        // ▲▲▲ [여기까지 수정] ▲▲▲
+
+        setSelectedProfile(null); 
+        setIsDetailView(false); 
+        setCurrentView('radio'); 
+    }}
                                                                 className="h-6 px-3 bg-gradient-to-b from-orange-400 to-orange-600 rounded-[2px] shadow-[0_2px_3px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.4)] active:scale-95 active:shadow-inner transition-transform flex items-center justify-center group"
                                                             >
                                                                 <span className="text-[8px] font-bold text-white drop-shadow-sm tracking-tighter group-hover:animate-pulse">ENTER BOOTH</span>
@@ -2503,124 +2574,118 @@ return (
                     <img src={jaehyunProfileImage} alt="DJ" className="w-9 h-9 rounded-full border-2 border-purple-500/50 object-cover shadow-[0_0_15px_rgba(168,85,247,0.3)]" />
                 </div>
                 {/* 채팅 영역 */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-5 bg-[#0f0f0f] custom-scrollbar">
-                    <div className="flex justify-center my-6 opacity-90 animate-fade-in-up">
-                        <div className="bg-gray-800/80 backdrop-blur border border-purple-500/30 px-5 py-2 rounded-full flex items-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
-                            <Music size={12} className="text-purple-400 animate-bounce" />
-                            <span className="text-[11px] text-purple-200 font-bold tracking-widest">ON AIR : JAEHYUN's RADIO</span>
+<div 
+    ref={scrollRef} // [중요] 자동 스크롤을 위해 ref 연결
+    className="flex-1 overflow-y-auto p-4 space-y-5 bg-[#0f0f0f] custom-scrollbar"
+>
+    <div className="flex justify-center my-6 opacity-90 animate-fade-in-up">
+        <div className="bg-gray-800/80 backdrop-blur border border-purple-500/30 px-5 py-2 rounded-full flex items-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
+            <Music size={12} className="text-purple-400 animate-bounce" />
+            <span className="text-[11px] text-purple-200 font-bold tracking-widest">ON AIR : JAEHYUN's RADIO</span>
+        </div>
+    </div>
+
+    {/* ▼▼▼ [수정] 실시간 채팅 렌더링 (radioMessages 매핑) ▼▼▼ */}
+    {radioMessages.map((msg) => {
+        // 1. 특수 지문 (음악/서술)
+        if (msg.type === 'narrative' || msg.type === 'music') {
+            let contentStyle = "text-xs text-gray-500 bg-[#1a1a1a] px-4 py-1.5 rounded-full border border-gray-800 tracking-wider";
+            let icon = null;
+            let displayText = msg.text.replace(/[\[\]]/g, '');
+
+            // [서술] 스타일
+            if (msg.text.includes('서술:')) {
+                contentStyle = "text-xs text-purple-200/50 bg-purple-900/40 backdrop-blur px-5 py-2.5 rounded-xl border border-purple-800/50 text-justify leading-6 break-keep max-w-[90%]";
+                displayText = msg.text.replace(/\[서술:(.*?)\]/, '$1').trim();
+            }
+            // [음악] 스타일
+            else if (msg.type === 'music') {
+                contentStyle = "bg-purple-900/60 backdrop-blur border border-purple-700/50 px-5 py-3 rounded-full flex items-center gap-3 shadow-[0_4px_15px_rgba(124,58,237,0.3)] text-white font-bold text-sm";
+                icon = <Music size={14} className="text-purple-400" />;
+                // 음악 링크 찾기
+                const match = msg.text.match(/\[(?:오프닝곡|클로징곡|곡명):\s*(.*?)\]/);
+                const songName = match ? match[1].trim() : "";
+                const link = RADIO_MUSIC_LINKS[songName];
+                
+                return (
+                    <div key={msg.id} className="flex justify-center my-8 animate-fade-in-up">
+                        <a href={link || '#'} target="_blank" rel="noopener noreferrer" onClick={(e) => link ? playSound('click') : e.preventDefault()} className={contentStyle}>
+                            {icon}
+                            <div className="flex flex-col items-start">
+                                <span className="text-[10px] font-bold text-purple-300 tracking-wider uppercase leading-none">NOW PLAYING</span>
+                                <span className="mt-0.5">{songName || displayText}</span>
+                            </div>
+                        </a>
+                    </div>
+                );
+            }
+
+            return (
+                <div key={msg.id} className="flex justify-center my-8 animate-fade-in-up">
+                    <span className={contentStyle}>{displayText}</span>
+                </div>
+            );
+        }
+
+        // 2. 대화 (재현 vs 누리)
+        const isJaehyun = msg.sender === '재현';
+        
+        // 스타일 설정 (재현:왼쪽/보라, 누리:오른쪽/회색)
+        const alignClass = isJaehyun ? "justify-start" : "justify-end";
+        const rowClass = isJaehyun ? "flex-row" : "flex-row-reverse";
+        const bubbleClass = isJaehyun 
+            ? "bg-[#2d2d2d] text-gray-200 border-gray-700 rounded-tl-none" 
+            : "bg-gray-200 text-gray-900 border-gray-300 rounded-tr-none";
+        const avatarClass = isJaehyun ? "border-purple-500/50" : "border-gray-400 bg-gray-300";
+        
+        return (
+            <div key={msg.id} className={`flex w-full ${alignClass} mb-4 animate-fade-in-up`}>
+                <div className={`flex ${rowClass} items-start max-w-[85%] gap-2`}>
+                    {/* 아바타 */}
+                    <div className={`w-10 h-10 rounded-[16px] flex-shrink-0 border flex items-center justify-center overflow-hidden shadow-md ${avatarClass}`}>
+                        {isJaehyun ? (
+                            <img src={jaehyunProfileImage} alt="Jaehyun" className="w-full h-full object-cover" />
+                        ) : (
+                            <User size={20} className="text-white drop-shadow-md" />
+                        )}
+                    </div>
+                    
+                    {/* 이름 & 말풍선 */}
+                    <div className={`flex flex-col ${isJaehyun ? "items-start" : "items-end"}`}>
+                        <span className="text-[10px] font-bold text-gray-500 mb-1 mx-1 opacity-80">{msg.sender}</span>
+                        <div className={`px-4 py-3 text-[13px] leading-relaxed rounded-2xl border shadow-sm ${bubbleClass}`}>
+                            {msg.text}
                         </div>
                     </div>
-
-                     {/* 스크립트 파싱 */}
-                    {CHARACTER_DETAILS.jaehyun.radio.script.split('\n').map((line, idx) => {
-                        const originalText = line.trim();
-                        if (!originalText) return null;
-
-                        // 화자 이름 분리
-                        const [senderRaw, ...contentParts] = originalText.split(':');
-                        const sender = senderRaw.trim();
-                        const content = contentParts.join(':').trim();
-
-                        // 1. 코너 구분자/곡 삽입 (화자 대화가 아닌 경우)
-                        if (sender.startsWith('[') || sender.endsWith(']')) {
-                            // [코너: ...], [서술: ...], [곡명: ...] 등을 처리
-                            let parsedText = originalText;
-                            let className = "text-xs text-gray-500 bg-[#1a1a1a] px-4 py-1.5 rounded-full border border-gray-800 tracking-wider";
-                            let isMusic = false;
-                            let link = null;
-
-                            // [서술: ...] 처리
-                            if (originalText.startsWith('[서술:')) {
-                                parsedText = originalText.replace(/\[서술:(.*?)\]/, '$1').trim();
-                                className = "text-xs text-purple-200/50 bg-purple-900/40 backdrop-blur px-5 py-2.5 rounded-xl border border-purple-800/50 text-justify leading-6 break-keep max-w-[90%]";
-                            }
-                            // [곡명: ...] 처리
-                            else if (originalText.includes('곡:')) {
-                                const match = originalText.match(/\[(?:오프닝곡|클로징곡|곡명):\s*(.*?)\]/);
-                                if (match && match[1]) {
-                                    const songName = match[1].trim();
-                                    link = RADIO_MUSIC_LINKS[songName];
-                                    parsedText = songName;
-                                    isMusic = true;
-                                    className = "bg-purple-900/60 backdrop-blur border border-purple-700/50 px-5 py-3 rounded-full flex items-center gap-3 shadow-[0_4px_15px_rgba(124,58,237,0.3)] transition-all hover:shadow-[0_4px_25px_rgba(124,58,237,0.6)] group/music active:scale-95";
-                                } else {
-                                    parsedText = originalText.replace(/[\[\]]/g, '');
-                                }
-                            }
-                            // [코너: ...] 처리
-                            else {
-                                parsedText = originalText.replace(/[\[\]]/g, '').trim();
-                            }
-
-                            if (isMusic) {
-                                return (
-                                    <div key={idx} className="flex justify-center my-8 animate-fade-in-up">
-                                        <a href={link || '#'} target="_blank" rel="noopener noreferrer" onClick={(e) => link ? playSound('click') : e.preventDefault()} className={className}>
-                                            <Music size={14} className="text-purple-400 group-hover/music:text-white transition-colors"/>
-                                            <div className="flex flex-col items-start">
-                                                <span className="text-[10px] font-bold text-purple-300 tracking-wider uppercase leading-none">{sender.replace('곡', '').replace('[', '').replace(':', '')} MUSIC</span>
-                                                <span className="text-sm font-black text-white leading-tight mt-1 tracking-tight">{parsedText}</span>
-                                            </div>
-                                        </a>
-                                    </div>
-                                );
-                            } else {
-                                return (
-                                    <div key={idx} className="flex justify-center my-8 animate-fade-in-up">
-                                        <span className={className}>
-                                            {parsedText}
-                                        </span>
-                                    </div>
-                                );
-                            }
-                        }
-
-                        // 2. 화자 메시지 (대화창 스타일)
-                        if (content && sender) {
-                            const isJaehyun = sender === '재현';
-                            // 재현: 보라색 계열 (왼쪽)
-                            const jaehyunBubble = "bg-[#1e1e1e] text-gray-200 border-gray-800 rounded-tl-none transition-transform hover:translate-x-1";
-                            const jaehyunAvatar = jaehyunProfileImage;
-                            
-                            // 누리: 회색 계열 (오른쪽) -> 마루모리 프로필 색상 사용
-                            const nuriBubble = "bg-gray-700/80 text-gray-100 border-gray-600 rounded-tr-none justify-end transition-transform hover:-translate-x-1";
-                            const nuriAvatar = "https://i.ifh.cc/R1L7fS.jpg"; // 최누리 평론가 임시 이미지
-                            const nuriAvatarBg = "bg-gray-300"; // 마루모리 회색 계열 (이 경우 이미지로 대체)
-
-                            const bubbleStyle = isJaehyun ? jaehyunBubble : nuriBubble;
-                            const avatarSrc = isJaehyun ? jaehyunAvatar : nuriAvatar;
-                            const avatarBg = isJaehyun ? "bg-purple-500" : nuriAvatarBg;
-                            const flexStyle = isJaehyun ? 'justify-start' : 'justify-end';
-                            const flexRowStyle = isJaehyun ? 'flex-row' : 'flex-row-reverse';
-                            const alignStyle = isJaehyun ? 'items-start' : 'items-end';
-
-                            return (
-                                <div key={idx} className={`flex w-full ${flexStyle} animate-fade-in-up`} style={{ animationDelay: `${idx * 50}ms` }}>
-                                    <div className={`flex ${flexRowStyle} ${alignStyle} max-w-[85%]`}>
-                                        
-                                        {/* 아바타 (말풍선 반대쪽에 배치) */}
-                                        <div className={`w-10 h-10 rounded-full object-cover mr-2 ml-2 shadow-lg flex-shrink-0 border-2 ${isJaehyun ? 'border-purple-500/50' : 'border-gray-500/50'}`} style={{backgroundImage: `url(${avatarSrc})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: avatarBg}} alt={sender}>
-                                            {/* 이미지가 없을 때 대체 아이콘 */}
-                                            {(!avatarSrc || (isJaehyun && !jaehyunAvatar) || (!isJaehyun && !nuriAvatar)) && <User size={20} className="text-white/80" />}
-                                        </div>
-
-                                        {/* 말풍선 */}
-                                        <div className={`flex flex-col ${isJaehyun ? 'items-start' : 'items-end'} max-w-full`}>
-                                            <span className="text-[11px] font-bold text-gray-400 mb-1">{sender}</span>
-                                            <div className={`relative px-4 py-3 text-[13px] leading-7 border shadow-sm rounded-2xl ${bubbleStyle}`}>
-                                                {content}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        }
-
-                        return null;
-                    })}
-                    <div className="h-10"></div>
                 </div>
+            </div>
+        );
+    })}
 
+    {/* 타이핑 인디케이터 (대기 중일 때 표시) */}
+    {isRadioTyping && radioQueue.length > 0 && (
+            <div className={`flex w-full ${radioQueue[0].sender === '재현' ? 'justify-start' : (radioQueue[0].type === 'narrative' ? 'hidden' : 'justify-end')} mb-4 animate-fade-in`}>
+            <div className={`flex ${radioQueue[0].sender === '재현' ? 'flex-row' : 'flex-row-reverse'} items-start max-w-[85%] gap-2`}>
+                {/* 아바타 */}
+                <div className={`w-10 h-10 rounded-[16px] flex-shrink-0 border flex items-center justify-center overflow-hidden shadow-md ${radioQueue[0].sender === '재현' ? "border-purple-500/50" : "border-gray-400 bg-gray-300"}`}>
+                        {radioQueue[0].sender === '재현' ? (
+                        <img src={jaehyunProfileImage} alt="Jaehyun" className="w-full h-full object-cover" />
+                        ) : (
+                        <User size={20} className="text-white drop-shadow-md" />
+                        )}
+                </div>
+                {/* 타이핑 점 애니메이션 */}
+                <div className={`px-4 py-3 rounded-2xl border shadow-sm flex items-center gap-1 h-[42px] mt-5 ${radioQueue[0].sender === '재현' ? "bg-[#2d2d2d] border-gray-700 rounded-tl-none" : "bg-gray-200 border-gray-300 rounded-tr-none"}`}>
+                    <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${radioQueue[0].sender === '재현' ? 'bg-gray-500' : 'bg-gray-600'}`} style={{ animationDelay: '0ms' }}></div>
+                    <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${radioQueue[0].sender === '재현' ? 'bg-gray-500' : 'bg-gray-600'}`} style={{ animationDelay: '150ms' }}></div>
+                    <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${radioQueue[0].sender === '재현' ? 'bg-gray-500' : 'bg-gray-600'}`} style={{ animationDelay: '300ms' }}></div>
+                </div>
+            </div>
+            </div>
+    )}
+    
+    <div className="h-10"></div>
+</div>
                 {/* 하단 입력창 */}
                 <div className="p-4 bg-gray-800/90 backdrop-blur-md border-t border-gray-700 shrink-0 z-20 pb-8">
                     <div className="flex items-center gap-3 bg-gray-900/50 rounded-full px-5 py-3 border border-gray-600/50 shadow-inner">
