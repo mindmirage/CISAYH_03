@@ -1705,27 +1705,25 @@ return (
                         </div>
 
                         {/* 2. 배경 이미지 (슬라이드 쇼 - 부드러운 전환 적용) */}
-                        <div className="absolute inset-0 z-0 bg-black overflow-hidden">
+                        <div className={`absolute inset-0 z-0 overflow-hidden ${
+                            (CHARACTER_DETAILS[selectedProfile.id].headerImages || CHARACTER_DETAILS[selectedProfile.id].headerImage) 
+                            ? 'bg-black' 
+                            : 'bg-white' 
+                        }`}>
+                            {/* [A] 배경 이미지 또는 파스텔 톤 배경 렌더링 */}
                             {(() => {
                                 const details = CHARACTER_DETAILS[selectedProfile.id];
-                                // 배열이 없으면 단일 이미지를 배열로 만듦, 둘 다 없으면 빈 배열
                                 const images = details.headerImages || (details.headerImage ? [details.headerImage] : []);
                                 const totalImages = images.length;
                                 
                                 if (totalImages > 0) {
-                                    // [핵심] 모든 이미지를 겹쳐서 렌더링하고, 현재 인덱스만 opacity: 1로 설정
                                     return images.map((imgSrc, index) => {
-                                        // 현재 보여야 할 이미지 인덱스 계산
                                         const isActive = index === (bgImageIndex % totalImages);
-                                        
                                         return (
                                             <img 
                                                 key={imgSrc + index}
                                                 src={imgSrc} 
                                                 alt={`header-bg-${index}`}
-                                                // absolute로 위치 고정하여 겹치기
-                                                // transition-opacity duration-1000 ease-in-out: 1초 동안 부드럽게 투명도 변화
-                                                // isActive ? 'opacity-100 z-10' : 'opacity-0 z-0': 활성 이미지만 보이고 앞으로 나옴
                                                 className={`w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-1000 ease-in-out ${
                                                     isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
                                                 }`}
@@ -1733,19 +1731,39 @@ return (
                                         );
                                     });
                                 } else {
-                                    // 이미지가 없는 캐릭터용 기본 배경
-                                    return <div className={`w-full h-full absolute top-0 left-0 ${selectedProfile.id === 'mark' ? 'bg-green-200' : 'bg-sky-200'}`}></div>;
+                                    // [수정] 파스텔 톤 그라데이션 배경 (검은 경계선 제거됨)
+                                    const bgColors = {
+                                        eunjae: 'bg-gradient-to-b from-orange-100 to-orange-300',
+                                        niko: 'bg-gradient-to-b from-pink-100 to-pink-300',
+                                        jiwon: 'bg-gradient-to-b from-yellow-100 to-yellow-400',
+                                        seonwoo: 'bg-gradient-to-b from-purple-100 to-purple-300',
+                                        yeondeok: 'bg-gradient-to-b from-[#EFEBE9] to-[#8D6E63]', 
+                                        jaekyung: 'bg-gradient-to-b from-blue-100 to-blue-300',
+                                    };
+                                    
+                                    const colorClass = bgColors[selectedProfile.id] || 'bg-gradient-to-b from-gray-100 to-gray-300';
+                                    return <div className={`w-full h-full absolute top-0 left-0 ${colorClass}`}></div>;
                                 }
                             })()}
                             
-                            {/* 배경 디밍 오버레이 (스크롤 내릴수록 어두워짐) */}
-                            <div 
-                                className="absolute inset-0 bg-black transition-opacity duration-0 z-20 pointer-events-none"
-                                style={{ opacity: Math.min(0.85, scrollTop / 400) }} 
-                            ></div>
-                            
-                            {/* 하단 그라데이션 (초기 텍스트 가독성용) */}
-                            <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-black/80 via-transparent to-transparent z-20 pointer-events-none"></div>
+                            {/* [B] 오버레이 로직: 이미지가 있는 경우에만 검은 그림자/디밍 효과 적용 */}
+                            {(() => {
+                                const details = CHARACTER_DETAILS[selectedProfile.id];
+                                const hasImages = details.headerImages || details.headerImage;
+                                
+                                if (hasImages) {
+                                    return (
+                                        <>
+                                            <div 
+                                                className="absolute inset-0 bg-black transition-opacity duration-0 z-20 pointer-events-none"
+                                                style={{ opacity: Math.min(0.85, scrollTop / 400) }} 
+                                            ></div>
+                                            <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-black/80 via-transparent to-transparent z-20 pointer-events-none"></div>
+                                        </>
+                                    );
+                                }
+                                return null;
+                            })()}
                         </div>
 
                         {/* 3. 스크롤 가능한 컨텐츠 영역 */}
@@ -1759,23 +1777,34 @@ return (
                             }}
                             /* ▲▲▲ [여기까지 수정] ▲▲▲ */
                         >
-                            {/* 상단 여백 (이미지가 보이는 영역) */}
+                           {/* 상단 여백 (이미지가 보이는 영역) */}
                             <div className="h-[55vh] w-full bg-transparent relative pointer-events-none">
-                                {/* 이름 & 직업 (스크롤과 함께 올라감) */}
+                                {/* 이름 & 직업 - [수정] 이름은 흰색 유지, 직업의 검은 그림자만 제거 */}
                                 <div className="absolute bottom-0 left-0 w-full px-6 pb-6 z-20">
-                                    <span className={`text-sm font-bold tracking-widest uppercase mb-2 block drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] ${CHARACTER_DETAILS[selectedProfile.id].roleColor}`}>
-                                        {CHARACTER_DETAILS[selectedProfile.id].role}
-                                    </span>
-                                    <h2 className="text-5xl font-black tracking-tighter text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] leading-tight">
-                                        {CHARACTER_DETAILS[selectedProfile.id].fullName}
-                                    </h2>
+                                    {(() => {
+                                        const isImageBg = ['mark', 'jaehyun'].includes(selectedProfile.id);
+                                        return (
+                                            <>
+                                                <span className={`text-sm font-bold tracking-widest uppercase mb-2 block ${CHARACTER_DETAILS[selectedProfile.id].roleColor} ${
+                                                    isImageBg 
+                                                    ? 'drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]' // 사진 배경: 그림자 유지
+                                                    : '' // [수정] 파스텔 배경: 그림자 제거 (글씨가 깔끔하게 보이도록)
+                                                }`}>
+                                                    {CHARACTER_DETAILS[selectedProfile.id].role}
+                                                </span>
+                                                <h2 className="text-5xl font-black tracking-tighter leading-tight text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
+                                                    {CHARACTER_DETAILS[selectedProfile.id].fullName}
+                                                </h2>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             </div>
 
-                            {/* [수정됨] 테두리 없는 텍스트 영역 (배경 없음, 글씨만 떠 있음) */}
+                            {/* [수정됨] 테두리 없는 텍스트 영역 */}
                             <div className="px-6 pb-20 pt-4 relative">
-                                {/* 소개글 */}
-                                <p className="text-[16px] text-white/90 leading-loose text-justify mb-16 break-keep font-medium drop-shadow-md">
+                                {/* 소개글 - [수정] 다시 흰색 텍스트로 복구 */}
+                                <p className="text-[16px] leading-loose text-justify mb-16 break-keep font-medium text-white/90 drop-shadow-md">
                                     {CHARACTER_DETAILS[selectedProfile.id].desc}
                                 </p>
 
