@@ -66,6 +66,15 @@ html, body {
 .animate-fade-out-right { animation: fadeOutRight 0.2s ease-in forwards; }
 .animate-fade-in-left { animation: fadeInLeft 0.2s ease-out forwards; }
 
+/* [추가] 이퀄라이저 애니메이션 */
+@keyframes equalizer {
+  0%, 100% { height: 20%; }
+  50% { height: 100%; }
+}
+.animate-equalizer {
+  animation: equalizer 1s ease-in-out infinite;
+  transform-origin: bottom;
+}
 @keyframes fadeOutLeft {
   from { opacity: 1; transform: translateX(0); }
   to { opacity: 0; transform: translateX(-20px); }
@@ -81,6 +90,16 @@ html, body {
 @keyframes fadeInLeft {
   from { opacity: 0; transform: translateX(-20px); }
   to { opacity: 1; transform: translateX(0); }
+}
+
+/* [추가] 이퀄라이저 애니메이션 */
+@keyframes equalizer {
+  0%, 100% { height: 20%; }
+  50% { height: 100%; }
+}
+.animate-equalizer {
+  animation: equalizer 1s ease-in-out infinite;
+  transform-origin: bottom;
 }
 /* [추가] 긴 텍스트 흐르는 효과 */
 @keyframes marquee {
@@ -410,10 +429,19 @@ const CHARACTER_DETAILS = {
     // =========================================================================
 // [추가] 라디오 음악 링크 데이터
 // =========================================================================
-const RADIO_MUSIC_LINKS = {
-  'Stay With Me': 'https://youtu.be/k2YFm5i-D1I',
-  'The Moon Song (Film Version)': 'https://youtu.be/aawiJ74rHRc', 
-  'Dancing': 'https://youtu.be/u5-Ng82_79s?si=kbp9oIWT6gpaxx-G',
+const RADIO_MUSIC_INFO = {
+  'Stay With Me': {
+    link: 'https://www.youtube.com/watch?v=VEe_yIbW64w',
+    thumb: 'https://i.ytimg.com/vi/VEe_yIbW64w/hqdefault.jpg'
+  },
+  'The Moon Song (Film Version)': {
+    link: 'https://youtu.be/G_6YCPPbgVw?si=FMM7E4eQBad9Un-7',
+    thumb: 'https://i.ytimg.com/vi/G_6YCPPbgVw/hqdefault.jpg'
+  },
+  'Dancing': {
+    link: 'https://youtu.be/u5-Ng82_79s?si=fKaUx4TNxN4DInJe',
+    thumb: 'https://i.ytimg.com/vi/u5-Ng82_79s/hqdefault.jpg'
+  }
 };
 // =========================================================================
 
@@ -2401,7 +2429,7 @@ return (
             let text = line.trim();
             if (!text) return;
 
-            // [1] 코너 제목 처리 (회색 서술로 통일)
+            // [1] 코너 제목 처리
             if (text.includes('코너:') || text.includes('[코너:')) {
                 if (text.includes('스크린의 재현') || text.includes('클로징')) {
                     fullList.push({ id: `trans-${idx}`, type: 'transition', text: '잠시 후...' });
@@ -2426,23 +2454,35 @@ return (
                 });
             }
 
-            // [4] The Moon Song (노래 링크 -> 서술 순서)
+            // [4] The Moon Song 재생 시퀀스 (대사 -> 음악 -> 서술)
+            
+            // 4-1. [대사] "네, 맞아요. 저는 그 장면을..." (강제 포착)
+            if (text.includes('함께 한 버전입니다')) {
+                let content = text.replace('재현:', '').trim();
+                fullList.push({ id: idx, type: 'talk', sender: '재현', text: content });
+                return;
+            }
+
+            // 4-2. [음악 & 서술] "스튜디오의 낮은 기계음..." 줄을 만나면 음악 먼저 재생
             if (text.includes('스튜디오의 낮은 기계음')) {
+                // (1) MP3 플레이어 (The Moon Song)
                 fullList.push({ 
                     id: `music-moon-${idx}`, 
                     type: 'music', 
                     text: 'The Moon Song (Film Version)', 
                     sender: 'system' 
                 });
+                // (2) 서술 텍스트
                 fullList.push({ id: idx, type: 'narrative', text: text.replace(/\[서술:(.*?)\]/, '$1').trim() });
                 return;
             }
+            // 기존 곡명 태그 방지
             if (text.includes('곡명:') && text.includes('The Moon Song')) return;
 
 
             // [5] 강제 삽입 및 대사 변환 로직
 
-            // Case: "잠시 침묵..." (서술 분리 + 대사)
+            // "잠시 침묵..." (서술+대사 분리)
             if (text.includes('잠시 침묵')) {
                 fullList.push({ id: `narr-silence-${idx}`, type: 'narrative', text: '잠시 침묵, 마이크 너머로 희미한 미소가 느껴진다.' });
                 if (text.includes('어··· 글쎄요')) {
@@ -2452,34 +2492,40 @@ return (
                 return;
             }
 
-            // [수정됨] Case: "멋쩍은 웃음..." 서술과 "네, 스칼렛..." 대사가 한 줄에 있을 때 분리 처리
+            // "멋쩍은 웃음..." (서술만) - 여기서 씹혔던 대사 복구
             if (text.includes('멋쩍은 웃음을 지은')) {
-                // 1. 서술 먼저 출력
+                // 1. 서술
                 fullList.push({ id: `narr-smile-${idx}`, type: 'narrative', text: '멋쩍은 웃음을 지은 재현이 아무렇게나 굴러다니고 있는 뚜껑을 찾아내고는 펜에 끼운다. 다시 이어지는 공상.' });
                 
-                // 2. [복구] 씹혔던 재현 대사 출력
-                if (text.includes('네, 스칼렛 요한슨과')) {
-                    let dialog = text.substring(text.indexOf('네, 스칼렛')).trim();
-                    fullList.push({ id: idx, type: 'talk', sender: '재현', text: dialog });
-                }
+                // 2. [복구됨] "네, 스칼렛 요한슨과..." 대사 (노래 후 멘트)
+                // 원본 스크립트에 이 줄이 합쳐져 있을 경우를 대비해 강제로 추가
+                fullList.push({ 
+                    id: `talk-after-moon-${idx}`, 
+                    type: 'talk', 
+                    sender: '재현', 
+                    text: '네, 스칼렛 요한슨과 호아킨 피닉스가 함께한 The Moon Song 듣고 왔습니다. 노래를 듣고 나니 조금 전 나눴던 이야기의 주제가 조금은 다르게 느껴지네요, 누리 님.' 
+                });
                 return;
             }
+            // 원본 대사 줄 중복 방지
+            if (text.includes('네, 스칼렛 요한슨과')) return;
 
-            // Case: "후자에 가까운 것 같아요..." (빠진 대사 복구)
+
+            // "후자에 가까운 것 같아요..."
             if (text.includes('정의할 수 없는 느낌인가요?')) {
                 fullList.push({ id: idx, type: 'talk', sender: '누리', text: text.replace('누리:', '').trim() });
                 fullList.push({ id: `missing-jaehyun-1-${idx}`, type: 'talk', sender: '재현', text: '후자에 가까운 것 같아요. 텅 비어있다기보다 오히려 너무 가득 차 있어서, 뭐가 뭔지 분간이 안 가는 느낌. 그런 모순된 감정들이 한꺼번에 제 안에 들어와 있는 거죠. 그래서 길을 잃는 기분이기도 하고요.' });
                 return;
             }
 
-            // Case: "둘의 관점으로..." (빠진 대사 복구)
+            // "둘의 관점으로..."
             if (text.includes('그들만의 향유인 거죠')) {
                 fullList.push({ id: idx, type: 'talk', sender: '누리', text: text.replace('누리:', '').trim() });
                 fullList.push({ id: `missing-jaehyun-2-${idx}`, type: 'talk', sender: '재현', text: '둘의 관점으로 세계를 재구성한다··· 흥미롭네요. 하지만 그 둘만의 세계가 때로는 너무 견고해서 생기는 위험도 있지 않을까요?' });
                 return;
             }
 
-            // Case: "지금은요?" 시퀀스 (서술+대사 추가)
+            // "지금은요?"
             if (text.includes('지금은요?')) {
                 fullList.push({ id: idx, type: 'talk', sender: '누리', text: '지금은요?' });
                 fullList.push({ id: `narr-think-${idx}`, type: 'narrative', text: '재현, 잠시 생각에 빠진다.' });
@@ -2488,46 +2534,35 @@ return (
             }
             if (text.includes('지금은··· 그게 사랑이 할 수 있는')) return;
 
-            // Case: "네, 그랬죠. 한 달이라는..." (예능 관련 대사)
+            // "네, 그랬죠..."
             if (text.includes('한 달이라는 시간 동안')) {
-                // 1. 재현 대사
                 let content = text.replace('재현:', '').trim();
                 if (content.includes('농담조로')) {
                     content = content.replace(/\[서술:.*?\]/g, '(농담조로)').replace('저의 활약은', '저의 활약은');
                 }
                 fullList.push({ id: idx, type: 'talk', sender: '재현', text: content });
 
-                // 2. 누리 서술
+                // 순서대로 추가 삽입
                 fullList.push({ id: `narr-nuri-${idx}`, type: 'narrative', text: '누리, 뭔가를 눈치챘다는 듯 묻는다.' });
-                
-                // 3. 누리 대사
                 fullList.push({ id: `talk-nuri-${idx}`, type: 'talk', sender: '누리', text: '아름다웠나요?' });
-
-                // 4. 재현 서술
                 fullList.push({ id: `narr-jae-${idx}`, type: 'narrative', text: '재현, 잠시 묘한 표정을 짓고는 답한다.' });
-
-                // 5. 재현 대사
                 fullList.push({ id: `talk-jae-${idx}`, type: 'talk', sender: '재현', text: '아름다웠죠.' });
                 return;
             }
 
-            // 위에서 처리한 "아름다웠나요", "아름다웠죠" 등 중복 방지
             if (text.includes('아름다웠나요?') || text.includes('아름다웠죠') || (text.includes('그럼 됐죠') && !text.includes('누리'))) return;
 
-            // Case: "그럼 됐죠" (누리)
             if (text.includes('그럼 됐죠')) {
                  fullList.push({ id: idx, type: 'talk', sender: '누리', text: '그럼 됐죠.' });
                  return;
             }
 
-            // Case: "저도요. 누리 님 덕분에..."
             if (text.includes('저도요. 누리 님 덕분에')) {
                 let cleanText = text.replace(/\[서술:.*?\]/g, '').replace('재현:', '').trim();
                 fullList.push({ id: idx, type: 'talk', sender: '재현', text: cleanText });
                 return;
             }
 
-            // Case: 클로징 멘트
             if (text.includes('결국 사랑이란 건')) {
                 let cleanText = text.replace(/\[서술:.*?\]/g, '').replace('누리:', '').trim();
                 fullList.push({ id: idx, type: 'talk', sender: '누리', text: cleanText });
@@ -2579,7 +2614,6 @@ return (
             }
         });
 
-        // 결과 반영
         setRadioMessages(fullList); 
         setRadioQueue([]);       
         setIsRadioTyping(false);    
@@ -2788,25 +2822,78 @@ return (
                                 contentStyle = "text-xs text-purple-200/50 bg-purple-900/40 backdrop-blur px-5 py-2.5 rounded-xl border border-purple-800/50 text-justify leading-6 break-keep max-w-[90%]";
                                 displayText = msg.text;
                             }
-                            else if (msg.type === 'music') {
-                                contentStyle = "bg-purple-900/60 backdrop-blur border border-purple-700/50 px-5 py-3 rounded-full flex items-center gap-3 shadow-[0_4px_15px_rgba(124,58,237,0.3)] text-white font-bold text-sm cursor-pointer hover:bg-purple-800/60 transition-colors";
-                                icon = <Music size={14} className="text-purple-400" />;
-                                const match = msg.text.match(/\[(?:오프닝곡|클로징곡|곡명):\s*(.*?)\]/);
-                                const songName = match ? match[1].trim() : "";
-                                const link = RADIO_MUSIC_LINKS[songName];
-                                
-                                return (
-                                    <div key={msg.id} className="flex justify-center my-8 animate-fade-in-up">
-                                        <a href={link || '#'} target="_blank" rel="noopener noreferrer" onClick={(e) => link ? playSound('click') : e.preventDefault()} className={contentStyle}>
-                                            {icon}
-                                            <div className="flex flex-col items-start">
-                                                <span className="text-[10px] font-bold text-purple-300 tracking-wider uppercase leading-none">NOW PLAYING</span>
-                                                <span className="mt-0.5">{songName || displayText}</span>
+                            // [NEW] 2. 레트로 MP3 플레이어 (흐르는 효과 제거됨)
+                        else if (msg.type === 'music') {
+                            const match = msg.text.match(/\[(?:오프닝곡|클로징곡|곡명):\s*(.*?)\]/);
+                            const songName = match ? match[1].trim() : msg.text;
+                            const info = RADIO_MUSIC_INFO[songName] || { link: '#', thumb: '' }; 
+                            
+                            return (
+                                <div key={msg.id} className="flex justify-center my-10 animate-fade-in-up w-full px-4">
+                                    <a 
+                                        href={info.link} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        onClick={(e) => info.link ? playSound('click') : e.preventDefault()}
+                                        className="w-full max-w-[280px] bg-zinc-800 rounded-lg p-3 border-b-4 border-r-4 border-zinc-900 shadow-xl group relative active:translate-y-1 active:border-b-0 active:border-r-0 active:shadow-none transition-all"
+                                    >
+                                        <div className="bg-black p-0 rounded-sm shadow-[inset_0_2px_5px_rgba(0,0,0,0.5)] border border-zinc-600/50 relative overflow-hidden mb-3 h-32 group-hover:brightness-110 transition-all">
+                                            <div 
+                                                className="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-70 transition-opacity scale-105 blur-[2px]"
+                                                style={{ backgroundImage: `url(${info.thumb})` }}
+                                            ></div>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/pixel-weave.png')] opacity-30 pointer-events-none z-10"></div>
+                                            
+                                            <div className="absolute inset-0 p-3 flex flex-col justify-between z-20">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="flex items-center gap-1">
+                                                        <Music size={10} className="text-green-400 animate-pulse" />
+                                                        <span className="text-[9px] font-mono font-bold text-green-400 tracking-tighter">MP3</span>
+                                                    </div>
+                                                    <div className="text-[8px] font-mono text-white/70">128kbps</div>
+                                                </div>
+
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="w-full overflow-hidden">
+                                                        {/* [수정] 흐르는 효과(animate-marquee) 제거됨 */}
+                                                        <div className="text-xs font-bold text-white font-mono tracking-tight inline-block drop-shadow-md">
+                                                            {songName}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-end h-8 gap-[3px]">
+                                                        <div className="w-1.5 bg-green-400 animate-equalizer shadow-[0_0_5px_rgba(74,222,128,0.5)]" style={{ animationDuration: '0.5s' }}></div>
+                                                        <div className="w-1.5 bg-green-400 animate-equalizer shadow-[0_0_5px_rgba(74,222,128,0.5)]" style={{ animationDuration: '0.7s' }}></div>
+                                                        <div className="w-1.5 bg-green-400 animate-equalizer shadow-[0_0_5px_rgba(74,222,128,0.5)]" style={{ animationDuration: '0.4s' }}></div>
+                                                        <div className="w-1.5 bg-green-400 animate-equalizer shadow-[0_0_5px_rgba(74,222,128,0.5)]" style={{ animationDuration: '0.6s' }}></div>
+                                                        <div className="w-1.5 bg-green-400 animate-equalizer shadow-[0_0_5px_rgba(74,222,128,0.5)]" style={{ animationDuration: '0.8s' }}></div>
+                                                        <div className="w-1.5 bg-green-400 animate-equalizer shadow-[0_0_5px_rgba(74,222,128,0.5)]" style={{ animationDuration: '0.5s' }}></div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </a>
-                                    </div>
-                                );
-                            }
+                                        </div>
+
+                                        <div className="flex items-center justify-between px-2">
+                                            <div className="flex gap-2">
+                                                <div className="w-8 h-8 rounded-full bg-zinc-700 shadow-[inset_0_1px_2px_rgba(255,255,255,0.2),0_2px_4px_rgba(0,0,0,0.5)] flex items-center justify-center border border-zinc-900 hover:bg-zinc-600 transition-colors">
+                                                    <ChevronLeft size={14} className="text-zinc-400" />
+                                                </div>
+                                                <div className="w-8 h-8 rounded-full bg-zinc-700 shadow-[inset_0_1px_2px_rgba(255,255,255,0.2),0_2px_4px_rgba(0,0,0,0.5)] flex items-center justify-center border border-zinc-900 hover:bg-zinc-600 transition-colors">
+                                                    <Play size={14} className="text-green-400 ml-0.5 fill-current" />
+                                                </div>
+                                                <div className="w-8 h-8 rounded-full bg-zinc-700 shadow-[inset_0_1px_2px_rgba(255,255,255,0.2),0_2px_4px_rgba(0,0,0,0.5)] flex items-center justify-center border border-zinc-900 hover:bg-zinc-600 transition-colors">
+                                                    <ChevronLeft size={14} className="text-zinc-400 rotate-180" />
+                                                </div>
+                                            </div>
+                                            <div className="text-[8px] font-black text-zinc-500 font-mono">
+                                                PLAY
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            );
+                        }
 
                             return (
                                 <div key={msg.id} className="flex justify-center my-8 animate-fade-in-up">
