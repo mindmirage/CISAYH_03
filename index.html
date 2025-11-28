@@ -156,7 +156,32 @@ const Info=(p)=><IconWrapper {...p}><circle cx="12" cy="12" r="10"/><line x1="12
 const Download=(p)=><IconWrapper {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></IconWrapper>;
     // --- 유틸리티 ---
 const getTime = () => { const now = new Date(); let h = now.getHours(), m = String(now.getMinutes()).padStart(2, '0'); return `${h >= 12 ? '오후' : '오전'} ${h % 12 || 12}:${m}`; };
+// [수정] 현재 시각에 따라 다음 정각 시간을 계산하는 함수
+const getNextHourTime = () => {
+    const d = new Date();
+    const currentMinutes = d.getMinutes();
+    
+    // 현재 분이 50분 미만이면 다음 정각 (현재 시간 + 1시간)
+    if (currentMinutes < 50) {
+        d.setHours(d.getHours() + 1);
+        d.setMinutes(0);
+    } 
+    // 현재 분이 50분 이상이면 그 다음 정각 (현재 시간 + 2시간)
+    else {
+        d.setHours(d.getHours() + 2);
+        d.setMinutes(0);
+    }
+    
+    return `${String(d.getHours()).padStart(2, '0')}:00`;
+};
 
+// [수정] J 또는 M열 랜덤 선택 및 1-15 사이의 좌석 번호 반환
+const getRandomSeat = () => {
+    const rows = ['J', 'M']; // J열과 M열만 선택
+    const randomRow = rows[Math.floor(Math.random() * rows.length)];
+    const randomNumber = Math.floor(Math.random() * 15) + 1; // 1부터 15까지
+    return `${randomRow}-${String(randomNumber).padStart(2, '0')}`;
+};
 // [수정됨] 오디오 컨텍스트 변수
 let audioCtx = null;
 const playSound = (type) => {
@@ -888,6 +913,8 @@ function App() {
   const [kintsugiBgIndex, setKintsugiBgIndex] = useState(0);           // [추가] 킨츠기 티켓 배경 인덱스
   const [showKintsugiTrailer, setShowKintsugiTrailer] = useState(false);
    const [showInterview, setShowInterview] = useState(false); // [추가] 재현 인터뷰 팝업 상태
+  const [ticketTime, setTicketTime] = useState(""); 
+  const [ticketSeat, setTicketSeat] = useState("");
    // ▼▼▼ [추가] 스크롤 위치 저장용 State & Ref ▼▼▼
   const [savedScrollTop, setSavedScrollTop] = useState(0); 
   const profileDetailRef = useRef(null); // 프로필 상세창 스크롤 감지용
@@ -2219,7 +2246,7 @@ return (
                                         </div>
                                     </div>
                                 )}
-                                {/* 재현: 필모그래피 & 라디오 (최종 수정: 텍스트 진하게 복구, 라벨 키움, SEAT 정렬, 닫기 문구 고정) */}
+                                {/* 재현: 필모그래피 & 라디오 & 킨츠기 */}
                                 {selectedProfile.id === 'jaehyun' && (
                                     <div className="space-y-16 animate-fade-in-up pb-10">
                                         
@@ -2246,29 +2273,32 @@ return (
                                             
                                             {/* 버튼 그룹 */}
                                             <div className="space-y-3">
-                                                {/* 인터뷰 버튼 수정 */}
-<button 
-                                                onClick={() => { 
-                                                    playSound('click'); 
-                                                    
-                                                    // ▼▼▼ [수정] 현재 스크롤 위치 저장 후 화면 전환 ▼▼▼
-                                                    if (profileDetailRef.current) {
-                                                        setSavedScrollTop(profileDetailRef.current.scrollTop);
-                                                    }
-                                                    setSelectedProfile(null); 
-                                                    setIsDetailView(false);   
-                                                    setCurrentView('interview'); 
-                                                    // ▲▲▲ [여기까지 수정] ▲▲▲
-                                                }}
-    className="w-full py-4 bg-white/10 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:border-white/40 hover:bg-gradient-to-r hover:from-sky-300/30 hover:to-blue-400/30 transition-all duration-300 flex items-center justify-center gap-2 tracking-wider rounded-lg group"
->
-    인터뷰 보러 가기 <ChevronLeft size={12} className="rotate-180 group-hover:translate-x-1 transition-transform" />
-</button>
+                                                {/* 인터뷰 버튼 */}
+                                                <button 
+                                                    onClick={() => { 
+                                                        playSound('click'); 
+                                                        if (profileDetailRef.current) {
+                                                            setSavedScrollTop(profileDetailRef.current.scrollTop);
+                                                        }
+                                                        setSelectedProfile(null); 
+                                                        setIsDetailView(false);   
+                                                        setCurrentView('interview'); 
+                                                    }}
+                                                    className="w-full py-4 bg-white/10 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:border-white/40 hover:bg-gradient-to-r hover:from-sky-300/30 hover:to-blue-400/30 transition-all duration-300 flex items-center justify-center gap-2 tracking-wider rounded-lg group"
+                                                >
+                                                    인터뷰 보러 가기 <ChevronLeft size={12} className="rotate-180 group-hover:translate-x-1 transition-transform" />
+                                                </button>
 
                                                 {/* 예매하기 & 예고편 버튼 */}
                                                 <div className="flex gap-3">
                                                     <button 
-                                                        onClick={() => { playSound('click'); setShowTicket(true); }}
+                                                        onClick={() => { 
+                                                            playSound('click'); 
+                                                            // [수정] 클릭 시 시간과 좌석을 생성하여 고정
+                                                            setTicketTime(getNextHourTime());
+                                                            setTicketSeat(getRandomSeat());
+                                                            setShowTicket(true); 
+                                                        }}
                                                         className="flex-1 py-4 bg-white/10 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:border-white/40 hover:bg-gradient-to-r hover:from-sky-300/30 hover:to-blue-400/30 transition-all duration-300 flex items-center justify-center gap-1.5 tracking-wider rounded-lg active:scale-95"
                                                     >
                                                         <div className="w-3 h-3 border-[1.5px] border-white rounded-sm flex items-center justify-center text-[7px] mr-0.5">✔</div>
@@ -2289,19 +2319,16 @@ return (
                                             </div>
                                         </div>
 
-                
-
-                                        {/* [2] 영화 티켓 팝업 - 저장 시 투명화 해결 버전 */}
+                                        {/* [2] 영화 티켓 팝업 (익명의 편지) */}
                                         {showTicket && (
                                             <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4" onClick={() => setShowTicket(false)}>
                                                 <div 
                                                     id="ticket-anonymous"
-                                                    // [중요] 배경색을 style로 강제 지정해야 저장 시 투명해지지 않음
                                                     style={{ backgroundColor: '#fdfbf7' }}
                                                     className="w-full max-w-[300px] bg-[#fdfbf7] rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)] relative animate-fade-in-up transform transition-transform cursor-default flex flex-col"
                                                     onClick={e => e.stopPropagation()}
                                                 >
-                                                    {/* 상단 포스터 - [중요] 포스터 배경색(#111827) 강제 지정 */}
+                                                    {/* 상단 포스터 */}
                                                     <div 
                                                         className="h-[450px] relative overflow-hidden bg-gray-900 shrink-0"
                                                         style={{ backgroundColor: '#111827' }}
@@ -2338,16 +2365,16 @@ return (
                                                             <div>
                                                                 <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">TIME</div>
                                                                 <div className="text-[15px] font-bold text-gray-700 font-serif">
-                                                                    {(() => {
-                                                                        const d = new Date();
-                                                                        d.setHours(d.getHours() + 1);
-                                                                        return `${String(d.getHours()).padStart(2, '0')}:00`;
-                                                                    })()}
+                                                                    {/* [수정] 고정된 State 값 사용 */}
+                                                                    {ticketTime}
                                                                 </div>
                                                             </div>
                                                             <div>
                                                                 <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">SEAT</div>
-                                                                <div className="text-[15px] font-black text-rose-400 font-serif">J-14</div>
+                                                                <div className="text-[15px] font-black text-rose-400 font-serif">
+                                                                    {/* [수정] 고정된 State 값 사용 */}
+                                                                    {ticketSeat}
+                                                                </div>
                                                             </div>
                                                         </div>
 
@@ -2375,7 +2402,7 @@ return (
                                                         </div>
                                                     </div>
 
-                                                    {/* 버튼들 (저장 시 숨겨짐: ticket-btn 클래스) */}
+                                                    {/* 닫기 및 저장 버튼 */}
                                                     <button 
                                                         onClick={(e) => { e.stopPropagation(); setShowTicket(false); }} 
                                                         className="ticket-btn absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white hover:text-gray-100 transition shadow-sm z-40"
@@ -2393,220 +2420,208 @@ return (
                                             </div>
                                         )}
 
-                                        {/* =================================================================================
-    [추가] 나의 킨츠기 형제들 섹션
-   ================================================================================= */}
-<div className="mt-16"> {/* 간격 띄우기 */}
-    <div className="text-2xl font-black text-white mb-6 tracking-tight drop-shadow-md">나의 킨츠기 형제들</div>
-    
-    {/* 1. 첫 번째 사진 (가로로 길게 한 줄) */}
-    <div 
-        onClick={() => { playSound('click'); setSelectedImage(KINTSUGI_IMAGES[0]); }}
-        className="w-full aspect-video relative overflow-hidden rounded-sm shadow-lg transition-transform hover:scale-[1.02] bg-white/5 cursor-pointer active:scale-95 mb-2"
-    >
-        <img src={KINTSUGI_IMAGES[0]} alt="scene-main" className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
-    </div>
+                                        {/* [3] 나의 킨츠기 형제들 섹션 */}
+                                        <div className="mt-16">
+                                            <div className="text-2xl font-black text-white mb-6 tracking-tight drop-shadow-md">나의 킨츠기 형제들</div>
+                                            
+                                            {/* 첫 번째 사진 */}
+                                            <div 
+                                                onClick={() => { playSound('click'); setSelectedImage(KINTSUGI_IMAGES[0]); }}
+                                                className="w-full aspect-video relative overflow-hidden rounded-sm shadow-lg transition-transform hover:scale-[1.02] bg-white/5 cursor-pointer active:scale-95 mb-2"
+                                            >
+                                                <img src={KINTSUGI_IMAGES[0]} alt="scene-main" className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
+                                            </div>
 
-    {/* 2. 나머지 세 장 (3열 그리드) */}
-    <div className="grid grid-cols-3 gap-2 mb-6">
-        {KINTSUGI_IMAGES.slice(1).map((img, i) => (
-            <div 
-                key={i} 
-                onClick={() => { playSound('click'); setSelectedImage(img); }}
-                className="aspect-[3/4] relative overflow-hidden rounded-sm shadow-lg transition-transform hover:scale-105 bg-white/5 cursor-pointer active:scale-95"
-            >
-                <img src={img} alt={`scene-sub-${i}`} className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
-            </div>
-        ))}
-    </div>
-    
-    {/* 3. 버튼 그룹 (예매하기 & 예고편) - 수정됨 */}
-    <div className="flex gap-3">
-        {/* 예매하기 버튼 */}
-        <button 
-            onClick={() => { playSound('click'); setShowKintsugiTicket(true); }}
-            className="flex-1 py-4 bg-white/10 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:border-white/40 hover:bg-gradient-to-r hover:from-sky-300/30 hover:to-blue-400/30 transition-all duration-300 flex items-center justify-center gap-1.5 tracking-wider rounded-lg active:scale-95"
-        >
-            <div className="w-3 h-3 border-[1.5px] border-white rounded-sm flex items-center justify-center text-[7px] mr-0.5">✔</div>
-            예매하기
-        </button>
+                                            {/* 나머지 세 장 */}
+                                            <div className="grid grid-cols-3 gap-2 mb-6">
+                                                {KINTSUGI_IMAGES.slice(1).map((img, i) => (
+                                                    <div 
+                                                        key={i} 
+                                                        onClick={() => { playSound('click'); setSelectedImage(img); }}
+                                                        className="aspect-[3/4] relative overflow-hidden rounded-sm shadow-lg transition-transform hover:scale-105 bg-white/5 cursor-pointer active:scale-95"
+                                                    >
+                                                        <img src={img} alt={`scene-sub-${i}`} className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            
+                                            {/* 버튼 그룹 */}
+                                            <div className="flex gap-3">
+                                                <button 
+                                                    onClick={() => { 
+                                                        playSound('click'); 
+                                                        // [수정] 클릭 시 시간과 좌석을 생성하여 고정
+                                                        setTicketTime(getNextHourTime());
+                                                        setTicketSeat(getRandomSeat());
+                                                        setShowKintsugiTicket(true); 
+                                                    }}
+                                                    className="flex-1 py-4 bg-white/10 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:border-white/40 hover:bg-gradient-to-r hover:from-sky-300/30 hover:to-blue-400/30 transition-all duration-300 flex items-center justify-center gap-1.5 tracking-wider rounded-lg active:scale-95"
+                                                >
+                                                    <div className="w-3 h-3 border-[1.5px] border-white rounded-sm flex items-center justify-center text-[7px] mr-0.5">✔</div>
+                                                    예매하기
+                                                </button>
 
-        {/* [추가됨] 예고편(줄거리) 버튼 */}
-        <button 
-            onClick={() => { playSound('click'); setShowKintsugiTrailer(true); }}
-            className="flex-1 py-4 bg-white/10 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:border-white/40 hover:bg-gradient-to-r hover:from-sky-300/30 hover:to-blue-400/30 transition-all duration-300 flex items-center justify-center gap-1.5 tracking-wider rounded-lg active:scale-95"
-        >
-            <BookOpen size={12} strokeWidth={2.5} /> {/* 아이콘 변경 (Play -> BookOpen) */}
-            예고편
-        </button>
-    </div>
-</div>
+                                                <button 
+                                                    onClick={() => { playSound('click'); setShowKintsugiTrailer(true); }}
+                                                    className="flex-1 py-4 bg-white/10 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:border-white/40 hover:bg-gradient-to-r hover:from-sky-300/30 hover:to-blue-400/30 transition-all duration-300 flex items-center justify-center gap-1.5 tracking-wider rounded-lg active:scale-95"
+                                                >
+                                                    <BookOpen size={12} strokeWidth={2.5} />
+                                                    예고편
+                                                </button>
+                                            </div>
+                                        </div>
 
-{/* =================================================================================
-    [2-2] 나의 킨츠기 형제들 티켓 팝업 - 사진 찌그러짐 완벽 해결 (img 태그 + object-fit)
-   ================================================================================= */}
-{showKintsugiTicket && (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4" onClick={() => setShowKintsugiTicket(false)}>
-        <div 
-            id="ticket-kintsugi"
-            // 저장 시 배경 투명화 방지
-            style={{ backgroundColor: '#fdfbf7' }}
-            className="w-full max-w-[300px] bg-[#fdfbf7] rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)] relative animate-fade-in-up transform transition-transform cursor-default flex flex-col"
-            onClick={e => e.stopPropagation()}
-        >
-            {/* 상단 포스터 영역 - [수정] img 태그 사용 + ticket-img 클래스 필수 */}
-            <div 
-                className="h-[450px] relative overflow-hidden bg-gray-900 shrink-0"
-                style={{ backgroundColor: '#111827' }}
-            >
-                {KINTSUGI_IMAGES.map((img, idx) => (
-                    <img 
-                        key={idx}
-                        src={img}
-                        alt="Poster"
-                        // [중요] ticket-img 클래스가 있어야 저장 시 비율 보정이 적용됩니다.
-                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ticket-img ${idx === kintsugiBgIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-                    />
-                ))}
-                
-                {/* 그라데이션 오버레이 */}
-                <div className="absolute bottom-0 left-0 right-0 h-1/2 z-20 bg-gradient-to-t from-[#fdfbf7] via-[#fdfbf7]/60 to-transparent pointer-events-none"></div>
-                
-                {/* 타이틀 */}
-                <div className="absolute bottom-6 left-6 right-6 z-30">
-                    <div className="text-[9px] font-bold tracking-[0.3em] text-gray-500 mb-1">CINEMA TICKET</div>
-                    <h2 className="text-3xl font-black text-gray-900 leading-tight tracking-tighter break-keep drop-shadow-sm">나의 킨츠기<br/>형제들</h2>
-                </div>
-            </div>
+                                        {/* [4] 나의 킨츠기 형제들 티켓 팝업 */}
+                                        {showKintsugiTicket && (
+                                            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4" onClick={() => setShowKintsugiTicket(false)}>
+                                                <div 
+                                                    id="ticket-kintsugi"
+                                                    style={{ backgroundColor: '#fdfbf7' }}
+                                                    className="w-full max-w-[300px] bg-[#fdfbf7] rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)] relative animate-fade-in-up transform transition-transform cursor-default flex flex-col"
+                                                    onClick={e => e.stopPropagation()}
+                                                >
+                                                    {/* 상단 포스터 */}
+                                                    <div 
+                                                        className="h-[450px] relative overflow-hidden bg-gray-900 shrink-0"
+                                                        style={{ backgroundColor: '#111827' }}
+                                                    >
+                                                        {KINTSUGI_IMAGES.map((img, idx) => (
+                                                            <img 
+                                                                key={idx}
+                                                                src={img}
+                                                                alt="Poster"
+                                                                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ticket-img ${idx === kintsugiBgIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+                                                            />
+                                                        ))}
+                                                        
+                                                        <div className="absolute bottom-0 left-0 right-0 h-1/2 z-20 bg-gradient-to-t from-[#fdfbf7] via-[#fdfbf7]/60 to-transparent pointer-events-none"></div>
+                                                        
+                                                        <div className="absolute bottom-6 left-6 right-6 z-30">
+                                                            <div className="text-[9px] font-bold tracking-[0.3em] text-gray-500 mb-1">CINEMA TICKET</div>
+                                                            <h2 className="text-3xl font-black text-gray-900 leading-tight tracking-tighter break-keep drop-shadow-sm">나의 킨츠기<br/>형제들</h2>
+                                                        </div>
+                                                    </div>
 
-            {/* 티켓 정보 영역 */}
-            <div className="px-7 pt-6 pb-4 relative flex-1 bg-[#fdfbf7]">
-                <div className="absolute top-[-12px] left-[-12px] w-6 h-6 bg-black/80 rounded-full z-30"></div>
-                <div className="absolute top-[-12px] right-[-12px] w-6 h-6 bg-black/80 rounded-full z-30"></div>
+                                                    {/* 티켓 정보 */}
+                                                    <div className="px-7 pt-6 pb-4 relative flex-1 bg-[#fdfbf7]">
+                                                        <div className="absolute top-[-12px] left-[-12px] w-6 h-6 bg-black/80 rounded-full z-30"></div>
+                                                        <div className="absolute top-[-12px] right-[-12px] w-6 h-6 bg-black/80 rounded-full z-30"></div>
 
-                <div className="flex justify-between items-start mb-6 border-b border-dashed border-gray-300 pb-6">
-                    <div>
-                        <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">DATE</div>
-                        <div className="text-[15px] font-bold text-gray-700 font-serif">
-                            {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}
-                        </div>
-                    </div>
-                    <div>
-                        <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">TIME</div>
-                        <div className="text-[15px] font-bold text-gray-700 font-serif">
-                            {(() => {
-                                const d = new Date();
-                                d.setHours(d.getHours() + 1);
-                                return `${String(d.getHours()).padStart(2, '0')}:00`;
-                            })()}
-                        </div>
-                    </div>
-                    <div>
-                        <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">SEAT</div>
-                        <div className="text-[15px] font-black text-rose-400 font-serif">K-01</div>
-                    </div>
-                </div>
+                                                        <div className="flex justify-between items-start mb-6 border-b border-dashed border-gray-300 pb-6">
+                                                            <div>
+                                                                <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">DATE</div>
+                                                                <div className="text-[15px] font-bold text-gray-700 font-serif">
+                                                                    {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">TIME</div>
+                                                                <div className="text-[15px] font-bold text-gray-700 font-serif">
+                                                                    {/* [수정] 고정된 State 값 사용 */}
+                                                                    {ticketTime}
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">SEAT</div>
+                                                                <div className="text-[15px] font-black text-rose-400 font-serif">
+                                                                    {/* [수정] 고정된 State 값 사용 */}
+                                                                    {ticketSeat}
+                                                                </div>
+                                                            </div>
+                                                        </div>
 
-                <div className="space-y-5">
-                    <div>
-                        <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">THEATER</div>
-                        <a 
-                            href="https://www.postype.com/@mindmirage/post/19578368" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-sm font-bold text-gray-700 border-b border-gray-400 hover:text-sky-500 hover:border-sky-500 transition-colors pb-0.5"
-                        >
-                            MIND MIRAGE ↗
-                        </a>
-                    </div>
-                    <div>
-                        <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">CAST</div>
-                        <div className="text-sm font-bold text-gray-600">JAEHYUN</div>
-                    </div>
-                </div>
-            </div>
+                                                        <div className="space-y-5">
+                                                            <div>
+                                                                <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">THEATER</div>
+                                                                <a 
+                                                                    href="https://www.postype.com/@mindmirage/post/19578368" 
+                                                                    target="_blank" 
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-sm font-bold text-gray-700 border-b border-gray-400 hover:text-sky-500 hover:border-sky-500 transition-colors pb-0.5"
+                                                                >
+                                                                    MIND MIRAGE ↗
+                                                                </a>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">CAST</div>
+                                                                <div className="text-sm font-bold text-gray-600">JAEHYUN</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
-            {/* 하단 바코드 */}
-            <div className="relative pb-8 pt-4 bg-[#fdfbf7]">
-                <div className="px-6 flex flex-col items-center justify-center gap-2">
-                    <div className="h-12 w-full max-w-[220px] flex justify-between items-end">
-                        {barcodePattern.map((width, i) => (
-                            <div key={i} className="bg-gray-700" style={{ width: width, height: '100%' }}></div>
-                        ))}
-                    </div>
-                    <div className="text-[11px] tracking-[0.6em] text-gray-500 font-mono font-medium mt-1">970214</div>
-                </div>
-            </div>
+                                                    {/* 하단 바코드 */}
+                                                    <div className="relative pb-8 pt-4 bg-[#fdfbf7]">
+                                                        <div className="px-6 flex flex-col items-center justify-center gap-2">
+                                                            <div className="h-12 w-full max-w-[220px] flex justify-between items-end">
+                                                                {barcodePattern.map((width, i) => (
+                                                                    <div key={i} className="bg-gray-700" style={{ width: width, height: '100%' }}></div>
+                                                                ))}
+                                                            </div>
+                                                            <div className="text-[11px] tracking-[0.6em] text-gray-500 font-mono font-medium mt-1">970214</div>
+                                                        </div>
+                                                    </div>
 
-            {/* 버튼들 */}
-            <button 
-                onClick={(e) => { e.stopPropagation(); setShowKintsugiTicket(false); }} 
-                className="ticket-btn absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white hover:text-gray-100 transition shadow-sm z-40"
-            >
-                <X size={16} />
-            </button>
-            <button 
-                onClick={(e) => { e.stopPropagation(); handleSaveTicket('ticket-kintsugi', '나의 킨츠기 형제들'); }} 
-                className="ticket-btn absolute top-4 left-4 p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white hover:text-gray-100 transition shadow-sm z-40"
-                title="티켓 이미지 저장"
-            >
-                <Download size={16} />
-            </button>
-        </div>
-    </div>
-)}
-{/* =================================================================================
-    [추가] 나의 킨츠기 형제들 - 줄거리(예고편) 팝업
-   ================================================================================= */}
-{showKintsugiTrailer && (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-6" onClick={() => setShowKintsugiTrailer(false)}>
-        <div 
-            className="w-full max-w-[320px] bg-[#1a1a1a] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative animate-fade-in-up flex flex-col max-h-[70vh]"
-            onClick={e => e.stopPropagation()}
-        >
-            {/* 팝업 헤더 */}
-            <div className="px-6 py-5 border-b border-white/10 bg-white/5 flex items-center justify-between shrink-0">
-                <div>
-                    <div className="text-[10px] text-sky-400 font-bold tracking-widest mb-1">SYNOPSIS</div>
-                    <h3 className="text-lg font-bold text-white leading-tight">나의 킨츠기 형제들</h3>
-                </div>
-                <button 
-                    onClick={() => setShowKintsugiTrailer(false)}
-                    className="p-2 text-white/50 hover:text-white transition bg-white/5 rounded-full"
-                >
-                    <X size={18} />
-                </button>
-            </div>
+                                                    {/* 닫기 및 저장 버튼 */}
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); setShowKintsugiTicket(false); }} 
+                                                        className="ticket-btn absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white hover:text-gray-100 transition shadow-sm z-40"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); handleSaveTicket('ticket-kintsugi', '나의 킨츠기 형제들'); }} 
+                                                        className="ticket-btn absolute top-4 left-4 p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white hover:text-gray-100 transition shadow-sm z-40"
+                                                        title="티켓 이미지 저장"
+                                                    >
+                                                        <Download size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
 
-            {/* 줄거리 내용 영역 */}
-            <div className="p-6 overflow-y-auto custom-scrollbar text-white/80 text-[13px] leading-relaxed font-light whitespace-pre-line text-justify">
-                
-                <p className="mb-4">
-                    19년 전 여름, 거장 이현로의 문하생으로 들어온 재현은 형제들에게 잊을 수 없는 계절을 선사한다.
-                </p>
-                <p className="mb-4">
-                    하지만 아버지의 어긋난 예술혼과 세 사람 사이의 비밀스러운 감정은 점차 위태로운 균열을 만들어낸다.
-                </p>
-                <p>
-                    긴 침묵을 깨고 드러나는 그날의 충격적 진실, 깨진 기억을 금으로 이어 붙이려는 한 남자의 애틋하고도 서늘한 고백이 시작된다.
-                </p>
-
-            </div>
-
-            {/* 하단 닫기 버튼 */}
-            <div className="px-6 py-4 border-t border-white/10 bg-white/5 text-center shrink-0">
-                <button 
-                    onClick={() => setShowKintsugiTrailer(false)}
-                    className="text-xs text-white/60 hover:text-white font-medium transition"
-                >
-                    닫기
-                </button>
-            </div>
-        </div>
-    </div>
-)}
+                                        {/* [5] 킨츠기 줄거리(예고편) 팝업 */}
+                                        {showKintsugiTrailer && (
+                                            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-6" onClick={() => setShowKintsugiTrailer(false)}>
+                                                <div 
+                                                    className="w-full max-w-[320px] bg-[#1a1a1a] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative animate-fade-in-up flex flex-col max-h-[70vh]"
+                                                    onClick={e => e.stopPropagation()}
+                                                >
+                                                    <div className="px-6 py-5 border-b border-white/10 bg-white/5 flex items-center justify-between shrink-0">
+                                                        <div>
+                                                            <div className="text-[10px] text-sky-400 font-bold tracking-widest mb-1">SYNOPSIS</div>
+                                                            <h3 className="text-lg font-bold text-white leading-tight">나의 킨츠기 형제들</h3>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => setShowKintsugiTrailer(false)}
+                                                            className="p-2 text-white/50 hover:text-white transition bg-white/5 rounded-full"
+                                                        >
+                                                            <X size={18} />
+                                                        </button>
+                                                    </div>
+                                                    <div className="p-6 overflow-y-auto custom-scrollbar text-white/80 text-[13px] leading-relaxed font-light whitespace-pre-line text-justify">
+                                                        <p className="mb-4">
+                                                            19년 전 여름, 거장 이현로의 문하생으로 들어온 재현은 형제들에게 잊을 수 없는 계절을 선사한다.
+                                                        </p>
+                                                        <p className="mb-4">
+                                                            하지만 아버지의 어긋난 예술혼과 세 사람 사이의 비밀스러운 감정은 점차 위태로운 균열을 만들어낸다.
+                                                        </p>
+                                                        <p>
+                                                            긴 침묵을 깨고 드러나는 그날의 충격적 진실, 깨진 기억을 금으로 이어 붙이려는 한 남자의 애틋하고도 서늘한 고백이 시작된다.
+                                                        </p>
+                                                    </div>
+                                                    <div className="px-6 py-4 border-t border-white/10 bg-white/5 text-center shrink-0">
+                                                        <button 
+                                                            onClick={() => setShowKintsugiTrailer(false)}
+                                                            className="text-xs text-white/60 hover:text-white font-medium transition"
+                                                        >
+                                                            닫기
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                         
-                                        {/* [3] 라디오 (가로형 워크맨 + 블루 테마) - 스크롤 저장 로직 추가됨 */}
+                                        {/* [6] 라디오 섹션 */}
                                         <div>
                                             <div className="flex items-center gap-2 mb-4">
                                                 <div className="w-1 h-4 bg-sky-400"></div>
@@ -2623,217 +2638,163 @@ return (
                                                                 <div className="w-1.5 h-1.5 rounded-full bg-red-900"></div>
                                                             </div>
                                                             <button 
-    onClick={() => { 
-        playSound('click'); 
-        
-        const scriptLines = CHARACTER_DETAILS.jaehyun.radio.script.split('\n');
-        let fullList = []; 
+                                                                onClick={() => { 
+                                                                    playSound('click'); 
+                                                                    
+                                                                    const scriptLines = CHARACTER_DETAILS.jaehyun.radio.script.split('\n');
+                                                                    let fullList = []; 
 
-        scriptLines.forEach((line, idx) => {
-            let text = line.trim();
-            if (!text) return;
+                                                                    scriptLines.forEach((line, idx) => {
+                                                                        let text = line.trim();
+                                                                        if (!text) return;
 
-            // [1] 코너 제목 처리 (수정됨: section 타입으로 분리)
-            if (text.includes('코너:') || text.includes('[코너:')) {
-                // 텍스트 정제: "[코너: 오프닝]" -> "오프닝"
-                let cleanText = text.replace(/[\[\]]/g, '').replace('코너:', '').trim();
-                fullList.push({ id: `section-${idx}`, type: 'section', text: cleanText });
-                return;
-            }
+                                                                        if (text.includes('코너:') || text.includes('[코너:')) {
+                                                                            let cleanText = text.replace(/[\[\]]/g, '').replace('코너:', '').trim();
+                                                                            fullList.push({ id: `section-${idx}`, type: 'section', text: cleanText });
+                                                                            return;
+                                                                        }
+                                                                        if (text.includes('고개를 끄덕이며') || text.includes('까맣게 물든') || text.includes('잠시 생각하다') || text.includes('뭔가를 눈치챘다는 듯')) return;
+                                                                        
+                                                                        if (text.includes('네 맞아요. <그녀>는 인공지능')) {
+                                                                            fullList.push({ 
+                                                                                id: `movie-${idx}`, 
+                                                                                type: 'movie', 
+                                                                                title: '그녀 (Her)',
+                                                                                poster: 'https://ih1.redbubble.net/image.3143898462.4368/flat,750x,075,f-pad,750x1000,f8f8f8.u1.webp',
+                                                                                desc: "‘테오도르’(와킨 피닉스)는 다른 사람들의 편지를 대신 써주는 대필 작가로, 아내(루니 마라)와 별거 중이다. 타인의 마음을 전해주는 일을 하고 있지만, 정작 자신은 너무 외롭고 공허한 삶을 살고 있다. 그러던 어느 날, 스스로 생각하고 느끼는 인공 지능 운영체제인 ‘사만다’(스칼렛 요한슨)를 만나게 된다. 자신의 말에 귀 기울이고, 이해해주는 ‘사만다’로 인해 조금씩 행복을 되찾기 시작한 ‘테오도르’는 점점 그녀에게 사랑을 느끼게 되는데..."
+                                                                            });
+                                                                        }
+                                                                        if (text.includes('함께 한 버전입니다')) {
+                                                                            let content = text.replace('재현:', '').trim();
+                                                                            fullList.push({ id: idx, type: 'talk', sender: '재현', text: content });
+                                                                            return;
+                                                                        }
+                                                                        if (text.includes('스튜디오의 낮은 기계음')) {
+                                                                            fullList.push({ 
+                                                                                id: `music-moon-${idx}`, 
+                                                                                type: 'music', 
+                                                                                text: '[곡명: The Moon Song (Film Version)]', 
+                                                                                sender: 'system' 
+                                                                            });
+                                                                            fullList.push({ id: idx, type: 'narrative', text: text.replace(/\[서술:(.*?)\]/, '$1').trim() });
+                                                                            return;
+                                                                        }
+                                                                        if (text.includes('곡명:') && text.includes('The Moon Song')) return;
+                                                                        if (text.includes('잠시 침묵')) {
+                                                                            fullList.push({ id: `narr-silence-${idx}`, type: 'narrative', text: '잠시 침묵, 마이크 너머로 희미한 미소가 느껴진다.' });
+                                                                            if (text.includes('어··· 글쎄요')) {
+                                                                                let dialog = text.substring(text.indexOf('어···')).trim();
+                                                                                fullList.push({ id: idx, type: 'talk', sender: '재현', text: dialog });
+                                                                            }
+                                                                            return;
+                                                                        }
+                                                                        if (text.includes('멋쩍은 웃음을 지은')) {
+                                                                            fullList.push({ id: `narr-smile-${idx}`, type: 'narrative', text: '멋쩍은 웃음을 지은 재현이 아무렇게나 굴러다니고 있는 뚜껑을 찾아내고는 펜에 끼운다. 다시 이어지는 공상.' });
+                                                                            fullList.push({ 
+                                                                                id: `talk-after-moon-${idx}`, 
+                                                                                type: 'talk', 
+                                                                                sender: '재현', 
+                                                                                text: '네, 스칼렛 요한슨과 호아킨 피닉스가 함께한 The Moon Song 듣고 왔습니다. 노래를 듣고 나니 조금 전 나눴던 이야기의 주제가 조금은 다르게 느껴지네요, 누리 님.' 
+                                                                            });
+                                                                            return;
+                                                                        }
+                                                                        if (text.includes('네, 스칼렛 요한슨과')) return;
+                                                                        if (text.includes('정의할 수 없는 느낌인가요?')) {
+                                                                            fullList.push({ id: idx, type: 'talk', sender: '누리', text: text.replace('누리:', '').trim() });
+                                                                            fullList.push({ id: `missing-jaehyun-1-${idx}`, type: 'talk', sender: '재현', text: '후자에 가까운 것 같아요. 텅 비어있다기보다 오히려 너무 가득 차 있어서, 뭐가 뭔지 분간이 안 가는 느낌. 그런 모순된 감정들이 한꺼번에 제 안에 들어와 있는 거죠. 그래서 길을 잃는 기분이기도 하고요.' });
+                                                                            return;
+                                                                        }
+                                                                        if (text.includes('그들만의 향유인 거죠')) {
+                                                                            fullList.push({ id: idx, type: 'talk', sender: '누리', text: text.replace('누리:', '').trim() });
+                                                                            fullList.push({ id: `missing-jaehyun-2-${idx}`, type: 'talk', sender: '재현', text: '둘의 관점으로 세계를 재구성한다··· 흥미롭네요. 하지만 그 둘만의 세계가 때로는 너무 견고해서 생기는 위험도 있지 않을까요?' });
+                                                                            return;
+                                                                        }
+                                                                        if (text.includes('지금은요?')) {
+                                                                            fullList.push({ id: idx, type: 'talk', sender: '누리', text: '지금은요?' });
+                                                                            fullList.push({ id: `narr-think-${idx}`, type: 'narrative', text: '재현, 잠시 생각에 빠진다.' });
+                                                                            fullList.push({ id: `missing-jaehyun-3-${idx}`, type: 'talk', sender: '재현', text: '지금은··· 그게 사랑이 할 수 있는 가장 고통스럽고 또 가장 위대한 일일지도 모른다는 생각이 들어요. 내가 사랑하는 사람이 나로 인해 더 넓은 세계를 갖게 되고, 나 없이는 닿을 수 없었던 곳으로 나아가는 걸 지켜보는 것. 그리고··· 기꺼이 놓아주는 것 말이에요.' });
+                                                                            return;
+                                                                        }
+                                                                        if (text.includes('지금은··· 그게 사랑이 할 수 있는')) return;
+                                                                        if (text.includes('한 달이라는 시간 동안')) {
+                                                                            let content = text.replace('재현:', '').trim();
+                                                                            if (content.includes('농담조로')) {
+                                                                                content = content.replace(/\[서술:.*?\]/g, '').replace('저의 활약은', '저의 활약은');
+                                                                            }
+                                                                            fullList.push({ id: idx, type: 'talk', sender: '재현', text: content });
+                                                                            fullList.push({ id: `narr-nuri-${idx}`, type: 'narrative', text: '누리, 뭔가를 눈치챘다는 듯 묻는다.' });
+                                                                            fullList.push({ id: `talk-nuri-${idx}`, type: 'talk', sender: '누리', text: '아름다웠나요?' });
+                                                                            fullList.push({ id: `narr-jae-${idx}`, type: 'narrative', text: '재현, 잠시 묘한 표정을 짓고는 답한다.' });
+                                                                            fullList.push({ id: `talk-jae-${idx}`, type: 'talk', sender: '재현', text: '아름다웠죠.' });
+                                                                            return;
+                                                                        }
+                                                                        if (text.includes('아름다웠나요?') || text.includes('아름다웠죠') || (text.includes('그럼 됐죠') && !text.includes('누리'))) return;
+                                                                        if (text.includes('그럼 됐죠')) {
+                                                                            fullList.push({ id: idx, type: 'talk', sender: '누리', text: '그럼 됐죠.' });
+                                                                            return;
+                                                                        }
+                                                                        if (text.includes('저도요. 누리 님 덕분에')) {
+                                                                            let cleanText = text.replace(/\[서술:.*?\]/g, '').replace('재현:', '').trim();
+                                                                            fullList.push({ id: idx, type: 'talk', sender: '재현', text: cleanText });
+                                                                            return;
+                                                                        }
+                                                                        if (text.includes('결국 사랑이란 건')) {
+                                                                            let cleanText = text.replace(/\[서술:.*?\]/g, '').replace('누리:', '').trim();
+                                                                            fullList.push({ id: idx, type: 'talk', sender: '누리', text: cleanText });
+                                                                            return;
+                                                                        }
+                                                                        if (text.includes('[서술:')) {
+                                                                            let cleanNarrative = text.replace(/\[서술:(.*?)\]/, '$1').trim();
+                                                                            if(cleanNarrative.includes(':')) cleanNarrative = cleanNarrative.split(':')[1].trim();
+                                                                            fullList.push({ id: idx, type: 'narrative', text: cleanNarrative });
+                                                                            return;
+                                                                        }
+                                                                        if (text.startsWith('[') || text.endsWith(']')) {
+                                                                            let type = 'narrative';
+                                                                            if (text.includes('곡:') || text.includes('곡명:')) type = 'music';
+                                                                            fullList.push({ id: idx, type, text, sender: 'system' });
+                                                                            return;
+                                                                        }
+                                                                        
+                                                                        const parts = text.split(':');
+                                                                        if (parts.length >= 2) {
+                                                                            const sender = parts[0].trim();
+                                                                            const content = parts.slice(1).join(':').trim();
+                                                                            if (content.length >= 150) {
+                                                                                const sentences = content.match(/[^.?!]+[.?!]+["']?|[^.?!]+$/g) || [content];
+                                                                                let currentChunk = "";
+                                                                                let chunkCount = 0;
+                                                                                sentences.forEach((sent) => {
+                                                                                    currentChunk += sent;
+                                                                                    if (currentChunk.length >= 150) {
+                                                                                        fullList.push({ id: `${idx}-${chunkCount}`, type: 'talk', text: currentChunk.trim(), sender });
+                                                                                        currentChunk = "";
+                                                                                        chunkCount++;
+                                                                                    }
+                                                                                });
+                                                                                if (currentChunk.trim().length > 0) {
+                                                                                    fullList.push({ id: `${idx}-${chunkCount}`, type: 'talk', text: currentChunk.trim(), sender });
+                                                                                }
+                                                                            } else {
+                                                                                fullList.push({ id: idx, type: 'talk', text: content, sender });
+                                                                            }
+                                                                        }
+                                                                    });
 
-            // [2] 삭제할 서술들
-            if (text.includes('고개를 끄덕이며') || text.includes('까맣게 물든') || text.includes('잠시 생각하다') || text.includes('뭔가를 눈치챘다는 듯')) {
-                return;
-            }
+                                                                    setRadioMessages(fullList); 
+                                                                    setRadioQueue([]);       
+                                                                    setIsRadioTyping(false);    
 
-            // [3] 영화 정보 카드
-            if (text.includes('네 맞아요. <그녀>는 인공지능')) {
-                fullList.push({ 
-                    id: `movie-${idx}`, 
-                    type: 'movie', 
-                    title: '그녀 (Her)',
-                    poster: 'https://ih1.redbubble.net/image.3143898462.4368/flat,750x,075,f-pad,750x1000,f8f8f8.u1.webp',
-                    desc: "‘테오도르’(와킨 피닉스)는 다른 사람들의 편지를 대신 써주는 대필 작가로, 아내(루니 마라)와 별거 중이다. 타인의 마음을 전해주는 일을 하고 있지만, 정작 자신은 너무 외롭고 공허한 삶을 살고 있다. 그러던 어느 날, 스스로 생각하고 느끼는 인공 지능 운영체제인 ‘사만다’(스칼렛 요한슨)를 만나게 된다. 자신의 말에 귀 기울이고, 이해해주는 ‘사만다’로 인해 조금씩 행복을 되찾기 시작한 ‘테오도르’는 점점 그녀에게 사랑을 느끼게 되는데..."
-                });
-            }
+                                                                    if (profileDetailRef.current) setSavedScrollTop(profileDetailRef.current.scrollTop);
 
-            // [4] The Moon Song 재생 시퀀스 (대사 -> 음악 -> 서술)
-            
-            // 4-1. [대사] "네, 맞아요. 저는 그 장면을..." (강제 포착)
-            if (text.includes('함께 한 버전입니다')) {
-                let content = text.replace('재현:', '').trim();
-                fullList.push({ id: idx, type: 'talk', sender: '재현', text: content });
-                return;
-            }
-
-            // 4-2. [음악 & 서술] "스튜디오의 낮은 기계음..." 줄을 만나면 음악 먼저 재생
-            if (text.includes('스튜디오의 낮은 기계음')) {
-                // (1) MP3 플레이어 (The Moon Song)
-                // [수정] 텍스트만 넣지 않고 '[곡명: ...]' 포맷으로 통일하여 유튜브 링크 연결
-                fullList.push({ 
-                    id: `music-moon-${idx}`, 
-                    type: 'music', 
-                    text: '[곡명: The Moon Song (Film Version)]', 
-                    sender: 'system' 
-                });
-                // (2) 서술 텍스트
-                fullList.push({ id: idx, type: 'narrative', text: text.replace(/\[서술:(.*?)\]/, '$1').trim() });
-                return;
-            }
-            // 기존 곡명 태그 방지
-            if (text.includes('곡명:') && text.includes('The Moon Song')) return;
-
-
-            // [5] 강제 삽입 및 대사 변환 로직
-
-            // "잠시 침묵..." (서술+대사 분리)
-            if (text.includes('잠시 침묵')) {
-                fullList.push({ id: `narr-silence-${idx}`, type: 'narrative', text: '잠시 침묵, 마이크 너머로 희미한 미소가 느껴진다.' });
-                if (text.includes('어··· 글쎄요')) {
-                    let dialog = text.substring(text.indexOf('어···')).trim();
-                    fullList.push({ id: idx, type: 'talk', sender: '재현', text: dialog });
-                }
-                return;
-            }
-
-            // "멋쩍은 웃음..." (서술만) - 여기서 씹혔던 대사 복구
-            if (text.includes('멋쩍은 웃음을 지은')) {
-                // 1. 서술
-                fullList.push({ id: `narr-smile-${idx}`, type: 'narrative', text: '멋쩍은 웃음을 지은 재현이 아무렇게나 굴러다니고 있는 뚜껑을 찾아내고는 펜에 끼운다. 다시 이어지는 공상.' });
-                
-                // 2. [복구됨] "네, 스칼렛 요한슨과..." 대사 (노래 후 멘트)
-                // 원본 스크립트에 이 줄이 합쳐져 있을 경우를 대비해 강제로 추가
-                fullList.push({ 
-                    id: `talk-after-moon-${idx}`, 
-                    type: 'talk', 
-                    sender: '재현', 
-                    text: '네, 스칼렛 요한슨과 호아킨 피닉스가 함께한 The Moon Song 듣고 왔습니다. 노래를 듣고 나니 조금 전 나눴던 이야기의 주제가 조금은 다르게 느껴지네요, 누리 님.' 
-                });
-                return;
-            }
-            // 원본 대사 줄 중복 방지
-            if (text.includes('네, 스칼렛 요한슨과')) return;
-
-
-            // "후자에 가까운 것 같아요..."
-            if (text.includes('정의할 수 없는 느낌인가요?')) {
-                fullList.push({ id: idx, type: 'talk', sender: '누리', text: text.replace('누리:', '').trim() });
-                fullList.push({ id: `missing-jaehyun-1-${idx}`, type: 'talk', sender: '재현', text: '후자에 가까운 것 같아요. 텅 비어있다기보다 오히려 너무 가득 차 있어서, 뭐가 뭔지 분간이 안 가는 느낌. 그런 모순된 감정들이 한꺼번에 제 안에 들어와 있는 거죠. 그래서 길을 잃는 기분이기도 하고요.' });
-                return;
-            }
-
-            // "둘의 관점으로..."
-            if (text.includes('그들만의 향유인 거죠')) {
-                fullList.push({ id: idx, type: 'talk', sender: '누리', text: text.replace('누리:', '').trim() });
-                fullList.push({ id: `missing-jaehyun-2-${idx}`, type: 'talk', sender: '재현', text: '둘의 관점으로 세계를 재구성한다··· 흥미롭네요. 하지만 그 둘만의 세계가 때로는 너무 견고해서 생기는 위험도 있지 않을까요?' });
-                return;
-            }
-
-            // "지금은요?"
-            if (text.includes('지금은요?')) {
-                fullList.push({ id: idx, type: 'talk', sender: '누리', text: '지금은요?' });
-                fullList.push({ id: `narr-think-${idx}`, type: 'narrative', text: '재현, 잠시 생각에 빠진다.' });
-                fullList.push({ id: `missing-jaehyun-3-${idx}`, type: 'talk', sender: '재현', text: '지금은··· 그게 사랑이 할 수 있는 가장 고통스럽고 또 가장 위대한 일일지도 모른다는 생각이 들어요. 내가 사랑하는 사람이 나로 인해 더 넓은 세계를 갖게 되고, 나 없이는 닿을 수 없었던 곳으로 나아가는 걸 지켜보는 것. 그리고··· 기꺼이 놓아주는 것 말이에요.' });
-                return;
-            }
-            if (text.includes('지금은··· 그게 사랑이 할 수 있는')) return;
-
-            // "네, 그랬죠..."
-            if (text.includes('한 달이라는 시간 동안')) {
-                let content = text.replace('재현:', '').trim();
-                // ▼▼▼ [수정] '(농담조로)' 변환 부분을 빈 문자열 ''로 변경하여 삭제 ▼▼▼
-                if (content.includes('농담조로')) {
-                    content = content.replace(/\[서술:.*?\]/g, '').replace('저의 활약은', '저의 활약은');
-                }
-                // ▲▲▲ [여기까지] ▲▲▲
-                fullList.push({ id: idx, type: 'talk', sender: '재현', text: content });
-
-                // 순서대로 추가 삽입
-                fullList.push({ id: `narr-nuri-${idx}`, type: 'narrative', text: '누리, 뭔가를 눈치챘다는 듯 묻는다.' });
-                fullList.push({ id: `talk-nuri-${idx}`, type: 'talk', sender: '누리', text: '아름다웠나요?' });
-                fullList.push({ id: `narr-jae-${idx}`, type: 'narrative', text: '재현, 잠시 묘한 표정을 짓고는 답한다.' });
-                fullList.push({ id: `talk-jae-${idx}`, type: 'talk', sender: '재현', text: '아름다웠죠.' });
-                return;
-            }
-
-            if (text.includes('아름다웠나요?') || text.includes('아름다웠죠') || (text.includes('그럼 됐죠') && !text.includes('누리'))) return;
-
-            if (text.includes('그럼 됐죠')) {
-                 fullList.push({ id: idx, type: 'talk', sender: '누리', text: '그럼 됐죠.' });
-                 return;
-            }
-
-            if (text.includes('저도요. 누리 님 덕분에')) {
-                let cleanText = text.replace(/\[서술:.*?\]/g, '').replace('재현:', '').trim();
-                fullList.push({ id: idx, type: 'talk', sender: '재현', text: cleanText });
-                return;
-            }
-
-            if (text.includes('결국 사랑이란 건')) {
-                let cleanText = text.replace(/\[서술:.*?\]/g, '').replace('누리:', '').trim();
-                fullList.push({ id: idx, type: 'talk', sender: '누리', text: cleanText });
-                return;
-            }
-
-
-            // [6] 기본 처리
-            
-            if (text.includes('[서술:')) {
-                let cleanNarrative = text.replace(/\[서술:(.*?)\]/, '$1').trim();
-                if(cleanNarrative.includes(':')) cleanNarrative = cleanNarrative.split(':')[1].trim();
-                fullList.push({ id: idx, type: 'narrative', text: cleanNarrative });
-                return;
-            }
-
-            if (text.startsWith('[') || text.endsWith(']')) {
-                let type = 'narrative';
-                if (text.includes('곡:') || text.includes('곡명:')) type = 'music';
-                fullList.push({ id: idx, type, text, sender: 'system' });
-                return;
-            }
-            
-            // 일반 대화 (150자 분리)
-            const parts = text.split(':');
-            if (parts.length >= 2) {
-                const sender = parts[0].trim();
-                const content = parts.slice(1).join(':').trim();
-
-                if (content.length >= 150) {
-                    const sentences = content.match(/[^.?!]+[.?!]+["']?|[^.?!]+$/g) || [content];
-                    let currentChunk = "";
-                    let chunkCount = 0;
-
-                    sentences.forEach((sent) => {
-                        currentChunk += sent;
-                        if (currentChunk.length >= 150) {
-                            fullList.push({ id: `${idx}-${chunkCount}`, type: 'talk', text: currentChunk.trim(), sender });
-                            currentChunk = "";
-                            chunkCount++;
-                        }
-                    });
-                    if (currentChunk.trim().length > 0) {
-                        fullList.push({ id: `${idx}-${chunkCount}`, type: 'talk', text: currentChunk.trim(), sender });
-                    }
-                } else {
-                    fullList.push({ id: idx, type: 'talk', text: content, sender });
-                }
-            }
-        });
-
-        setRadioMessages(fullList); 
-        setRadioQueue([]);       
-        setIsRadioTyping(false);    
-
-        if (profileDetailRef.current) setSavedScrollTop(profileDetailRef.current.scrollTop);
-
-        setSelectedProfile(null); 
-        setIsDetailView(false); 
-        setCurrentView('radio'); 
-        
-        setTimeout(() => {
-             if(scrollRef.current) scrollRef.current.scrollTop = 0;
-        }, 50);
-    }}
+                                                                    setSelectedProfile(null); 
+                                                                    setIsDetailView(false); 
+                                                                    setCurrentView('radio'); 
+                                                                    
+                                                                    setTimeout(() => {
+                                                                        if(scrollRef.current) scrollRef.current.scrollTop = 0;
+                                                                    }, 50);
+                                                                }}
                                                                 className="h-6 px-3 bg-gradient-to-b from-orange-400 to-orange-600 rounded-[2px] shadow-[0_2px_3px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.4)] active:scale-95 active:shadow-inner transition-transform flex items-center justify-center group"
                                                             >
                                                                 <span className="text-[8px] font-bold text-white drop-shadow-sm tracking-tighter group-hover:animate-pulse">ENTER BOOTH</span>
@@ -2845,7 +2806,6 @@ return (
                                                         <div 
                                                             onClick={() => { 
                                                                 playSound('click'); 
-                                                                // ▼▼▼ 스크롤 저장 로직 추가 ▼▼▼
                                                                 if (profileDetailRef.current) setSavedScrollTop(profileDetailRef.current.scrollTop);
                                                                 setSelectedProfile(null); 
                                                                 setIsDetailView(false); 
@@ -2880,7 +2840,6 @@ return (
                                                                 <button 
                                                                     onClick={() => { 
                                                                         playSound('click'); 
-                                                                        // ▼▼▼ 스크롤 저장 로직 추가 ▼▼▼
                                                                         if (profileDetailRef.current) setSavedScrollTop(profileDetailRef.current.scrollTop);
                                                                         setSelectedProfile(null); 
                                                                         setIsDetailView(false); 
