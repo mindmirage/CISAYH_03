@@ -11,6 +11,8 @@
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<!-- [추가] html2canvas 라이브러리 (이미지 저장용) -->
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 <style>
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
@@ -151,7 +153,8 @@ const Play=(p)=><IconWrapper {...p}><polygon points="5 3 19 12 5 21 5 3"/></Icon
 const BookOpen=(p)=><IconWrapper {...p}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></IconWrapper>;
 const Feather=(p)=><IconWrapper {...p}><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" x2="2" y1="8" y2="22"/><line x1="17.5" x2="9" y1="15" y2="15"/></IconWrapper>;
 const Info=(p)=><IconWrapper {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></IconWrapper>;
-// --- 유틸리티 ---
+const Download=(p)=><IconWrapper {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></IconWrapper>;
+    // --- 유틸리티 ---
 const getTime = () => { const now = new Date(); let h = now.getHours(), m = String(now.getMinutes()).padStart(2, '0'); return `${h >= 12 ? '오후' : '오전'} ${h % 12 || 12}:${m}`; };
 
 // [수정됨] 오디오 컨텍스트 변수
@@ -1220,6 +1223,63 @@ function App() {
     if (sender === '재경') return { color: COLORS.jaekyung, avatarBg: 'bg-blue-200' };
     return { color: COLORS.other, avatarBg: 'bg-gray-300' };
   };
+// [최종_진짜_최종] 티켓 이미지 저장 함수 (가로 사진 맞춤형)
+  const handleSaveTicket = (elementId, fileName) => {
+    const element = document.getElementById(elementId);
+    if (!element || !window.html2canvas) return;
+
+    window.html2canvas(element, {
+        scale: 4, // 고화질
+        useCORS: true,
+        backgroundColor: null, 
+        allowTaint: true,
+        onclone: (documentClone) => {
+            const clone = documentClone.getElementById(elementId);
+            if (clone) {
+                // 1. 애니메이션/효과 제거
+                clone.style.animation = 'none';
+                clone.style.transition = 'none';
+                clone.style.opacity = '1';
+                clone.style.transform = 'none';
+                clone.classList.remove('animate-fade-in-up', 'animate-fade-in', 'transform');
+                
+                // 2. 버튼 숨기기
+                const btns = clone.querySelectorAll('.ticket-btn');
+                btns.forEach(b => b.style.display = 'none');
+
+                // 3. [핵심 수정] 가로 사진이 너무 확대되는 문제 해결
+                const images = clone.querySelectorAll('.ticket-img');
+                images.forEach(img => {
+                    // 기존 스타일 초기화
+                    img.style.cssText = '';
+                    
+                    // [중요] 높이를 티켓 높이에 강제로 맞춤 (450px)
+                    img.style.height = '100%';
+                    img.style.width = 'auto'; // 비율 유지하며 너비 자동 조절
+                    
+                    // 가로 중앙 정렬 (양옆을 균등하게 자름)
+                    img.style.position = 'absolute';
+                    img.style.top = '0';
+                    img.style.left = '50%';
+                    img.style.transform = 'translateX(-50%)';
+                    
+                    // 제한 해제
+                    img.style.maxWidth = 'none';
+                    img.style.maxHeight = 'none';
+                });
+            }
+        }
+    }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `${fileName}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        playSound('message');
+    }).catch(err => {
+        console.error("Ticket save failed:", err);
+        playSound('error');
+    });
+  };
 return (
     <div className="fixed inset-0 w-full h-full bg-gray-100 flex justify-center items-center overflow-hidden font-sans">
       
@@ -2231,15 +2291,21 @@ return (
 
                 
 
-                                        {/* [2] 영화 티켓 팝업 */}
+                                        {/* [2] 영화 티켓 팝업 - 저장 시 투명화 해결 버전 */}
                                         {showTicket && (
                                             <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4" onClick={() => setShowTicket(false)}>
                                                 <div 
+                                                    id="ticket-anonymous"
+                                                    // [중요] 배경색을 style로 강제 지정해야 저장 시 투명해지지 않음
+                                                    style={{ backgroundColor: '#fdfbf7' }}
                                                     className="w-full max-w-[300px] bg-[#fdfbf7] rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)] relative animate-fade-in-up transform transition-transform cursor-default flex flex-col"
                                                     onClick={e => e.stopPropagation()}
                                                 >
-                                                    {/* 상단 포스터 */}
-                                                    <div className="h-[450px] relative overflow-hidden bg-gray-900 shrink-0">
+                                                    {/* 상단 포스터 - [중요] 포스터 배경색(#111827) 강제 지정 */}
+                                                    <div 
+                                                        className="h-[450px] relative overflow-hidden bg-gray-900 shrink-0"
+                                                        style={{ backgroundColor: '#111827' }}
+                                                    >
                                                         {CHARACTER_DETAILS.jaehyun.hexImages.map((img, idx) => (
                                                             <img 
                                                                 key={idx}
@@ -2251,7 +2317,6 @@ return (
                                                         
                                                         <div className="absolute bottom-0 left-0 right-0 h-1/2 z-20 bg-gradient-to-t from-[#fdfbf7] via-[#fdfbf7]/60 to-transparent pointer-events-none"></div>
                                                         
-                                                        {/* [수정됨] 제목 색상 복구 (진한 검정) */}
                                                         <div className="absolute bottom-6 left-6 right-6 z-30">
                                                             <div className="text-[9px] font-bold tracking-[0.3em] text-gray-500 mb-1">CINEMA TICKET</div>
                                                             <h2 className="text-3xl font-black text-gray-900 leading-tight tracking-tighter break-keep drop-shadow-sm">익명의 편지가<br/>이국에서</h2>
@@ -2264,7 +2329,6 @@ return (
                                                         <div className="absolute top-[-12px] right-[-12px] w-6 h-6 bg-black/80 rounded-full z-30"></div>
 
                                                         <div className="flex justify-between items-start mb-6 border-b border-dashed border-gray-300 pb-6">
-                                                            {/* [수정됨] 라벨 크기 9px로 확대 */}
                                                             <div>
                                                                 <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">DATE</div>
                                                                 <div className="text-[15px] font-bold text-gray-700 font-serif">
@@ -2281,7 +2345,6 @@ return (
                                                                     })()}
                                                                 </div>
                                                             </div>
-                                                            {/* [수정됨] SEAT 정렬 왼쪽으로 변경 (text-right 제거) */}
                                                             <div>
                                                                 <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">SEAT</div>
                                                                 <div className="text-[15px] font-black text-rose-400 font-serif">J-14</div>
@@ -2290,19 +2353,10 @@ return (
 
                                                         <div className="space-y-5">
                                                             <div>
-                                                                {/* [수정됨] 라벨 크기 9px로 확대 */}
                                                                 <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">THEATER</div>
-                                                                <a 
-                                                                    href="https://www.postype.com/@mindmirage/post/19428444" 
-                                                                    target="_blank" 
-                                                                    rel="noopener noreferrer"
-                                                                    className="text-sm font-bold text-gray-700 border-b border-gray-400 hover:text-sky-500 hover:border-sky-500 transition-colors pb-0.5"
-                                                                >
-                                                                    MIND MIRAGE ↗
-                                                                </a>
+                                                                <span className="text-sm font-bold text-gray-700 border-b border-gray-400 pb-0.5">MIND MIRAGE</span>
                                                             </div>
                                                             <div>
-                                                                {/* [수정됨] 라벨 크기 9px로 확대 */}
                                                                 <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">CAST</div>
                                                                 <div className="text-sm font-bold text-gray-600">JAEHYUN</div>
                                                             </div>
@@ -2321,12 +2375,20 @@ return (
                                                         </div>
                                                     </div>
 
-                                                    <button onClick={() => setShowTicket(false)} className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white hover:text-gray-100 transition shadow-sm z-40"><X size={16} /></button>
-                                                </div>
-                                                
-                                                {/* [수정됨] 닫기 안내 문구 위치 보정 (left-0 w-full text-center 추가) */}
-                                                <div className="absolute bottom-8 left-0 w-full text-center text-white/60 text-xs tracking-widest animate-pulse pointer-events-none font-medium">
-                                                    화면을 터치하여 닫기
+                                                    {/* 버튼들 (저장 시 숨겨짐: ticket-btn 클래스) */}
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); setShowTicket(false); }} 
+                                                        className="ticket-btn absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white hover:text-gray-100 transition shadow-sm z-40"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); handleSaveTicket('ticket-anonymous', 'Anonymous_Letter_Ticket'); }} 
+                                                        className="ticket-btn absolute top-4 left-4 p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white hover:text-gray-100 transition shadow-sm z-40"
+                                                        title="티켓 이미지 저장"
+                                                    >
+                                                        <Download size={16} />
+                                                    </button>
                                                 </div>
                                             </div>
                                         )}
@@ -2381,28 +2443,36 @@ return (
 </div>
 
 {/* =================================================================================
-    [추가] 나의 킨츠기 형제들 티켓 팝업 (익편국 티켓 로직 복사 및 수정)
+    [2-2] 나의 킨츠기 형제들 티켓 팝업 - 사진 찌그러짐 완벽 해결 (img 태그 + object-fit)
    ================================================================================= */}
 {showKintsugiTicket && (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4" onClick={() => setShowKintsugiTicket(false)}>
         <div 
+            id="ticket-kintsugi"
+            // 저장 시 배경 투명화 방지
+            style={{ backgroundColor: '#fdfbf7' }}
             className="w-full max-w-[300px] bg-[#fdfbf7] rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)] relative animate-fade-in-up transform transition-transform cursor-default flex flex-col"
             onClick={e => e.stopPropagation()}
         >
-            {/* 상단 포스터 (킨츠기 이미지 배열 사용) */}
-            <div className="h-[450px] relative overflow-hidden bg-gray-900 shrink-0">
+            {/* 상단 포스터 영역 - [수정] img 태그 사용 + ticket-img 클래스 필수 */}
+            <div 
+                className="h-[450px] relative overflow-hidden bg-gray-900 shrink-0"
+                style={{ backgroundColor: '#111827' }}
+            >
                 {KINTSUGI_IMAGES.map((img, idx) => (
                     <img 
                         key={idx}
-                        src={img} 
-                        alt="Poster" 
-                        className={`absolute inset-0 w-full h-full object-cover mix-blend-normal transition-opacity duration-1000 ease-in-out ${idx === kintsugiBgIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} 
+                        src={img}
+                        alt="Poster"
+                        // [중요] ticket-img 클래스가 있어야 저장 시 비율 보정이 적용됩니다.
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ticket-img ${idx === kintsugiBgIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
                     />
                 ))}
                 
+                {/* 그라데이션 오버레이 */}
                 <div className="absolute bottom-0 left-0 right-0 h-1/2 z-20 bg-gradient-to-t from-[#fdfbf7] via-[#fdfbf7]/60 to-transparent pointer-events-none"></div>
                 
-                {/* 제목 변경 */}
+                {/* 타이틀 */}
                 <div className="absolute bottom-6 left-6 right-6 z-30">
                     <div className="text-[9px] font-bold tracking-[0.3em] text-gray-500 mb-1">CINEMA TICKET</div>
                     <h2 className="text-3xl font-black text-gray-900 leading-tight tracking-tighter break-keep drop-shadow-sm">나의 킨츠기<br/>형제들</h2>
@@ -2440,7 +2510,6 @@ return (
                 <div className="space-y-5">
                     <div>
                         <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">THEATER</div>
-                        {/* [수정] 링크 주소 업데이트 */}
                         <a 
                             href="https://www.postype.com/@mindmirage/post/19578368" 
                             target="_blank" 
@@ -2457,7 +2526,7 @@ return (
                 </div>
             </div>
 
-            {/* 하단 바코드 (패턴 재사용) */}
+            {/* 하단 바코드 */}
             <div className="relative pb-8 pt-4 bg-[#fdfbf7]">
                 <div className="px-6 flex flex-col items-center justify-center gap-2">
                     <div className="h-12 w-full max-w-[220px] flex justify-between items-end">
@@ -2469,11 +2538,20 @@ return (
                 </div>
             </div>
 
-            <button onClick={() => setShowKintsugiTicket(false)} className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white hover:text-gray-100 transition shadow-sm z-40"><X size={16} /></button>
-        </div>
-        
-        <div className="absolute bottom-8 left-0 w-full text-center text-white/60 text-xs tracking-widest animate-pulse pointer-events-none font-medium">
-            화면을 터치하여 닫기
+            {/* 버튼들 */}
+            <button 
+                onClick={(e) => { e.stopPropagation(); setShowKintsugiTicket(false); }} 
+                className="ticket-btn absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white hover:text-gray-100 transition shadow-sm z-40"
+            >
+                <X size={16} />
+            </button>
+            <button 
+                onClick={(e) => { e.stopPropagation(); handleSaveTicket('ticket-kintsugi', 'Kintsugi_Brothers_Ticket'); }} 
+                className="ticket-btn absolute top-4 left-4 p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white hover:text-gray-100 transition shadow-sm z-40"
+                title="티켓 이미지 저장"
+            >
+                <Download size={16} />
+            </button>
         </div>
     </div>
 )}
