@@ -156,30 +156,27 @@ const Info=(p)=><IconWrapper {...p}><circle cx="12" cy="12" r="10"/><line x1="12
 const Download=(p)=><IconWrapper {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></IconWrapper>;
     // --- 유틸리티 ---
 const getTime = () => { const now = new Date(); let h = now.getHours(), m = String(now.getMinutes()).padStart(2, '0'); return `${h >= 12 ? '오후' : '오전'} ${h % 12 || 12}:${m}`; };
-// [수정] 현재 시각에 따라 다음 정각 시간을 계산하는 함수
-const getNextHourTime = () => {
+// [수정] 현재 시각 기준, 다음 정각의 '시간'과 '날짜'를 함께 계산하는 함수
+const getTicketDateTime = () => {
     const d = new Date();
     const currentMinutes = d.getMinutes();
     
-    // 현재 분이 50분 미만이면 다음 정각 (현재 시간 + 1시간)
-    if (currentMinutes < 50) {
-        d.setHours(d.getHours() + 1);
-        d.setMinutes(0);
-    } 
-    // 현재 분이 50분 이상이면 그 다음 정각 (현재 시간 + 2시간)
-    else {
-        d.setHours(d.getHours() + 2);
-        d.setMinutes(0);
-    }
+    // 50분 미만이면 +1시간, 50분 이상이면 +2시간
+    // setHours는 24시가 넘어가면 자동으로 날짜를 다음 날로 넘겨줍니다.
+    d.setHours(d.getHours() + (currentMinutes < 50 ? 1 : 2));
+    d.setMinutes(0);
     
-    return `${String(d.getHours()).padStart(2, '0')}:00`;
+    return {
+        time: `${String(d.getHours()).padStart(2, '0')}:00`,
+        date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
+    };
 };
 
 // [수정] J 또는 M열 랜덤 선택 및 1-15 사이의 좌석 번호 반환
 const getRandomSeat = () => {
-    const rows = ['J', 'M']; // J열과 M열만 선택
+    const rows = ['J', 'M']; 
     const randomRow = rows[Math.floor(Math.random() * rows.length)];
-    const randomNumber = Math.floor(Math.random() * 15) + 1; // 1부터 15까지
+    const randomNumber = Math.floor(Math.random() * 15) + 1;
     return `${randomRow}-${String(randomNumber).padStart(2, '0')}`;
 };
 // [수정됨] 오디오 컨텍스트 변수
@@ -915,6 +912,7 @@ function App() {
    const [showInterview, setShowInterview] = useState(false); // [추가] 재현 인터뷰 팝업 상태
   const [ticketTime, setTicketTime] = useState(""); 
   const [ticketSeat, setTicketSeat] = useState("");
+  const [ticketDate, setTicketDate] = useState(""); // [NEW] 날짜도 고정해야 함
    // ▼▼▼ [추가] 스크롤 위치 저장용 State & Ref ▼▼▼
   const [savedScrollTop, setSavedScrollTop] = useState(0); 
   const profileDetailRef = useRef(null); // 프로필 상세창 스크롤 감지용
@@ -2294,8 +2292,10 @@ return (
                                                     <button 
                                                         onClick={() => { 
                                                             playSound('click'); 
-                                                            // [수정] 클릭 시 시간과 좌석을 생성하여 고정
-                                                            setTicketTime(getNextHourTime());
+                                                            // [수정] 날짜와 시간을 함께 계산하여 고정
+                                                            const { time, date } = getTicketDateTime();
+                                                            setTicketTime(time);
+                                                            setTicketDate(date);
                                                             setTicketSeat(getRandomSeat());
                                                             setShowTicket(true); 
                                                         }}
@@ -2359,20 +2359,19 @@ return (
                                                             <div>
                                                                 <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">DATE</div>
                                                                 <div className="text-[15px] font-bold text-gray-700 font-serif">
-                                                                    {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}
+                                                                    {/* [수정] 계산된 날짜 State 사용 */}
+                                                                    {ticketDate}
                                                                 </div>
                                                             </div>
                                                             <div>
                                                                 <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">TIME</div>
                                                                 <div className="text-[15px] font-bold text-gray-700 font-serif">
-                                                                    {/* [수정] 고정된 State 값 사용 */}
                                                                     {ticketTime}
                                                                 </div>
                                                             </div>
                                                             <div>
                                                                 <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">SEAT</div>
                                                                 <div className="text-[15px] font-black text-rose-400 font-serif">
-                                                                    {/* [수정] 고정된 State 값 사용 */}
                                                                     {ticketSeat}
                                                                 </div>
                                                             </div>
@@ -2450,8 +2449,10 @@ return (
                                                 <button 
                                                     onClick={() => { 
                                                         playSound('click'); 
-                                                        // [수정] 클릭 시 시간과 좌석을 생성하여 고정
-                                                        setTicketTime(getNextHourTime());
+                                                        // [수정] 날짜와 시간을 함께 계산하여 고정
+                                                        const { time, date } = getTicketDateTime();
+                                                        setTicketTime(time);
+                                                        setTicketDate(date);
                                                         setTicketSeat(getRandomSeat());
                                                         setShowKintsugiTicket(true); 
                                                     }}
@@ -2511,20 +2512,19 @@ return (
                                                             <div>
                                                                 <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">DATE</div>
                                                                 <div className="text-[15px] font-bold text-gray-700 font-serif">
-                                                                    {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}
+                                                                    {/* [수정] 계산된 날짜 State 사용 */}
+                                                                    {ticketDate}
                                                                 </div>
                                                             </div>
                                                             <div>
                                                                 <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">TIME</div>
                                                                 <div className="text-[15px] font-bold text-gray-700 font-serif">
-                                                                    {/* [수정] 고정된 State 값 사용 */}
                                                                     {ticketTime}
                                                                 </div>
                                                             </div>
                                                             <div>
                                                                 <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">SEAT</div>
                                                                 <div className="text-[15px] font-black text-rose-400 font-serif">
-                                                                    {/* [수정] 고정된 State 값 사용 */}
                                                                     {ticketSeat}
                                                                 </div>
                                                             </div>
